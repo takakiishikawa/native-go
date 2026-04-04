@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { DarkModeInit } from "@/components/dark-mode-init"
 import { LoginToast } from "@/components/login-toast"
 import { Suspense } from "react"
+import { Analytics } from "@vercel/analytics/next"
 
 const notoSans = Noto_Sans_JP({
   variable: "--font-noto-sans",
@@ -53,6 +54,7 @@ export default async function RootLayout({
           <main>{children}</main>
         )}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   )
