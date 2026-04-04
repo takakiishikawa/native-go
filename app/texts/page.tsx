@@ -41,9 +41,9 @@ function sortLessons(lessons: Lesson[]): Lesson[] {
 
 function StatusBadge({ status }: { status: Lesson["status"] }) {
   const styles: Record<Lesson["status"], string> = {
-    未登録: "border-border text-muted-foreground",
-    練習中: "border-amber-300 bg-amber-50 text-amber-700",
-    習得済み: "border-green-300 bg-green-50 text-green-700",
+    未登録: "border-transparent bg-[#F1F5F9] text-[#64748B]",
+    練習中: "border-transparent bg-[#FFFBEB] text-[#F59E0B]",
+    習得済み: "border-transparent bg-[#ECFDF5] text-[#10B981]",
   }
   return (
     <Badge variant="outline" className={styles[status]}>
@@ -523,9 +523,9 @@ export default function TextsPage() {
                 {s.total}
                 <span className="text-base font-normal text-muted-foreground ml-1">件</span>
               </span>
-              <Badge className="bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-100">練習中 {s.inProgress}</Badge>
-              <Badge className="bg-green-100 text-green-700 border border-green-300 hover:bg-green-100">習得済み {s.done}</Badge>
-              <Badge variant="outline" className="text-muted-foreground">未登録 {s.unregistered}</Badge>
+              <Badge className="border-transparent bg-[#FFFBEB] text-[#F59E0B] hover:bg-[#FFFBEB]">練習中 {s.inProgress}</Badge>
+              <Badge className="border-transparent bg-[#ECFDF5] text-[#10B981] hover:bg-[#ECFDF5]">習得済み {s.done}</Badge>
+              <Badge className="border-transparent bg-[#F1F5F9] text-[#64748B] hover:bg-[#F1F5F9]">未登録 {s.unregistered}</Badge>
             </div>
             <LessonList
               lessons={byLevel(lvl)}

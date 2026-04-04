@@ -39,7 +39,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-50 bg-background border shadow-2xl rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto",
+          "relative z-50 bg-background border shadow-lg rounded-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto",
           className
         )}
       >

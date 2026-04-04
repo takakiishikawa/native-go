@@ -205,12 +205,12 @@ export default function ExpressionRepeatingPage() {
               </div>
               <StarRating value={current?.frequency ?? 0} />
             </div>
-            <p className="text-base text-muted-foreground whitespace-pre-line">{current?.meaning}</p>
+            <p className="text-lg text-muted-foreground whitespace-pre-line leading-relaxed">{current?.meaning}</p>
           </CardHeader>
           <CardContent>
-            <p className="text-base font-medium mb-3">会話例:</p>
+            <p className="text-sm font-medium text-muted-foreground mb-3">会話例</p>
             <ConversationLines lines={lines} currentLine={currentLine} />
-            <p className="text-sm text-muted-foreground mt-3">
+            <p className="text-sm text-muted-foreground mt-4">
               場面: {current?.usage_scene}
             </p>
           </CardContent>

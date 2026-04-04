@@ -4,6 +4,7 @@ import "./globals.css"
 import { Nav } from "@/components/layout/nav"
 import { createClient } from "@/lib/supabase/server"
 import { Toaster } from "@/components/ui/sonner"
+import { DarkModeInit } from "@/components/dark-mode-init"
 
 const notoSans = Noto_Sans_JP({
   variable: "--font-noto-sans",
@@ -30,7 +31,11 @@ export default async function RootLayout({
     <html
       lang="ja"
       className={`${notoSans.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <DarkModeInit />
+      </head>
       <body className="min-h-full">
         {user ? (
           <div className="flex h-screen">

@@ -90,9 +90,9 @@ export default function ExpressionsPage() {
                 <TableCell className="text-sm">{item.play_count} / 10</TableCell>
                 <TableCell>
                   {item.play_count >= 10 ? (
-                    <Badge variant="outline" className="text-green-600 border-green-300">習得済み</Badge>
+                    <Badge className="border-transparent bg-[#ECFDF5] text-[#10B981]">習得済み</Badge>
                   ) : (
-                    <Badge>練習中</Badge>
+                    <Badge className="border-transparent bg-[#FFFBEB] text-[#F59E0B]">練習中</Badge>
                   )}
                 </TableCell>
               </TableRow>
@@ -138,10 +138,7 @@ export default function ExpressionsPage() {
                 <StarRating value={selected.frequency} />
               </div>
               <span className="text-xs text-muted-foreground">練習回数: {selected.play_count} / 10</span>
-              <Badge
-                variant={selected.play_count >= 10 ? "outline" : "default"}
-                className={selected.play_count >= 10 ? "text-green-600 border-green-300" : ""}
-              >
+              <Badge className={selected.play_count >= 10 ? "border-transparent bg-[#ECFDF5] text-[#10B981]" : "border-transparent bg-[#FFFBEB] text-[#F59E0B]"}>
                 {selected.play_count >= 10 ? "習得済み" : "練習中"}
               </Badge>
             </div>
