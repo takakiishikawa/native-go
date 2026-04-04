@@ -2,18 +2,28 @@ import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { GenerateImagesButton } from "./GenerateImagesButton"
 
 export default async function SpeakingPage() {
   const supabase = await createClient()
 
-  const { data: grammars } = await supabase
-    .from("grammar")
-    .select("id, name, summary, image_url, play_count, lessons!lesson_id(lesson_no)")
-    .not("image_url", "is", null)
-    .or("play_count.is.null,play_count.lt.10")
-    .order("created_at", { ascending: false })
+  const [{ data: grammars }, { data: pendingGrammars }] = await Promise.all([
+    supabase
+      .from("grammar")
+      .select("id, name, summary, image_url, play_count, lessons!lesson_id(lesson_no)")
+      .not("image_url", "is", null)
+      .or("play_count.is.null,play_count.lt.10")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("grammar")
+      .select("id, name")
+      .is("image_url", null)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ])
 
   const items = grammars ?? []
+  const pending = pendingGrammars ?? []
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -21,6 +31,16 @@ export default async function SpeakingPage() {
         <h1 className="text-3xl font-bold">スピーキング</h1>
         <p className="text-muted-foreground mt-1">画像を見ながら英語で説明する練習</p>
       </div>
+
+      {/* Pending image generation banner */}
+      {pending.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 px-4 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            {pending.length}件の文法の画像がまだ生成されていません
+          </p>
+          <GenerateImagesButton items={pending} />
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">

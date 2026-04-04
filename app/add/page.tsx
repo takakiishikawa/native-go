@@ -133,14 +133,24 @@ export default function AddPage() {
       toast.success(`文法 ${result.grammar.length}件・表現 ${result.expressions.length}件を保存しました`)
       setResult(null)
       setText("")
-      // Fire image generation in background (non-blocking)
+      // Fire image generation in background with visible feedback
       if (savedGrammars.length > 0) {
-        toast.info(`スピーキング用画像を生成中... (${savedGrammars.length}件)`, { duration: 8000 })
-        fetch("/api/generate-images", {
+        const genPromise = fetch("/api/generate-images", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items: savedGrammars }),
-        }).catch(() => {/* ignore errors */})
+        }).then(async (res) => {
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`)
+          const failed = (data.results ?? []).filter((r: { status: string }) => r.status === "error")
+          if (failed.length > 0) throw new Error(`${failed.length}件の生成に失敗: ${failed[0]?.reason ?? ""}`)
+          return data
+        })
+        toast.promise(genPromise, {
+          loading: `スピーキング用画像を生成中... (${savedGrammars.length}件)`,
+          success: "スピーキング用画像の生成完了！スピーキングページで練習できます",
+          error: (err: Error) => `画像生成に失敗: ${err.message}`,
+        })
       }
     } catch {
       toast.error("保存に失敗しました")

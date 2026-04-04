@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
 
       if (!response.ok) {
         const errText = await response.text()
-        console.error(`Imagen API error for ${item.name}:`, errText)
-        results.push({ id: item.id, status: "error" })
+        console.error(`Imagen API error ${response.status} for ${item.name}:`, errText)
+        results.push({ id: item.id, status: "error", reason: `API ${response.status}: ${errText.slice(0, 300)}` })
         continue
       }
 
