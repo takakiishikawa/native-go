@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     try {
       const imagePrompt = `A realistic everyday scene in Ho Chi Minh City that naturally demonstrates the grammar point: ${item.name}. Scene ideas: café, gym, street market, apartment, park. Style: natural photo-realistic, warm lighting, no text in the image. The scene should make someone want to describe it using ${item.name}.`
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:generateImages?key=${apiKey}`
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-fast-generate-001:generateImages?key=${apiKey}`
       console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`)
 
       const response = await fetch(apiUrl, {
