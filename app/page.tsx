@@ -177,7 +177,7 @@ export default async function HomePage() {
       <StreakPopup streak={streak} />
 
       <div>
-        <h1 className="text-3xl font-bold">ホーム</h1>
+        <h1 className="text-3xl font-bold">ダッシュボード</h1>
         <p className="text-muted-foreground mt-1">学習進捗の概要</p>
       </div>
 

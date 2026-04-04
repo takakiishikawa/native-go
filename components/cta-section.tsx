@@ -8,15 +8,15 @@ import { BookOpen, MessageSquare, Mic, ChevronRight } from "lucide-react"
 interface Props {
   grammarsInProgress: number
   expressionsInProgress: number
-  grammarDone: number
-  expressionDone: number
+  grammar完了: number
+  expression完了: number
 }
 
 export function CTASection({
   grammarsInProgress,
   expressionsInProgress,
-  grammarDone,
-  expressionDone,
+  grammar完了,
+  expression完了,
 }: Props) {
   return (
     <div className="space-y-3">
@@ -31,7 +31,7 @@ export function CTASection({
               <div className="min-w-0">
                 <p className="font-semibold text-sm text-foreground">文法リピーティング</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  練習中 {grammarsInProgress} / Done {grammarDone}
+                  練習中 {grammarsInProgress} / 完了 {grammar完了}
                 </p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
@@ -49,7 +49,7 @@ export function CTASection({
               <div className="min-w-0">
                 <p className="font-semibold text-sm text-foreground">フレーズリピーティング</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  練習中 {expressionsInProgress} / Done {expressionDone}
+                  練習中 {expressionsInProgress} / 完了 {expression完了}
                 </p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0 group-hover:text-green-500 dark:group-hover:text-green-400 transition-colors" />
