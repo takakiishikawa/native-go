@@ -40,6 +40,16 @@ export interface PracticeLog {
   created_at: string
   grammar_done_count: number
   expression_done_count: number
+  speaking_count: number
+  native_camp_count: number
+}
+
+export interface SpeakingScore {
+  id: string
+  user_id: string
+  score: number
+  tested_at: string
+  created_at: string
 }
 
 export interface ExtractedGrammar {

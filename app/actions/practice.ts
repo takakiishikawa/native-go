@@ -151,6 +151,50 @@ export async function saveExpressions(
   revalidatePath("/texts")
 }
 
+export async function upsertNativeCampLog(date: string, count: number) {
+  const supabase = await createClient()
+
+  const { data: existing } = await supabase
+    .from("practice_logs")
+    .select("grammar_done_count, expression_done_count, speaking_count")
+    .eq("practiced_at", date)
+    .maybeSingle()
+
+  await supabase.from("practice_logs").upsert(
+    {
+      practiced_at: date,
+      grammar_done_count: existing?.grammar_done_count ?? 0,
+      expression_done_count: existing?.expression_done_count ?? 0,
+      speaking_count: existing?.speaking_count ?? 0,
+      native_camp_count: count,
+    },
+    { onConflict: "practiced_at" }
+  )
+  revalidatePath("/")
+}
+
+export async function saveSpeakingScore(date: string, score: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from("speaking_scores")
+    .insert({ user_id: user.id, score, tested_at: date })
+    .select()
+    .single()
+
+  if (error) return null
+  revalidatePath("/")
+  return data
+}
+
+export async function deleteSpeakingScore(id: string) {
+  const supabase = await createClient()
+  await supabase.from("speaking_scores").delete().eq("id", id)
+  revalidatePath("/")
+}
+
 export async function updateLessonStatus(
   id: string,
   status: "未登録" | "練習中" | "習得済み"
