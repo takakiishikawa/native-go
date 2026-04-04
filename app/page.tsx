@@ -225,14 +225,14 @@ export default async function HomePage() {
           />
           <LineChart
             title="Native Camp 学習時間（直近7日）"
-            series={[{ key: "minutes", label: "学習時間", color: "#8B5CF6" }]}
+            series={[{ key: "minutes", label: "学習時間", color: "#3B82F6" }]}
             data={ncChartData}
             unit="分"
           />
         </div>
         <LineChart
           title="Speaking スコア推移"
-          series={[{ key: "score", label: "スコア", color: "#F59E0B" }]}
+          series={[{ key: "score", label: "スコア", color: "#10B981" }]}
           data={scoreChartData}
           unit="点"
           emptyText="スコアを記録するとグラフが表示されます"

@@ -168,7 +168,7 @@ export default function ExpressionRepeatingPage() {
   if (items.length === 0 && !showComplete) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4 text-muted-foreground">
-        <p className="text-lg">練習中の表現はありません</p>
+        <p className="text-lg">練習中のフレーズはありません</p>
         <p className="text-sm">すべて完了しました！</p>
       </div>
     )
@@ -182,7 +182,7 @@ export default function ExpressionRepeatingPage() {
       <div className="space-y-6 max-w-2xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">表現リピーティング</h1>
+            <h1 className="text-3xl font-bold">フレーズリピーティング</h1>
             <p className="text-muted-foreground mt-1">
               {index + 1} / {items.length} 件
             </p>
@@ -275,7 +275,7 @@ export default function ExpressionRepeatingPage() {
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold">お疲れ様でした！</h2>
-            <p className="text-muted-foreground">表現リピーティング 1周完了</p>
+            <p className="text-muted-foreground">フレーズリピーティング 1周完了</p>
             <Button onClick={() => router.push("/")} className="w-full">
               トップへ戻る
             </Button>

@@ -55,7 +55,6 @@ export function LineChart({
     return d
   }
 
-  const hovered = hoveredIdx !== null ? data[hoveredIdx] : null
   const segW = data.length <= 1 ? iw : iw / (data.length - 1)
   const showLabelIndices =
     data.length <= 4
@@ -65,32 +64,30 @@ export function LineChart({
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-            {hovered && (
-              <p className="text-xs text-muted-foreground mt-0.5">{hovered.label}</p>
-            )}
-            <div className="flex flex-wrap gap-4 mt-2 text-sm">
-              {series.map((s) => (
-                <span
-                  key={s.key}
-                  className="flex items-center gap-1.5 font-medium"
-                  style={{ color: s.color }}
-                >
-                  <span
-                    className="inline-block w-2 h-2 rounded-full shrink-0"
-                    style={{ background: s.color }}
-                  />
-                  {s.label}{" "}
-                  {hovered
-                    ? getVal(hovered, s.key)
-                    : data.reduce((sum, d) => sum + getVal(d, s.key), 0)}
-                  {unit}
-                </span>
-              ))}
-            </div>
-          </div>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
+          {hoveredIdx !== null && (
+            <span className="text-xs text-muted-foreground font-normal">
+              {data[hoveredIdx].label}
+            </span>
+          )}
+          {series.map((s) => (
+            <span
+              key={s.key}
+              className="flex items-center gap-1.5 font-medium"
+              style={{ color: s.color }}
+            >
+              <span
+                className="inline-block w-2 h-2 rounded-full shrink-0"
+                style={{ background: s.color }}
+              />
+              {s.label}{" "}
+              {hoveredIdx !== null
+                ? getVal(data[hoveredIdx], s.key)
+                : data.reduce((sum, d) => sum + getVal(d, s.key), 0)}
+              {unit}
+            </span>
+          ))}
         </div>
       </CardHeader>
       <CardContent className="pt-2">

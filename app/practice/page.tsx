@@ -43,12 +43,12 @@ export default function PracticePage() {
               <div className="rounded-lg bg-green-50 dark:bg-green-900/30 p-3 group-hover:bg-green-100 dark:group-hover:bg-green-800/40 transition-colors shrink-0">
                 <MessageSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
-              <CardTitle className="text-xl text-foreground">表現練習</CardTitle>
+              <CardTitle className="text-xl text-foreground">フレーズ練習</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              表現・フレーズを会話形式で練習します
+              フレーズを会話形式で練習します
             </p>
           </CardContent>
         </Card>

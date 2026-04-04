@@ -151,7 +151,7 @@ export async function saveExpressions(
   revalidatePath("/texts")
 }
 
-export async function upsertNativeCampLog(date: string, count: number) {
+export async function upsertNativeCampLog(date: string, count: number): Promise<{ error?: string } | null> {
   const supabase = await createClient()
 
   const { data: existing } = await supabase
@@ -160,7 +160,7 @@ export async function upsertNativeCampLog(date: string, count: number) {
     .eq("practiced_at", date)
     .maybeSingle()
 
-  await supabase.from("practice_logs").upsert(
+  const { error } = await supabase.from("practice_logs").upsert(
     {
       practiced_at: date,
       grammar_done_count: existing?.grammar_done_count ?? 0,
@@ -170,7 +170,10 @@ export async function upsertNativeCampLog(date: string, count: number) {
     },
     { onConflict: "practiced_at" }
   )
+
+  if (error) return { error: error.message }
   revalidatePath("/")
+  return null
 }
 
 export async function saveSpeakingScore(date: string, score: number) {

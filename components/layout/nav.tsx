@@ -14,6 +14,7 @@ import {
   PencilSquareIcon,
   SunIcon,
   MoonIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -24,6 +25,7 @@ import { Dialog } from "@/components/ui/dialog"
 const navItems = [
   { href: "/", label: "ホーム", icon: HomeIcon },
   { href: "/practice", label: "リピーティング", icon: ArrowPathRoundedSquareIcon },
+  { href: "/report", label: "レポート", icon: ChartBarIcon },
   { href: "/texts", label: "テキスト", icon: DocumentTextIcon },
   { href: "/list", label: "文法・フレーズ", icon: BookOpenIcon },
 ]

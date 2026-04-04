@@ -4,15 +4,10 @@ import { useState } from "react"
 import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DatePicker } from "@/components/ui/date-picker"
+import { DateButton } from "@/components/ui/date-button"
 import { saveSpeakingScore, deleteSpeakingScore } from "@/app/actions/practice"
-import { Trash2, CalendarIcon } from "lucide-react"
+import { Trash2 } from "lucide-react"
 import type { SpeakingScore } from "@/lib/types"
-
-function formatDate(str: string): string {
-  const [y, m, d] = str.split("-")
-  return `${y}/${m}/${d}`
-}
 
 export function SpeakingScoreModal({
   open,
@@ -25,7 +20,6 @@ export function SpeakingScoreModal({
 }) {
   const today = new Date().toISOString().split("T")[0]
   const [date, setDate] = useState(today)
-  const [calendarOpen, setCalendarOpen] = useState(false)
   const [score, setScore] = useState(70)
   const [saving, setSaving] = useState(false)
   const [scores, setScores] = useState(
@@ -58,14 +52,7 @@ export function SpeakingScoreModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">日付</label>
-            <button
-              type="button"
-              onClick={() => setCalendarOpen((v) => !v)}
-              className="flex items-center gap-2 w-full h-10 rounded-md border border-input bg-background px-3 text-sm hover:bg-muted/50 transition-colors"
-            >
-              <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-              {formatDate(date)}
-            </button>
+            <DateButton value={date} onChange={setDate} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">スコア（0〜100）</label>
@@ -80,16 +67,6 @@ export function SpeakingScoreModal({
             />
           </div>
         </div>
-
-        {calendarOpen && (
-          <DatePicker
-            value={date}
-            onChange={(v) => {
-              setDate(v)
-              setCalendarOpen(false)
-            }}
-          />
-        )}
 
         <div className="flex gap-3">
           <Button variant="outline" onClick={onClose} className="flex-1">

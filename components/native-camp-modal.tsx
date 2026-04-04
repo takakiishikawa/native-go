@@ -4,14 +4,8 @@ import { useState } from "react"
 import { Dialog } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DatePicker } from "@/components/ui/date-picker"
+import { DateButton } from "@/components/ui/date-button"
 import { upsertNativeCampLog } from "@/app/actions/practice"
-import { CalendarIcon } from "lucide-react"
-
-function formatDate(str: string): string {
-  const [y, m, d] = str.split("-")
-  return `${y}/${m}/${d}`
-}
 
 export function NativeCampModal({
   open,
@@ -22,16 +16,21 @@ export function NativeCampModal({
 }) {
   const today = new Date().toISOString().split("T")[0]
   const [date, setDate] = useState(today)
-  const [calendarOpen, setCalendarOpen] = useState(false)
   const [count, setCount] = useState(1)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
 
   const minutes = count * 25
 
   async function handleSave() {
     setSaving(true)
-    await upsertNativeCampLog(date, count)
+    setError("")
+    const result = await upsertNativeCampLog(date, count)
     setSaving(false)
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
     onClose()
   }
 
@@ -41,14 +40,7 @@ export function NativeCampModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">日付</label>
-            <button
-              type="button"
-              onClick={() => setCalendarOpen((v) => !v)}
-              className="flex items-center gap-2 w-full h-10 rounded-md border border-input bg-background px-3 text-sm hover:bg-muted/50 transition-colors"
-            >
-              <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-              {formatDate(date)}
-            </button>
+            <DateButton value={date} onChange={setDate} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">回数</label>
@@ -64,15 +56,7 @@ export function NativeCampModal({
           </div>
         </div>
 
-        {calendarOpen && (
-          <DatePicker
-            value={date}
-            onChange={(v) => {
-              setDate(v)
-              setCalendarOpen(false)
-            }}
-          />
-        )}
+        {error && <p className="text-xs text-destructive">{error}</p>}
 
         <div className="flex gap-3">
           <Button variant="outline" onClick={onClose} className="flex-1">
