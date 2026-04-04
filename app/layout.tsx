@@ -5,6 +5,8 @@ import { Nav } from "@/components/layout/nav"
 import { createClient } from "@/lib/supabase/server"
 import { Toaster } from "@/components/ui/sonner"
 import { DarkModeInit } from "@/components/dark-mode-init"
+import { LoginToast } from "@/components/login-toast"
+import { Suspense } from "react"
 
 const notoSans = Noto_Sans_JP({
   variable: "--font-noto-sans",
@@ -41,6 +43,9 @@ export default async function RootLayout({
           <div className="flex h-screen">
             <Nav />
             <main className="flex-1 overflow-y-auto p-6 bg-background">
+              <Suspense>
+                <LoginToast />
+              </Suspense>
               {children}
             </main>
           </div>
