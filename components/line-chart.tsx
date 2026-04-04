@@ -66,11 +66,6 @@ export function LineChart({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm">
-          {hoveredIdx !== null && (
-            <span className="text-xs text-muted-foreground font-normal">
-              {data[hoveredIdx].label}
-            </span>
-          )}
           {series.map((s) => (
             <span
               key={s.key}

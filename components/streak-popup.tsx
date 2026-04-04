@@ -19,6 +19,8 @@ export function StreakPopup({ streak }: { streak: number }) {
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, "1")
       setVisible(true)
+      const timer = setTimeout(() => setVisible(false), 5000)
+      return () => clearTimeout(timer)
     }
   }, [streak])
 

@@ -39,7 +39,7 @@ export function MetricsSection({
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              リピーティング（直近7日）
+              リピーティング（7日間）
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -57,7 +57,7 @@ export function MetricsSection({
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              スピーキング（直近7日）
+              スピーキング（7日間）
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -73,7 +73,7 @@ export function MetricsSection({
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Native Camp（直近7日）
+                Native Camp（7日間）
               </CardTitle>
               <button
                 onClick={() => setNcOpen(true)}

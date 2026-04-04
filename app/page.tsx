@@ -211,7 +211,7 @@ export default async function HomePage() {
         />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <LineChart
-            title="リピーティング（直近7日）"
+            title="リピーティング（7日間）"
             series={[
               { key: "grammar", label: "文法", color: "#3B82F6" },
               { key: "expression", label: "フレーズ", color: "#10B981" },
@@ -220,7 +220,7 @@ export default async function HomePage() {
             unit="回"
           />
           <LineChart
-            title="Native Camp（直近7日）"
+            title="Native Camp（7日間）"
             series={[{ key: "minutes", label: "学習時間", color: "#3B82F6" }]}
             data={ncChartData}
             unit="分"
