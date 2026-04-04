@@ -161,23 +161,26 @@ export function PracticeClient({
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
-      {/* Header */}
-      <div className="space-y-0.5">
-        <h1 className="text-2xl font-bold">{grammarName}</h1>
-        <p className="text-sm text-muted-foreground">{grammarSummary}</p>
+      {/* Image - full bleed, no padding */}
+      <div className="rounded-xl overflow-hidden aspect-[4/3]">
+        <img src={imageUrl} alt={grammarName} className="w-full h-full object-cover" />
       </div>
 
-      {/* Image */}
-      <div className="rounded-xl overflow-hidden aspect-[4/3] bg-muted">
-        <img src={imageUrl} alt={grammarName} className="w-full h-full object-cover" />
+      {/* Grammar hint */}
+      <div className="rounded-lg border bg-muted/40 px-4 py-3 space-y-0.5">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">使いたい文法</p>
+        <p className="text-sm font-semibold">{grammarName}</p>
+        <p className="text-xs text-muted-foreground">{grammarSummary}</p>
       </div>
 
       {/* Timer + controls */}
       {state === "idle" && (
-        <div className="flex flex-col items-center gap-4 pt-2">
-          <p className="text-sm text-muted-foreground">画像を見ながら英語で説明してください（30秒）</p>
+        <div className="flex flex-col items-center gap-4 pt-1">
+          <p className="text-sm text-center text-muted-foreground leading-relaxed">
+            この文法を使いながら、画像の状況を英語で説明してみましょう
+          </p>
           <Button size="lg" onClick={startRecording} className="gap-2 px-8">
-            🎤 マイクを押して開始
+            🎤 録音スタート
           </Button>
         </div>
       )}

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { GenerateImagesButton } from "./GenerateImagesButton"
 
@@ -53,15 +53,15 @@ export default async function SpeakingPage() {
             const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons
             return (
               <Link key={g.id} href={`/speaking/${g.id}`}>
-                <Card className="cursor-pointer hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 transition-all overflow-hidden group">
-                  <div className="aspect-[4/3] overflow-hidden bg-muted relative">
+                <Card className="cursor-pointer hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 transition-all overflow-hidden group p-0">
+                  <div className="aspect-[4/3] overflow-hidden relative">
                     <img
                       src={g.image_url!}
                       alt={g.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <CardContent className="p-3 space-y-1">
+                  <div className="p-3 space-y-1">
                     {lesson && (
                       <Badge variant="outline" className="text-xs px-1.5 py-0">
                         No.{(lesson as { lesson_no: string }).lesson_no}
@@ -71,7 +71,7 @@ export default async function SpeakingPage() {
                       {g.name}
                     </p>
                     <p className="text-xs text-muted-foreground line-clamp-2">{g.summary}</p>
-                  </CardContent>
+                  </div>
                 </Card>
               </Link>
             )

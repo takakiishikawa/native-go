@@ -238,7 +238,7 @@ export default async function HomePage() {
             unit="分"
           />
           <LineChart
-            title="Speaking スコア推移"
+            title="NC AI Speaking Test スコア"
             series={[{ key: "score", label: "スコア", color: "#10B981" }]}
             data={scoreChartData}
             unit="点"

@@ -376,7 +376,7 @@ function AddModal({
                 disabled={!selectedLessonId || !text.trim()}
                 className="w-full"
               >
-                文法・フレーズを自動抽出
+                AIで教材を解析する
               </Button>
             </div>
           </>

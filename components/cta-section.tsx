@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { BookOpen, MessageSquare, Mic, ChevronRight } from "lucide-react"
 
 interface Props {
@@ -58,24 +57,21 @@ export function CTASection({
         </Link>
       </div>
 
-      {/* スピーキング（準備中） */}
-      <Card className="bg-card border opacity-60">
-        <CardContent className="flex items-center gap-3 p-4">
-          <div className="rounded-lg bg-muted p-2.5 shrink-0">
-            <Mic className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-semibold text-sm text-muted-foreground">スピーキング</p>
-            <p className="text-xs text-muted-foreground mt-0.5">自分の考えを英語で生成する練習</p>
-          </div>
-          <Badge
-            variant="outline"
-            className="ml-auto shrink-0 text-xs text-muted-foreground border-border"
-          >
-            準備中
-          </Badge>
-        </CardContent>
-      </Card>
+      {/* スピーキング */}
+      <Link href="/speaking">
+        <Card className="cursor-pointer bg-card border hover:border-purple-500 dark:hover:border-purple-400 hover:shadow-md transition-all group">
+          <CardContent className="flex items-center gap-3 p-4 border-l-4 border-purple-500 dark:border-purple-400 rounded-l-md">
+            <div className="rounded-lg bg-purple-50 dark:bg-purple-900/30 p-2.5 group-hover:bg-purple-100 dark:group-hover:bg-purple-800/40 transition-colors shrink-0">
+              <Mic className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-sm text-foreground">スピーキング</p>
+              <p className="text-xs text-muted-foreground mt-0.5">画像を見ながら英語で説明する練習</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors" />
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   )
 }
