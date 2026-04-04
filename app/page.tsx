@@ -178,7 +178,7 @@ export default async function HomePage() {
 
       <div>
         <h1 className="text-3xl font-bold">ダッシュボード</h1>
-        <p className="text-muted-foreground mt-1">学習進捗の概要</p>
+        <p className="text-muted-foreground mt-1">学習進捗のまとめ</p>
       </div>
 
       {/* 練習を始める */}
