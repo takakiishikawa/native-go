@@ -4,30 +4,35 @@ export async function GET() {
   const apiKey = process.env.GOOGLE_IMAGEN_API_KEY
   if (!apiKey) return NextResponse.json({ error: "GOOGLE_IMAGEN_API_KEY not configured" }, { status: 500 })
 
-  const models = [
-    "imagen-3.0-fast-generate-001",
-    "imagen-3.0-generate-001",
-    "imagen-4.0-fast-generate-001",
-  ]
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "Generate a small image of a red circle" }] }],
+          generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+        }),
+      }
+    )
+    const text = await res.text()
+    let parsed: unknown
+    try { parsed = JSON.parse(text) } catch { parsed = text.slice(0, 1000) }
 
-  const results: Record<string, unknown> = {}
+    // Check if image data exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const parts = (parsed as any)?.candidates?.[0]?.content?.parts ?? []
+    const hasImage = parts.some((p: { inlineData?: unknown }) => p.inlineData)
 
-  for (const model of models) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateImages?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: "A simple red circle", number_of_images: 1 }),
-        }
-      )
-      const text = await res.text()
-      results[model] = { status: res.status, body: text.slice(0, 500) }
-    } catch (e) {
-      results[model] = { error: String(e) }
-    }
+    return NextResponse.json({
+      status: res.status,
+      hasImage,
+      partsCount: parts.length,
+      partTypes: parts.map((p: Record<string, unknown>) => Object.keys(p).join(",")),
+      error: (parsed as Record<string, unknown>)?.error ?? null,
+    })
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 })
   }
-
-  return NextResponse.json(results)
 }

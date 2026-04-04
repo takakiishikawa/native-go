@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
 
-export const maxDuration = 60 // Extend Vercel function timeout to 60s
+export const maxDuration = 60
 
 export async function POST(request: NextRequest) {
   console.log("[generate-images] リクエスト受信")
@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
   for (const item of items) {
     console.log(`[generate-images] 処理開始: ${item.name} (${item.id})`)
 
-    // Skip if image already exists
     const { data: existing } = await supabase
       .from("grammar")
       .select("image_url")
@@ -44,16 +43,21 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const imagePrompt = `A realistic everyday scene in Ho Chi Minh City that naturally demonstrates the grammar point: ${item.name}. Scene ideas: café, gym, street market, apartment, park. Style: natural photo-realistic, warm lighting, no text in the image. The scene should make someone want to describe it using ${item.name}.`
+      const imagePrompt = `A realistic everyday scene in Ho Chi Minh City that naturally demonstrates the grammar point: ${item.name}. Scene ideas: café, gym, street market, apartment, park. Style: natural photo-realistic, warm lighting, no text in the image.`
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-fast-generate-001:generateImages?key=${apiKey}`
-      console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`)
+      console.log(`[generate-images] Gemini API呼び出し中: ${item.name}`)
 
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: imagePrompt, number_of_images: 1 }),
-      })
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: imagePrompt }] }],
+            generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+          }),
+        }
+      )
 
       console.log(`[generate-images] APIレスポンス status: ${response.status} (${item.name})`)
 
@@ -65,26 +69,29 @@ export async function POST(request: NextRequest) {
       }
 
       const data = await response.json()
-      console.log(`[generate-images] APIレスポンスキー: ${Object.keys(data).join(", ")} (${item.name})`)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parts: any[] = data.candidates?.[0]?.content?.parts ?? []
+      const inlineData = parts.find(p => p.inlineData)?.inlineData
+      const imageBytes = inlineData?.data
 
-      const imageBytes = data.generatedImages?.[0]?.image?.imageBytes
       if (!imageBytes) {
-        console.error(`[generate-images] imageBytes なし。レスポンス構造:`, JSON.stringify(data).slice(0, 500))
-        results.push({ id: item.id, status: "error", reason: `no image data. keys: ${Object.keys(data).join(",")}` })
+        console.error(`[generate-images] imageBytes なし。レスポンス:`, JSON.stringify(data).slice(0, 500))
+        results.push({ id: item.id, status: "error", reason: `no image data. parts: ${JSON.stringify(parts).slice(0, 200)}` })
         continue
       }
-      console.log(`[generate-images] imageBytes 取得成功 (${item.name})`)
+      console.log(`[generate-images] imageBytes 取得成功 (${item.name}), mimeType: ${inlineData.mimeType}`)
 
+      const ext = inlineData.mimeType === "image/png" ? "png" : "jpg"
       const buffer = Buffer.from(imageBytes, "base64")
-      const fileName = `${user.id}/${item.id}.png`
+      const fileName = `${user.id}/${item.id}.${ext}`
 
       console.log(`[generate-images] Supabaseアップロード開始: ${fileName}`)
       const { error: uploadError } = await supabase.storage
         .from("speaking-images")
-        .upload(fileName, buffer, { contentType: "image/png", upsert: true })
+        .upload(fileName, buffer, { contentType: inlineData.mimeType, upsert: true })
 
       if (uploadError) {
-        console.error(`[generate-images] Supabaseアップロードエラー (${item.name}):`, uploadError.message)
+        console.error(`[generate-images] アップロードエラー (${item.name}):`, uploadError.message)
         results.push({ id: item.id, status: "error", reason: uploadError.message })
         continue
       }
