@@ -77,16 +77,16 @@ export default async function HomePage() {
       value: streak,
       unit: "日",
       icon: Flame,
-      color: "text-orange-500",
-      bg: "bg-orange-50",
+      color: "text-neutral-500",
+      bg: "bg-neutral-100",
     },
     {
       title: "今月の練習日数",
       value: monthlyDays,
       unit: "日",
       icon: CalendarDays,
-      color: "text-blue-500",
-      bg: "bg-blue-50",
+      color: "text-neutral-500",
+      bg: "bg-neutral-100",
     },
     {
       title: "文法 Done",
@@ -101,8 +101,8 @@ export default async function HomePage() {
       value: expressionDone,
       unit: "件",
       icon: MessageSquare,
-      color: "text-green-500",
-      bg: "bg-green-50",
+      color: "text-[#10B981]",
+      bg: "bg-[#ECFDF5]",
     },
   ]
 
