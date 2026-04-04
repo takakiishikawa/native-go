@@ -49,20 +49,15 @@ export default async function HomePage() {
   const thisMonday = getWeekMonday(today)
   const thisMondayStr = thisMonday.toISOString().split("T")[0]
 
-  // 8 week buckets: index 0 = oldest, index 7 = this week
-  const weeks = Array.from({ length: 8 }, (_, i) => {
-    const mon = new Date(thisMonday)
-    mon.setDate(mon.getDate() - (7 - i) * 7)
-    const sun = new Date(mon)
-    sun.setDate(sun.getDate() + 6)
-    return {
-      monStr: mon.toISOString().split("T")[0],
-      sunStr: sun.toISOString().split("T")[0],
-      label: `${fmtDate(mon)}〜${fmtDate(sun)}`,
-    }
+  // 7 day buckets for charts (today and 6 days prior)
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(d.getDate() - (6 - i))
+    const str = d.toISOString().split("T")[0]
+    return { str, label: fmtDate(d) }
   })
 
-  const rangeStartStr = weeks[0].monStr
+  const rangeStartStr = days[0].str
 
   const [logsResult, grammarResult, expressionsResult, rangeLogsResult, scoresResult] =
     await Promise.all([
@@ -142,28 +137,21 @@ export default async function HomePage() {
   const todayLog = rangeLogs.find((l) => l.practiced_at === todayStr)
   const hasNativeCampToday = (todayLog?.native_camp_count ?? 0) > 0
 
-  // Chart: weekly repeating breakdown
-  const repeatingChartData: LineChartPoint[] = weeks.map(({ monStr, sunStr, label }) => {
-    let grammar = 0,
-      expression = 0
-    rangeLogs.forEach((l) => {
-      if (l.practiced_at >= monStr && l.practiced_at <= sunStr) {
-        grammar += l.grammar_done_count ?? 0
-        expression += l.expression_done_count ?? 0
-      }
-    })
-    return { label, grammar, expression }
+  // Chart: daily repeating breakdown (7 days)
+  const logMap = new Map(rangeLogs.map((l) => [l.practiced_at, l]))
+  const repeatingChartData: LineChartPoint[] = days.map(({ str, label }) => {
+    const l = logMap.get(str)
+    return {
+      label,
+      grammar: l?.grammar_done_count ?? 0,
+      expression: l?.expression_done_count ?? 0,
+    }
   })
 
-  // Chart: weekly native camp minutes
-  const ncChartData: LineChartPoint[] = weeks.map(({ monStr, sunStr, label }) => {
-    let minutes = 0
-    rangeLogs.forEach((l) => {
-      if (l.practiced_at >= monStr && l.practiced_at <= sunStr) {
-        minutes += (l.native_camp_count ?? 0) * 25
-      }
-    })
-    return { label, minutes }
+  // Chart: daily native camp minutes (7 days)
+  const ncChartData: LineChartPoint[] = days.map(({ str, label }) => {
+    const l = logMap.get(str)
+    return { label, minutes: (l?.native_camp_count ?? 0) * 25 }
   })
 
   // Chart: speaking score per test date
@@ -227,7 +215,7 @@ export default async function HomePage() {
         />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <LineChart
-            title="リピーティング推移（週別）"
+            title="リピーティング推移（直近7日）"
             series={[
               { key: "grammar", label: "文法", color: "#3B82F6" },
               { key: "expression", label: "フレーズ", color: "#10B981" },
@@ -236,7 +224,7 @@ export default async function HomePage() {
             unit="回"
           />
           <LineChart
-            title="Native Camp 学習時間（週別）"
+            title="Native Camp 学習時間（直近7日）"
             series={[{ key: "minutes", label: "学習時間", color: "#8B5CF6" }]}
             data={ncChartData}
             unit="分"
