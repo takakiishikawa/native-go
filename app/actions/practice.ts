@@ -99,7 +99,7 @@ export async function saveGrammar(
     frequency: number
   }[],
   lessonId?: string
-) {
+): Promise<{ id: string; name: string }[]> {
   const supabase = await createClient()
 
   const rows = grammar.map((g) => ({
@@ -113,11 +113,12 @@ export async function saveGrammar(
     lesson_id: lessonId ?? null,
   }))
 
-  const { error } = await supabase.from("grammar").insert(rows)
+  const { data, error } = await supabase.from("grammar").insert(rows).select("id, name")
   if (error) throw error
   revalidatePath("/grammar")
   revalidatePath("/list")
   revalidatePath("/texts")
+  return data ?? []
 }
 
 export async function saveExpressions(

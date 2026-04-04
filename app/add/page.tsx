@@ -127,11 +127,20 @@ export default function AddPage() {
     setSaving(true)
 
     try {
-      if (result.grammar.length > 0) await saveGrammar(result.grammar)
+      let savedGrammars: { id: string; name: string }[] = []
+      if (result.grammar.length > 0) savedGrammars = await saveGrammar(result.grammar)
       if (result.expressions.length > 0) await saveExpressions(result.expressions)
       toast.success(`文法 ${result.grammar.length}件・表現 ${result.expressions.length}件を保存しました`)
       setResult(null)
       setText("")
+      // Fire image generation in background (non-blocking)
+      if (savedGrammars.length > 0) {
+        fetch("/api/generate-images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: savedGrammars }),
+        }).catch(() => {/* ignore errors */})
+      }
     } catch {
       toast.error("保存に失敗しました")
     } finally {

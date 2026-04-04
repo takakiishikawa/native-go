@@ -10,6 +10,18 @@ export interface Grammar {
   last_played_at: string | null
   created_at: string
   lesson_id: string | null
+  image_url: string | null
+}
+
+export interface SpeakingLog {
+  id: string
+  user_id: string
+  grammar_id: string
+  speech_text: string
+  scores: number[]
+  total_score: number
+  comment: string
+  created_at: string
 }
 
 export interface Expression {

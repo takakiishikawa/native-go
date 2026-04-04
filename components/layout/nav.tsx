@@ -15,6 +15,7 @@ import {
   SunIcon,
   MoonIcon,
   ChartBarIcon,
+  MicrophoneIcon,
 } from "@heroicons/react/24/outline"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -25,6 +26,7 @@ import { Dialog } from "@/components/ui/dialog"
 const navItems = [
   { href: "/", label: "ダッシュボード", icon: HomeIcon },
   { href: "/practice", label: "リピーティング", icon: ArrowPathRoundedSquareIcon },
+  { href: "/speaking", label: "スピーキング", icon: MicrophoneIcon },
   { href: "/texts", label: "テキスト", icon: DocumentTextIcon },
   { href: "/list", label: "文法・フレーズ", icon: BookOpenIcon },
   { href: "/report", label: "レポート", icon: ChartBarIcon },
@@ -34,6 +36,9 @@ function isActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/"
   if (href === "/practice") {
     return pathname === "/practice" || pathname.startsWith("/repeating")
+  }
+  if (href === "/speaking") {
+    return pathname === "/speaking" || pathname.startsWith("/speaking/")
   }
   if (href === "/list") {
     return (
