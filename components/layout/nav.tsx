@@ -185,10 +185,10 @@ export function Nav() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 rounded-md pr-3 py-2 text-sm font-medium transition-colors border-l-[3px]",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive(href, pathname)
-                  ? "bg-blue-50 text-blue-700 border-l-blue-600 pl-[9px] dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-400"
-                  : "text-neutral-600 hover:bg-neutral-200/60 hover:text-neutral-800 border-l-transparent pl-3 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200"
+                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                  : "text-neutral-600 hover:bg-neutral-200/60 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200"
               )}
             >
               <Icon className="h-5 w-5 shrink-0" />
@@ -202,7 +202,7 @@ export function Nav() {
           {/* User profile */}
           <button
             onClick={openProfile}
-            className="flex items-center gap-3 rounded-md border-l-[3px] border-l-transparent pl-3 pr-3 py-2 w-full text-left hover:bg-neutral-200/60 dark:hover:bg-neutral-700/50 transition-colors group"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 w-full text-left hover:bg-neutral-200/60 dark:hover:bg-neutral-700/50 transition-colors group"
           >
             <Avatar url={avatarUrl} name={displayName || "U"} size={5} />
             <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate flex-1 min-w-0">
@@ -215,10 +215,10 @@ export function Nav() {
           <Link
             href="/concept"
             className={cn(
-              "flex items-center gap-3 rounded-md pr-3 py-2 text-sm font-medium transition-colors border-l-[3px]",
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               pathname === "/concept"
-                ? "bg-blue-50 text-blue-700 border-l-blue-600 pl-[9px] dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-400"
-                : "text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 border-l-transparent pl-3 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200"
+                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                : "text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200"
             )}
           >
             <LightBulbIcon className="h-5 w-5 shrink-0" />
@@ -228,7 +228,7 @@ export function Nav() {
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-3 rounded-md border-l-[3px] border-l-transparent pl-3 pr-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
           >
             {isDark ? (
               <MoonIcon className="h-5 w-5 shrink-0" />
@@ -241,7 +241,7 @@ export function Nav() {
           {/* Logout */}
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-3 rounded-md border-l-[3px] border-l-transparent pl-3 pr-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700/50 dark:hover:text-neutral-200 transition-colors"
           >
             <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0" />
             ログアウト

@@ -129,15 +129,12 @@ export default async function HomePage() {
   const expressionsInProgress = expressions.filter((e) => e.play_count > 0 && e.play_count < 10).length
   const expressionDone = expressions.filter((e) => e.play_count >= 10).length
 
-  // This week's metrics
-  const thisWeekLogs = rangeLogs.filter((l) => l.practiced_at >= thisMondayStr)
-  const weeklyGrammar = thisWeekLogs.reduce((s, l) => s + (l.grammar_done_count ?? 0), 0)
-  const weeklyExpression = thisWeekLogs.reduce((s, l) => s + (l.expression_done_count ?? 0), 0)
+  // Last 7 days metrics (rangeLogs already covers rangeStartStr–todayStr)
+  const weeklyGrammar = rangeLogs.reduce((s, l) => s + (l.grammar_done_count ?? 0), 0)
+  const weeklyExpression = rangeLogs.reduce((s, l) => s + (l.expression_done_count ?? 0), 0)
   const weeklyRepeating = weeklyGrammar + weeklyExpression
-  const weeklySpeaking = thisWeekLogs.reduce((s, l) => s + (l.speaking_count ?? 0), 0)
-  const weeklyNativeCampCount = [...ncByDate.entries()]
-    .filter(([date]) => date >= thisMondayStr)
-    .reduce((s, [, count]) => s + count, 0)
+  const weeklySpeaking = rangeLogs.reduce((s, l) => s + (l.speaking_count ?? 0), 0)
+  const weeklyNativeCampCount = [...ncByDate.values()].reduce((s, count) => s + count, 0)
 
   // Speaking score metrics
   const sortedScores = [...scores].sort((a, b) => b.tested_at.localeCompare(a.tested_at))

@@ -161,8 +161,8 @@ export function PracticeClient({
 
   return (
     <div className="space-y-5">
-      {/* Image - wider */}
-      <div className="rounded-xl overflow-hidden aspect-[4/3] max-w-2xl mx-auto">
+      {/* Image - full bleed, breaks out of p-6 layout padding */}
+      <div className="-mx-6 -mt-6 overflow-hidden aspect-[16/9]">
         <img src={imageUrl} alt={grammarName} className="w-full h-full object-cover" />
       </div>
 
