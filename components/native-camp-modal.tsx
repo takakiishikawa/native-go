@@ -50,13 +50,13 @@ export function NativeCampModal({
               value={count}
               onChange={(e) => setCount(Math.max(0, parseInt(e.target.value) || 0))}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {count === 0 ? "お休み" : `${minutes}分`}
             </p>
           </div>
         </div>
 
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="flex gap-3">
           <Button variant="outline" onClick={onClose} className="flex-1">

@@ -28,7 +28,7 @@ export default function PracticePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               文法パターンをリピーティングで練習します
             </p>
           </CardContent>
@@ -47,7 +47,7 @@ export default function PracticePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               フレーズを会話形式で練習します
             </p>
           </CardContent>

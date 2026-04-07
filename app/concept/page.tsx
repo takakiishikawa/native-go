@@ -53,7 +53,7 @@ function ConceptTable({
 function FlowStep({ children, isLast = false }: { children: React.ReactNode; isLast?: boolean }) {
   return (
     <div className="flex flex-col items-start">
-      <div className="rounded-lg border bg-white dark:bg-card px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300 w-full">
+      <div className="rounded-lg border bg-white dark:bg-card px-4 py-3 text-base text-neutral-700 dark:text-neutral-300 w-full">
         {children}
       </div>
       {!isLast && (
@@ -79,7 +79,7 @@ export default function ConceptPage() {
       {/* プロダクトコアバリュー */}
       <Section title="プロダクトコアバリュー">
         <div className="rounded-lg border bg-white dark:bg-card px-5 py-4">
-          <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
+          <p className="text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
             Native Camp のレッスンで学んだ英語を、使える状態として定着させる。
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function ConceptPage() {
       {/* 結果指標 */}
       <Section title="結果指標">
         <div className="rounded-lg border bg-white dark:bg-card px-5 py-4">
-          <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
+          <p className="text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
             Native Camp の AI Speaking Test の点数
           </p>
         </div>

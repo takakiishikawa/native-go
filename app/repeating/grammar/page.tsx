@@ -212,7 +212,7 @@ export default function GrammarRepeatingPage() {
           <CardContent>
             <p className="text-sm font-medium text-muted-foreground mb-3">会話</p>
             <ConversationLines lines={examples} currentLine={currentLine} />
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="text-base text-muted-foreground mt-4">
               場面: {current?.usage_scene}
             </p>
           </CardContent>

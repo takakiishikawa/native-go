@@ -70,15 +70,15 @@ function GrammarPreview({ item }: { item: ExtractedGrammar }) {
     <Card className="border-indigo-200">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm text-indigo-700">{item.name}</CardTitle>
+          <CardTitle className="text-base text-indigo-700">{item.name}</CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-xs">文法</Badge>
+            <Badge variant="secondary">文法</Badge>
             <StarRating value={item.frequency} />
           </div>
         </div>
-        <CardDescription className="text-xs">{item.summary}</CardDescription>
+        <CardDescription className="text-sm">{item.summary}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-1.5 text-xs">
+      <CardContent className="space-y-1.5 text-sm">
         {item.detail && <p className="text-muted-foreground">{item.detail}</p>}
         <ul className="space-y-1">
           {item.examples.map((ex, i) => (
@@ -95,19 +95,19 @@ function ExpressionPreview({ item }: { item: ExtractedExpression }) {
     <Card className="border-teal-200">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm text-teal-700">{item.expression}</CardTitle>
+          <CardTitle className="text-base text-teal-700">{item.expression}</CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">{item.category}</Badge>
+            <Badge variant="outline">{item.category}</Badge>
             <StarRating value={item.frequency} />
           </div>
         </div>
-        <CardDescription className="text-xs">{item.meaning}</CardDescription>
+        <CardDescription className="text-sm">{item.meaning}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-1">
         {item.conversation.map((line, i) => (
           <p
             key={i}
-            className={`text-xs pl-2 ${
+            className={`text-sm pl-2 py-0.5 ${
               line.startsWith("A:")
                 ? "text-blue-700 border-l-2 border-blue-300"
                 : "text-amber-700 border-l-2 border-amber-300"

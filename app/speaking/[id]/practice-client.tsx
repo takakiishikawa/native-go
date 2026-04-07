@@ -170,8 +170,8 @@ export function PracticeClient({
         {/* Grammar hint */}
         <div className="rounded-lg border bg-muted/40 px-4 py-3 space-y-0.5">
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">使いたい文法</p>
-          <p className="text-base font-semibold">{grammarName}</p>
-          <p className="text-sm text-muted-foreground">{grammarSummary}</p>
+          <p className="text-lg font-semibold">{grammarName}</p>
+          <p className="text-base text-muted-foreground">{grammarSummary}</p>
         </div>
 
         {/* Timer + controls */}

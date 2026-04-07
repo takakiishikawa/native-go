@@ -61,13 +61,13 @@ export default async function SpeakingPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <div className="p-3 space-y-1">
+                  <div className="p-4 space-y-1.5">
                     {lesson && (
-                      <Badge variant="outline" className="text-xs px-1.5 py-0">
+                      <Badge variant="outline">
                         No.{(lesson as { lesson_no: string }).lesson_no}
                       </Badge>
                     )}
-                    <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2">
+                    <p className="font-semibold text-base text-foreground leading-snug line-clamp-2">
                       {g.name}
                     </p>
                     <p className="text-sm text-muted-foreground line-clamp-2">{g.summary}</p>

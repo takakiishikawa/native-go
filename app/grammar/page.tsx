@@ -103,33 +103,33 @@ export default function GrammarPage() {
         <Dialog open={!!selected} onClose={() => setSelected(null)} title={selected.name}>
           <div className="space-y-4">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">概要</p>
-              <p className="text-sm whitespace-pre-line">{selected.summary}</p>
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">概要</p>
+              <p className="text-base whitespace-pre-line">{selected.summary}</p>
             </div>
             {selected.detail && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">詳細解説</p>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{selected.detail}</p>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">詳細解説</p>
+                <p className="text-base leading-relaxed whitespace-pre-wrap">{selected.detail}</p>
               </div>
             )}
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">例文</p>
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">例文</p>
               <ul className="space-y-2">
                 {selected.examples.split("\n").filter(Boolean).map((ex, i) => (
-                  <li key={i} className="rounded-lg bg-muted px-3 py-2 text-sm">{ex}</li>
+                  <li key={i} className="rounded-lg bg-muted px-3 py-2 text-base">{ex}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">使用場面</p>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{selected.usage_scene}</p>
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">使用場面</p>
+              <p className="text-base text-muted-foreground whitespace-pre-line">{selected.usage_scene}</p>
             </div>
             <div className="flex items-center gap-4 pt-2 border-t">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">頻度</span>
+                <span className="text-sm text-muted-foreground">頻度</span>
                 <StarRating value={selected.frequency} />
               </div>
-              <span className="text-xs text-muted-foreground">練習回数: {selected.play_count} / 10</span>
+              <span className="text-sm text-muted-foreground">練習回数: {selected.play_count} / 10</span>
               <Badge className={selected.play_count >= 10 ? "border-transparent bg-[#ECFDF5] text-[#10B981]" : "border-transparent bg-[#FFFBEB] text-[#F59E0B]"}>
                 {selected.play_count >= 10 ? "習得済み" : "練習中"}
               </Badge>

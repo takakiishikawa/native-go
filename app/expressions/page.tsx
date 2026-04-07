@@ -106,12 +106,12 @@ export default function ExpressionsPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Badge variant="outline">{selected.category}</Badge>
-              <span className="text-sm text-muted-foreground whitespace-pre-line">{selected.meaning}</span>
+              <span className="text-base text-muted-foreground whitespace-pre-line">{selected.meaning}</span>
             </div>
             {selected.usage_scene && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">使用場面</p>
-                <p className="text-sm text-muted-foreground">{selected.usage_scene}</p>
+                <p className="text-base text-muted-foreground">{selected.usage_scene}</p>
               </div>
             )}
             <div>
@@ -122,7 +122,7 @@ export default function ExpressionsPage() {
                   return (
                     <div
                       key={i}
-                      className={`rounded-lg px-3 py-2 text-sm ${
+                      className={`rounded-lg px-3 py-2.5 text-base ${
                         isA ? "bg-blue-50 text-blue-900" : "bg-amber-50 text-amber-900"
                       }`}
                     >
@@ -134,10 +134,10 @@ export default function ExpressionsPage() {
             </div>
             <div className="flex items-center gap-4 pt-2 border-t">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">頻度</span>
+                <span className="text-sm text-muted-foreground">頻度</span>
                 <StarRating value={selected.frequency} />
               </div>
-              <span className="text-xs text-muted-foreground">練習回数: {selected.play_count} / 10</span>
+              <span className="text-sm text-muted-foreground">練習回数: {selected.play_count} / 10</span>
               <Badge className={selected.play_count >= 10 ? "border-transparent bg-[#ECFDF5] text-[#10B981]" : "border-transparent bg-[#FFFBEB] text-[#F59E0B]"}>
                 {selected.play_count >= 10 ? "習得済み" : "練習中"}
               </Badge>

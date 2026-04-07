@@ -94,7 +94,7 @@ function ResultContent() {
       <div>
         <h1 className="text-2xl font-bold">評価結果</h1>
         {data.grammar && (
-          <p className="text-sm text-muted-foreground mt-0.5">{data.grammar.name}</p>
+          <p className="text-base text-muted-foreground mt-0.5">{data.grammar.name}</p>
         )}
       </div>
 
@@ -116,9 +116,9 @@ function ResultContent() {
         <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">内訳</p>
         {SCORE_LABELS.map((label, i) => (
           <div key={i} className="flex items-center justify-between gap-3">
-            <span className="text-sm text-muted-foreground flex-1">{label}</span>
+            <span className="text-base text-muted-foreground flex-1">{label}</span>
             <StarRow score={data.scores[i] ?? 0} />
-            <span className="text-sm font-medium w-6 text-right">{data.scores[i] ?? 0}</span>
+            <span className="text-base font-medium w-6 text-right">{data.scores[i] ?? 0}</span>
           </div>
         ))}
       </div>
@@ -127,7 +127,7 @@ function ResultContent() {
       {data.comment && (
         <div className="rounded-xl border bg-card p-5">
           <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide mb-2">AIコメント</p>
-          <p className="text-sm text-foreground leading-relaxed">{data.comment}</p>
+          <p className="text-base text-foreground leading-relaxed">{data.comment}</p>
         </div>
       )}
 

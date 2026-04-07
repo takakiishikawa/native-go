@@ -28,7 +28,7 @@ export function CTASection({
                 <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-sm text-foreground">文法リピーティング</p>
+                <p className="font-semibold text-base text-foreground">文法リピーティング</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   練習中 {grammarsInProgress} / 完了 {grammarDone}
                 </p>
@@ -46,7 +46,7 @@ export function CTASection({
                 <MessageSquare className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-sm text-foreground">フレーズリピーティング</p>
+                <p className="font-semibold text-base text-foreground">フレーズリピーティング</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   練習中 {expressionsInProgress} / 完了 {expressionDone}
                 </p>
@@ -65,7 +65,7 @@ export function CTASection({
               <Mic className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-sm text-foreground">スピーキング</p>
+              <p className="font-semibold text-base text-foreground">スピーキング</p>
               <p className="text-sm text-muted-foreground mt-0.5">画像を見ながら英語で説明する練習</p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
