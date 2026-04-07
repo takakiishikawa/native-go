@@ -22,16 +22,16 @@ interface Props {
   initialScores: SpeakingScore[]
 }
 
-function DiffBadge({ diff }: { diff: number | null }) {
+function DiffBadge({ diff, unit = "" }: { diff: number | null; unit?: string }) {
   if (diff === null) return null
   if (diff === 0) return (
-    <span className="text-sm text-muted-foreground">前7日比 ±0</span>
+    <span className="text-sm text-muted-foreground">前7日比 ±0{unit}</span>
   )
   const positive = diff > 0
   return (
     <span className={`flex items-center gap-0.5 text-sm font-medium ${positive ? "text-[#16A34A]" : "text-destructive"}`}>
       {positive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-      前7日比 {positive ? "+" : ""}{diff}
+      前7日比 {positive ? "+" : ""}{diff}{unit}
     </span>
   )
 }
@@ -112,14 +112,14 @@ export function MetricsSection({
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold">{weeklyNativeCampCount}</span>
-              <span className="text-base text-muted-foreground">回</span>
+              <span className="text-4xl font-bold">{weeklyNativeCampCount * 25}</span>
+              <span className="text-base text-muted-foreground">分</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {weeklyNativeCampCount * 25}分
+              {weeklyNativeCampCount}回
             </p>
             <div className="mt-1.5">
-              <DiffBadge diff={ncCountDiff} />
+              <DiffBadge diff={ncCountDiff !== null ? ncCountDiff * 25 : null} unit="分" />
             </div>
           </CardContent>
         </Card>
@@ -129,7 +129,7 @@ export function MetricsSection({
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Speaking スコア
+                NC AI Speaking Test
               </CardTitle>
               <button
                 onClick={() => setScoreOpen(true)}

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
 import { incrementGrammarPlayCount } from "@/app/actions/practice"
 import type { Grammar } from "@/lib/types"
-import { Play, Square, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react"
+import { Play, Square, ChevronLeft, ChevronRight, Star, CheckCircle2, Loader2 } from "lucide-react"
 import { ConversationLines } from "@/components/conversation-lines"
 
 function StarRating({ value }: { value: number }) {
@@ -35,6 +35,8 @@ export default function GrammarRepeatingPage() {
   const [rate, setRate] = useState(1.0)
   const [loading, setLoading] = useState(true)
   const [showComplete, setShowComplete] = useState(false)
+  const [aiComment, setAiComment] = useState("")
+  const [commentLoading, setCommentLoading] = useState(false)
   const cancelRef = useRef(false)
   const userCancelledRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -57,11 +59,22 @@ export default function GrammarRepeatingPage() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!showComplete) return
-    const timer = setTimeout(() => router.push("/"), 3000)
-    return () => clearTimeout(timer)
-  }, [showComplete, router])
+  const fetchComment = useCallback(async () => {
+    setCommentLoading(true)
+    try {
+      const res = await fetch("/api/repeating-comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "grammar" }),
+      })
+      const data = await res.json()
+      if (data.comment) setAiComment(data.comment)
+    } catch {
+      // silently fail
+    } finally {
+      setCommentLoading(false)
+    }
+  }, [])
 
   const stopSpeech = useCallback(() => {
     cancelRef.current = true
@@ -154,8 +167,9 @@ export default function GrammarRepeatingPage() {
     setCurrentLine(-1)
     if (!userCancelledRef.current) {
       setShowComplete(true)
+      fetchComment()
     }
-  }, [items, index, rate, speakLine])
+  }, [items, index, rate, speakLine, fetchComment])
 
   if (loading) {
     return (
@@ -272,6 +286,13 @@ export default function GrammarRepeatingPage() {
             </div>
             <h2 className="text-2xl font-bold">お疲れ様でした！</h2>
             <p className="text-muted-foreground">文法リピーティング 1周完了</p>
+            {commentLoading ? (
+              <div className="flex justify-center py-2">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : aiComment ? (
+              <p className="text-sm text-foreground leading-relaxed">{aiComment}</p>
+            ) : null}
             <Button onClick={() => router.push("/")} className="w-full">
               トップへ戻る
             </Button>
