@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
 import { incrementExpressionPlayCount } from "@/app/actions/practice"
 import type { Expression } from "@/lib/types"
-import { Play, Square, ChevronLeft, ChevronRight, Star, CheckCircle2, Loader2 } from "lucide-react"
+import { Play, Square, ChevronLeft, ChevronRight, Star, CheckCircle2, Loader2, ArrowRight } from "lucide-react"
 import { ConversationLines } from "@/components/conversation-lines"
 
 function StarRating({ value }: { value: number }) {
@@ -25,6 +25,35 @@ function StarRating({ value }: { value: number }) {
   )
 }
 
+type TodayStatus = { grammar: boolean; expression: boolean; speaking: boolean }
+
+function CompletionNavButton({
+  label,
+  done,
+  onClick,
+}: {
+  label: string
+  done: boolean
+  onClick: () => void
+}) {
+  return (
+    <Button
+      variant={done ? "outline" : "default"}
+      onClick={onClick}
+      className="w-full justify-between"
+    >
+      <span className="flex items-center gap-2">
+        {done
+          ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+          : <ArrowRight className="h-4 w-4 shrink-0" />
+        }
+        {label}
+      </span>
+      {done && <span className="text-xs text-muted-foreground ml-2 shrink-0">今日完了済み</span>}
+    </Button>
+  )
+}
+
 export default function ExpressionRepeatingPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -37,6 +66,7 @@ export default function ExpressionRepeatingPage() {
   const [showComplete, setShowComplete] = useState(false)
   const [aiComment, setAiComment] = useState("")
   const [commentLoading, setCommentLoading] = useState(false)
+  const [todayStatus, setTodayStatus] = useState<TodayStatus>({ grammar: false, expression: true, speaking: false })
   const cancelRef = useRef(false)
   const userCancelledRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -58,6 +88,24 @@ export default function ExpressionRepeatingPage() {
       audioRef.current?.pause()
     }
   }, [])
+
+  // Fetch today's completion status when the modal appears
+  useEffect(() => {
+    if (!showComplete) return
+    const today = new Date().toISOString().split("T")[0]
+    supabase
+      .from("practice_logs")
+      .select("grammar_done_count, expression_done_count, speaking_count")
+      .eq("practiced_at", today)
+      .maybeSingle()
+      .then(({ data }) => {
+        setTodayStatus({
+          grammar: (data?.grammar_done_count ?? 0) > 0,
+          expression: true, // just completed
+          speaking: (data?.speaking_count ?? 0) > 0,
+        })
+      })
+  }, [showComplete])
 
   const fetchComment = useCallback(async () => {
     setCommentLoading(true)
@@ -282,9 +330,9 @@ export default function ExpressionRepeatingPage() {
       </div>
 
       {showComplete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 text-center space-y-4 max-w-sm mx-4 shadow-xl">
-            <div className="rounded-full bg-green-100 p-4 w-20 h-20 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border rounded-2xl p-8 text-center space-y-4 w-full max-w-sm shadow-xl">
+            <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-4 w-20 h-20 flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold">お疲れ様でした！</h2>
@@ -294,11 +342,29 @@ export default function ExpressionRepeatingPage() {
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : aiComment ? (
-              <p className="text-sm text-foreground leading-relaxed">{aiComment}</p>
+              <p className="text-sm text-foreground leading-relaxed text-left">{aiComment}</p>
             ) : null}
-            <Button onClick={() => router.push("/")} className="w-full">
-              トップへ戻る
-            </Button>
+
+            <div className="space-y-2 pt-2">
+              <CompletionNavButton
+                label="文法リピーティング"
+                done={todayStatus.grammar}
+                onClick={() => router.push("/repeating/grammar")}
+              />
+              <CompletionNavButton
+                label="フレーズリピーティング"
+                done={todayStatus.expression}
+                onClick={() => { setShowComplete(false); router.push("/repeating/expression") }}
+              />
+              <CompletionNavButton
+                label="スピーキング"
+                done={todayStatus.speaking}
+                onClick={() => router.push("/speaking")}
+              />
+              <Button variant="ghost" onClick={() => router.push("/")} className="w-full text-muted-foreground">
+                ダッシュボードに戻る
+              </Button>
+            </div>
           </div>
         </div>
       )}
