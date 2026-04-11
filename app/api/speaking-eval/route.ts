@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
   const { grammarId, grammarName, speechText } = await request.json()
 
-  const prompt = `あなたは英会話コーチです。学習者の英語スピーチを以下の5観点で採点し、英会話力を伸ばすための励ましコメントを日本語で作成してください。
+  const prompt = `あなたは英会話コーチです。学習者の英語スピーチを5観点で採点し、日本語のフィードバックコメントを作成してください。
 
 ## 採点観点（各5点満点）
 1. 画像の描写度（画像の内容をどれだけ説明できているか）
@@ -22,27 +22,28 @@ export async function POST(request: NextRequest) {
 4. 流暢さ・話した量（十分な量を詰まらずに話せたか）
 5. 全体の自然さ（ネイティブに伝わる英語か）
 
-## コメントの書き方（重要）
-目的は厳しく採点することではなく、学習者の英会話力を向上させることです。以下の構成で100〜150文字の日本語コメントを作成してください。
+## コメントのフォーマット（厳守）
+comment フィールドを以下の3セクション形式で記述してください。
+各セクションは1〜2文、簡潔に。改行で区切る。
 
-1. 【グッドポイント】スピーチで使えていた自然な表現や良い点を1つ具体的に挙げて褒める
-   例：「"I can see that..." という表現が自然でグッドです！」
-2. 【アップグレード提案】より自然・豊かになる代替表現や追加フレーズを1つ具体例で提案する
-   例：「"looks like" の代わりに "seems to be" を使うとよりフォーマルで自然になります」
-3. 【文法使用について】「${grammarName}」の使い方に対して具体的なポジティブフィードバック
+[GOOD]（使えていた自然な表現や良い点を具体的に。例："I can see that..." が自然でよかった）
+[UPGRADE]（より良くなる代替表現を具体例で。例："looks like" より "seems to be" の方が自然）
+[GRAMMAR]（「${grammarName}」の使い方への簡潔なフィードバック）
 
-スピーチが空・短い場合は「次回はぜひ声に出してみましょう！」のように励ます。
+## トーンのルール
+- 冷静・建設的・前向きなトーンで統一する
+- 「ぜひ挑戦してください」「素晴らしい」などの過剰に熱い表現は使わない
+- スピーチが空または極端に短い場合は[GOOD]に「声に出す練習を続けていきましょう」と書く
 
-## 返答形式
-以下のJSON形式のみで返してください（他のテキストは不要）：
-{"scores":[4,3,4,3,5],"total":4,"comment":"..."}
+## 返答形式（他のテキストは不要）
+{"scores":[4,3,4,3,5],"total":4,"comment":"[GOOD]...\n[UPGRADE]...\n[GRAMMAR]..."}
 
 文法名：${grammarName}
 スピーチ：${speechText || "(no speech detected)"}`
 
   const message = await anthropic.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 512,
+    max_tokens: 600,
     messages: [{ role: "user", content: prompt }],
   })
 

@@ -7,12 +7,27 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Star } from "lucide-react"
 
 const SCORE_LABELS = [
-  "画像の描写度",
-  "推奨文法の使用",
-  "表現の豊かさ",
-  "流暢さ・話した量",
-  "全体の自然さ",
+  { label: "画像の描写度",    icon: "🖼️" },
+  { label: "推奨文法の使用",  icon: "📝" },
+  { label: "表現の豊かさ",    icon: "✨" },
+  { label: "流暢さ・話した量", icon: "🎙️" },
+  { label: "全体の自然さ",    icon: "🌐" },
 ]
+
+// Parse structured comment: [GOOD]...\n[UPGRADE]...\n[GRAMMAR]...
+function parseComment(raw: string) {
+  const goodMatch = raw.match(/\[GOOD\]([\s\S]*?)(?=\[UPGRADE\]|\[GRAMMAR\]|$)/)
+  const upgradeMatch = raw.match(/\[UPGRADE\]([\s\S]*?)(?=\[GRAMMAR\]|$)/)
+  const grammarMatch = raw.match(/\[GRAMMAR\]([\s\S]*)$/)
+  if (goodMatch && upgradeMatch && grammarMatch) {
+    return {
+      goodPoint: goodMatch[1].trim(),
+      upgrade: upgradeMatch[1].trim(),
+      grammarNote: grammarMatch[1].trim(),
+    }
+  }
+  return null
+}
 
 function StarRow({ score }: { score: number }) {
   return (
@@ -57,11 +72,12 @@ function ResultContent() {
   const grammarId = params.id as string
   const [data, setData] = useState<LogData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [nextLoading, setNextLoading] = useState(false)
+  const supabase = createClient()
 
   useEffect(() => {
     if (!logId) { router.replace("/speaking"); return }
 
-    const supabase = createClient()
     supabase
       .from("speaking_logs")
       .select("scores, total_score, comment, grammar:grammar_id(name, summary, image_url)")
@@ -79,6 +95,25 @@ function ResultContent() {
       })
   }, [logId, router])
 
+  async function goToNext() {
+    setNextLoading(true)
+    const { data: next } = await supabase
+      .from("grammar")
+      .select("id")
+      .not("image_url", "is", null)
+      .or("play_count.is.null,play_count.lt.10")
+      .neq("id", grammarId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (next?.id) {
+      router.push(`/speaking/${next.id}`)
+    } else {
+      router.push("/speaking")
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -89,8 +124,10 @@ function ResultContent() {
 
   if (!data) return null
 
+  const sections = parseComment(data.comment)
+
   return (
-    <div className="max-w-lg mx-auto space-y-6">
+    <div className="max-w-lg mx-auto space-y-5">
       <div>
         <h1 className="text-2xl font-bold">評価結果</h1>
         {data.grammar && (
@@ -101,7 +138,7 @@ function ResultContent() {
       {/* Thumbnail */}
       {data.grammar?.image_url && (
         <div className="rounded-xl overflow-hidden aspect-[4/3] bg-muted w-40">
-          <img src={data.grammar.image_url} alt="" className="w-full h-full object-cover" />
+          <img src={data.grammar.image_url} alt="" className="w-full h-full object-contain" />
         </div>
       )}
 
@@ -114,20 +151,38 @@ function ResultContent() {
       {/* Score breakdown */}
       <div className="rounded-xl border bg-card p-5 space-y-3">
         <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">内訳</p>
-        {SCORE_LABELS.map((label, i) => (
-          <div key={i} className="flex items-center justify-between gap-3">
-            <span className="text-base text-muted-foreground flex-1">{label}</span>
+        {SCORE_LABELS.map(({ label, icon }, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <span className="text-base w-5 text-center">{icon}</span>
+            <span className="text-sm text-muted-foreground flex-1">{label}</span>
             <StarRow score={data.scores[i] ?? 0} />
-            <span className="text-base font-medium w-6 text-right">{data.scores[i] ?? 0}</span>
+            <span className="text-sm font-medium w-4 text-right tabular-nums">{data.scores[i] ?? 0}</span>
           </div>
         ))}
       </div>
 
       {/* Comment */}
       {data.comment && (
-        <div className="rounded-xl border bg-card p-5">
-          <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide mb-2">AIコメント</p>
-          <p className="text-base text-foreground leading-relaxed">{data.comment}</p>
+        <div className="rounded-xl border bg-card p-5 space-y-3">
+          <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">コメント</p>
+          {sections ? (
+            <div className="space-y-3 text-sm leading-relaxed">
+              <div>
+                <p className="font-medium text-green-600 dark:text-green-400 mb-0.5">✓ グッドポイント</p>
+                <p className="text-foreground">{sections.goodPoint}</p>
+              </div>
+              <div>
+                <p className="font-medium text-blue-600 dark:text-blue-400 mb-0.5">↑ アップグレード提案</p>
+                <p className="text-foreground">{sections.upgrade}</p>
+              </div>
+              <div>
+                <p className="font-medium text-muted-foreground mb-0.5">◎ 文法について</p>
+                <p className="text-foreground">{sections.grammarNote}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-foreground leading-relaxed">{data.comment}</p>
+          )}
         </div>
       )}
 
@@ -136,8 +191,9 @@ function ResultContent() {
         <Button variant="outline" onClick={() => router.push("/speaking")} className="flex-1">
           一覧に戻る
         </Button>
-        <Button onClick={() => router.push(`/speaking/${grammarId}`)} className="flex-1">
-          もう一度やる
+        <Button onClick={goToNext} disabled={nextLoading} className="flex-1">
+          {nextLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          次へ進む
         </Button>
       </div>
     </div>

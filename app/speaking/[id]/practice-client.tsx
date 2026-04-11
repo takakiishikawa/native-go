@@ -175,35 +175,31 @@ export function PracticeClient({
   }
 
   return (
-    <div className="space-y-3">
-      {/* Image – contain to show the full image; 45vh cap keeps controls visible without scrolling */}
-      <div className="-mx-6 -mt-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[45vh]">
+    <div className="space-y-2">
+      {/* Header: grammar name + progress */}
+      <div className="-mt-2 flex items-center justify-between gap-2">
+        <h1 className="font-semibold text-base line-clamp-1">{grammarName}</h1>
+        <span className="text-xs font-medium text-muted-foreground tabular-nums shrink-0">
+          {completedCount} / {TOTAL_REQUIRED} 回
+        </span>
+      </div>
+
+      {/* Image – full width, contain to show the full image, 40vh cap */}
+      <div className="-mx-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[40vh]">
         <img
           src={imageUrl}
           alt={grammarName}
-          className="w-full max-h-[45vh] object-contain"
+          className="w-full max-h-[40vh] object-contain"
         />
       </div>
 
       <div className="max-w-lg mx-auto space-y-3">
-        {/* Grammar hint + progress */}
-        <div className="rounded-lg border bg-muted/40 px-4 py-3 space-y-0.5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">使いたい文法</p>
-            <span className="text-xs font-medium text-muted-foreground tabular-nums">
-              {completedCount} / {TOTAL_REQUIRED} 回完了
-            </span>
-          </div>
-          <p className="text-base font-semibold">{grammarName}</p>
-          <p className="text-sm text-muted-foreground">{grammarSummary}</p>
-        </div>
+        {/* Grammar summary */}
+        <p className="text-sm text-muted-foreground leading-relaxed">{grammarSummary}</p>
 
         {/* Timer + controls */}
         {state === "idle" && (
           <div className="flex flex-col items-center gap-3">
-            <p className="text-sm text-center text-muted-foreground leading-relaxed">
-              この文法を使いながら、画像の状況を英語で説明してみましょう
-            </p>
             <Button size="lg" onClick={startRecording} className="gap-2 px-8">
               🎤 録音スタート
             </Button>
