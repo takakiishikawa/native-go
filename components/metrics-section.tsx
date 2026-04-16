@@ -14,9 +14,11 @@ interface Props {
   weeklyExpression: number
   weeklySpeaking: number
   weeklyNativeCampCount: number
+  weeklyShadowing: number
   repeatingDiff: number | null
   speakingDiff: number | null
   ncCountDiff: number | null
+  shadowingDiff: number | null
   latestScore: number | null
   scoreDiff: number | null
   initialScores: SpeakingScore[]
@@ -42,9 +44,11 @@ export function MetricsSection({
   weeklyExpression,
   weeklySpeaking,
   weeklyNativeCampCount,
+  weeklyShadowing,
   repeatingDiff,
   speakingDiff,
   ncCountDiff,
+  shadowingDiff,
   latestScore,
   scoreDiff,
   initialScores,
@@ -54,7 +58,7 @@ export function MetricsSection({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {/* リピーティング */}
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
@@ -120,6 +124,24 @@ export function MetricsSection({
             </p>
             <div className="mt-1.5">
               <DiffBadge diff={ncCountDiff !== null ? ncCountDiff * 25 : null} unit="分" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* シャドーイング */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              シャドーイング（7日間）
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-bold">{weeklyShadowing}</span>
+              <span className="text-base text-muted-foreground">本</span>
+            </div>
+            <div className="mt-1.5">
+              <DiffBadge diff={shadowingDiff} />
             </div>
           </CardContent>
         </Card>

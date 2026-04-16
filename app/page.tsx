@@ -50,7 +50,7 @@ export default async function HomePage() {
   prev14Start.setDate(prev14Start.getDate() - 13)
   const prev14StartStr = prev14Start.toISOString().split("T")[0]
 
-  const [logsResult, grammarResult, expressionsResult, allRangeLogsResult, scoresResult, allNcLogsResult, speakingLogsResult] =
+  const [logsResult, grammarResult, expressionsResult, allRangeLogsResult, scoresResult, allNcLogsResult, speakingLogsResult, allYoutubeLogsResult] =
     await Promise.all([
       supabase.from("practice_logs").select("practiced_at"),
       supabase.from("grammar").select("id, play_count, image_url"),
@@ -71,6 +71,11 @@ export default async function HomePage() {
         .gte("logged_at", prev14StartStr)
         .lte("logged_at", todayStr),
       supabase.from("speaking_logs").select("grammar_id"),
+      supabase
+        .from("youtube_logs")
+        .select("completed_at")
+        .gte("completed_at", new Date(new Date(prev14Start).setHours(0, 0, 0, 0)).toISOString())
+        .lte("completed_at", new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString()),
     ])
 
   const allLogs = logsResult.data ?? []
@@ -158,6 +163,19 @@ export default async function HomePage() {
   const latestScore = sortedScores.length > 0 ? sortedScores[0].score : null
   const scoreDiff = sortedScores.length >= 2 ? sortedScores[0].score - sortedScores[1].score : null
 
+  // Youtube logs: split into curr / prev 7 days
+  const allYoutubeLogs = allYoutubeLogsResult.data ?? []
+  const ytByDate = new Map<string, number>()
+  const prevYtByDate = new Map<string, number>()
+  for (const yt of allYoutubeLogs) {
+    const dateStr = yt.completed_at.slice(0, 10)
+    const target = dateStr >= rangeStartStr ? ytByDate : prevYtByDate
+    target.set(dateStr, (target.get(dateStr) ?? 0) + 1)
+  }
+  const weeklyShadowing = [...ytByDate.values()].reduce((s, c) => s + c, 0)
+  const prevWeeklyShadowing = [...prevYtByDate.values()].reduce((s, c) => s + c, 0)
+  const shadowingDiff = hasPrevData ? weeklyShadowing - prevWeeklyShadowing : null
+
   // Today's native camp check for auto-modal
   const hasNativeCampToday = (ncByDate.get(todayStr) ?? 0) > 0
 
@@ -182,6 +200,11 @@ export default async function HomePage() {
   const scoreChartData: LineChartPoint[] = [...scores]
     .sort((a, b) => a.tested_at.localeCompare(b.tested_at))
     .map((s) => { const d = new Date(s.tested_at); return { label: fmtDate(d), score: s.score } })
+
+  const shadowingChartData: LineChartPoint[] = days.map(({ str, label }) => ({
+    label,
+    count: ytByDate.get(str) ?? 0,
+  }))
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -218,9 +241,11 @@ export default async function HomePage() {
           weeklyExpression={weeklyExpression}
           weeklySpeaking={weeklySpeaking}
           weeklyNativeCampCount={weeklyNativeCampCount}
+          weeklyShadowing={weeklyShadowing}
           repeatingDiff={repeatingDiff}
           speakingDiff={speakingDiff}
           ncCountDiff={ncCountDiff}
+          shadowingDiff={shadowingDiff}
           latestScore={latestScore}
           scoreDiff={scoreDiff}
           initialScores={scores}
@@ -246,6 +271,12 @@ export default async function HomePage() {
             series={[{ key: "minutes", label: "学習時間", color: COLORS.grammar.main }]}
             data={ncChartData}
             unit="分"
+          />
+          <LineChart
+            title="シャドーイング（7日間）"
+            series={[{ key: "count", label: "完了本数", color: COLORS.shadowing.main }]}
+            data={shadowingChartData}
+            unit="本"
           />
           <LineChart
             title="NC AI Speaking Test スコア"

@@ -21,6 +21,10 @@ export const COLORS = {
     main:  "#D97706", // amber-600
     light: "#F59E0B", // amber-500
   },
+  shadowing: {
+    main:  "#7C3AED", // violet-600
+    light: "#8B5CF6", // violet-500
+  },
   success: "#16A34A", // green-600 — semantic: completion, positive change
   error:   "#EF4444", // red-500
 } as const

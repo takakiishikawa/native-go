@@ -16,6 +16,7 @@ import {
   MoonIcon,
   ChartBarIcon,
   MicrophoneIcon,
+  SpeakerWaveIcon,
 } from "@heroicons/react/24/outline"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/", label: "ダッシュボード", icon: HomeIcon },
   { href: "/practice", label: "リピーティング", icon: ArrowPathRoundedSquareIcon },
   { href: "/speaking", label: "スピーキング", icon: MicrophoneIcon },
+  { href: "/shadowing", label: "シャドーイング", icon: SpeakerWaveIcon },
   { href: "/texts", label: "テキスト", icon: DocumentTextIcon },
   { href: "/list", label: "文法・フレーズ", icon: BookOpenIcon },
   { href: "/report", label: "レポート", icon: ChartBarIcon },

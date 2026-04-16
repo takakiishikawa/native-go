@@ -3,7 +3,7 @@ import { ReportCharts } from "@/components/report-charts"
 export default async function ReportPage() {
   const supabase = await createClient()
 
-  const [logsResult, ncLogsResult] = await Promise.all([
+  const [logsResult, ncLogsResult, youtubeLogsResult] = await Promise.all([
     supabase
       .from("practice_logs")
       .select("practiced_at, grammar_done_count, expression_done_count, speaking_count")
@@ -12,6 +12,10 @@ export default async function ReportPage() {
       .from("native_camp_logs")
       .select("logged_at, count, minutes")
       .order("logged_at"),
+    supabase
+      .from("youtube_logs")
+      .select("completed_at")
+      .order("completed_at"),
   ])
 
   const logs = (logsResult.data ?? []).map((l) => ({
@@ -27,6 +31,10 @@ export default async function ReportPage() {
     minutes: l.minutes ?? (l.count ?? 0) * 25,
   }))
 
+  const youtubeLogs = (youtubeLogsResult.data ?? []).map((l) => ({
+    completed_at: l.completed_at,
+  }))
+
   return (
     <div className="space-y-8 max-w-4xl">
       <div>
@@ -34,7 +42,7 @@ export default async function ReportPage() {
         <p className="text-muted-foreground mt-1">学習データの集計・推移</p>
       </div>
 
-      <ReportCharts logs={logs} ncLogs={ncLogs} />
+      <ReportCharts logs={logs} ncLogs={ncLogs} youtubeLogs={youtubeLogs} />
     </div>
   )
 }

@@ -18,6 +18,10 @@ type NcLog = {
   minutes: number
 }
 
+type YoutubeLog = {
+  completed_at: string
+}
+
 function fmtMonth(ym: string): string {
   const [y, m] = ym.split("-")
   return `${y}/${m}`
@@ -26,6 +30,26 @@ function fmtMonth(ym: string): string {
 function fmtDate(str: string): string {
   const [, m, d] = str.split("-")
   return `${m}/${d}`
+}
+
+function buildShadowingData(youtubeLogs: YoutubeLog[], mode: "monthly" | "alltime"): LineChartPoint[] {
+  if (mode === "monthly") {
+    const map = new Map<string, number>()
+    for (const l of youtubeLogs) {
+      const ym = l.completed_at.slice(0, 7)
+      map.set(ym, (map.get(ym) ?? 0) + 1)
+    }
+    const months = [...map.keys()].sort()
+    return months.map((ym) => ({ label: fmtMonth(ym), count: map.get(ym) ?? 0 }))
+  } else {
+    const map = new Map<string, number>()
+    for (const l of youtubeLogs) {
+      const d = l.completed_at.slice(0, 10)
+      map.set(d, (map.get(d) ?? 0) + 1)
+    }
+    const days = [...map.keys()].sort()
+    return days.map((d) => ({ label: fmtDate(d), count: map.get(d) ?? 0 }))
+  }
 }
 
 function buildMonthlyData(logs: PracticeLog[], ncLogs: NcLog[]): {
@@ -110,19 +134,25 @@ const speakingSeries: LineChartSeries[] = [
 const ncSeries: LineChartSeries[] = [
   { key: "minutes", label: "学習時間", color: COLORS.grammar.main },
 ]
+const shadowingSeries: LineChartSeries[] = [
+  { key: "count", label: "完了本数", color: COLORS.shadowing.main },
+]
 
 export function ReportCharts({
   logs,
   ncLogs,
+  youtubeLogs,
 }: {
   logs: PracticeLog[]
   ncLogs: NcLog[]
+  youtubeLogs: YoutubeLog[]
 }) {
   const [mode, setMode] = useState<"monthly" | "alltime">("monthly")
 
   const monthly = buildMonthlyData(logs, ncLogs)
   const alltime = buildAllTimeData(logs, ncLogs)
   const data = mode === "monthly" ? monthly : alltime
+  const shadowingData = buildShadowingData(youtubeLogs, mode)
 
   return (
     <Tabs value={mode} onValueChange={(v) => setMode(v as "monthly" | "alltime")}>
@@ -149,6 +179,12 @@ export function ReportCharts({
           series={ncSeries}
           data={data.nativeCamp}
           unit="分"
+        />
+        <LineChart
+          title="シャドーイング 完了本数"
+          series={shadowingSeries}
+          data={shadowingData}
+          unit="本"
         />
       </TabsContent>
     </Tabs>

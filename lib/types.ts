@@ -72,6 +72,33 @@ export interface SpeakingScore {
   created_at: string
 }
 
+export interface YoutubeChannel {
+  id: string
+  user_id: string
+  channel_name: string
+  channel_url: string
+  created_at: string
+}
+
+export interface YoutubeVideo {
+  id: string
+  channel_id: string
+  title: string
+  video_url: string
+  duration: string | null
+  thumbnail_url: string | null
+  published_at: string | null
+  sort_order: number
+}
+
+export interface YoutubeLog {
+  id: string
+  user_id: string
+  video_id: string
+  lap: number
+  completed_at: string
+}
+
 export interface ExtractedGrammar {
   name: string
   summary: string
