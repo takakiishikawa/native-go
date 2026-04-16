@@ -260,7 +260,7 @@ export default function ShadowingPage() {
             />
             <p className="text-xs text-muted-foreground">
               例: https://www.youtube.com/@EnglishWithVenya<br />
-              ※ ショート動画（60秒以下）は自動的に除外されます
+              ※ 3分未満の動画は自動的に除外されます
             </p>
           </div>
           {fetchError && <p className="text-sm text-destructive">{fetchError}</p>}

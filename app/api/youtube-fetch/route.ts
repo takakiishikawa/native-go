@@ -146,8 +146,8 @@ export async function POST(request: NextRequest) {
   for (const v of rawVideos) {
     const isoDuration = durationMap.get(v.videoId) ?? ""
     const sec = parseDurationSec(isoDuration)
-    // Skip Shorts: ≤60 seconds
-    if (sec > 0 && sec <= 60) continue
+    // Skip short videos: <3 minutes (180 seconds)
+    if (sec > 0 && sec < 180) continue
 
     videos.push({
       channel_id: newChannel.id,
