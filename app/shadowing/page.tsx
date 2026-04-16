@@ -301,9 +301,8 @@ function VideoCard({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "group rounded-xl border bg-card overflow-hidden shadow-sm flex flex-col transition-all cursor-pointer",
-        "hover:shadow-md hover:-translate-y-0.5",
-        isCompleted && "border-green-300 dark:border-green-700"
+        "group rounded-xl border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card overflow-hidden shadow-sm flex flex-col transition-all cursor-pointer",
+        "hover:shadow-md hover:-translate-y-0.5"
       )}
     >
       {/* Thumbnail */}
@@ -325,14 +324,14 @@ function VideoCard({
         </div>
         {/* Lap badge */}
         {isCompleted && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-white text-xs font-semibold shadow">
+          <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-[var(--bg-elevated,#F0F0EF)] px-2 py-0.5 text-[var(--text-secondary,#6B6B68)] text-xs font-medium shadow-sm">
             <CheckCircle className="h-3 w-3" />
             {video.lapCount}周完了
           </div>
         )}
       </div>
 
-      <div className="p-3 flex flex-col gap-3 flex-1">
+      <div className="p-4 flex flex-col gap-3 flex-1">
         {/* Title + duration */}
         <div className="flex-1">
           <p className="text-sm font-medium line-clamp-2 leading-snug group-hover:text-primary transition-colors">
@@ -344,23 +343,25 @@ function VideoCard({
         </div>
 
         {/* Complete button */}
-        {isCompleted ? (
-          <button
-            onClick={handleComplete}
-            disabled={marking}
-            className="w-full rounded-md border border-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-400 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            {marking ? "記録中..." : `＋1周 (→${video.lapCount + 1}周目)`}
-          </button>
-        ) : (
-          <button
-            onClick={handleComplete}
-            disabled={marking}
-            className="w-full rounded-md bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            {marking ? "記録中..." : "完了にする"}
-          </button>
-        )}
+        <div>
+          {isCompleted ? (
+            <button
+              onClick={handleComplete}
+              disabled={marking}
+              className="rounded-md border border-[var(--border-default,rgba(0,0,0,0.12))] bg-transparent hover:bg-muted px-3 py-1 text-xs font-medium text-[var(--text-secondary,#6B6B68)] transition-colors disabled:opacity-50"
+            >
+              {marking ? "記録中..." : `＋1周 (→${video.lapCount + 1}周目)`}
+            </button>
+          ) : (
+            <button
+              onClick={handleComplete}
+              disabled={marking}
+              className="rounded-md border border-[var(--border-default,rgba(0,0,0,0.12))] bg-transparent hover:bg-muted px-3 py-1 text-xs font-medium text-[var(--text-secondary,#6B6B68)] transition-colors disabled:opacity-50"
+            >
+              {marking ? "記録中..." : "完了にする"}
+            </button>
+          )}
+        </div>
       </div>
     </a>
   )
