@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { BookOpen, MessageSquare, Mic, ChevronRight } from "lucide-react"
+import { BookOpen, MessageSquare, Mic, Play, ChevronRight } from "lucide-react"
 
 interface Props {
   grammarsInProgress: number
@@ -52,25 +52,23 @@ export function CTASection({
   speakingDone,
 }: Props) {
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <CTACard
-          href="/repeating/grammar"
-          icon={<BookOpen className="h-4 w-4" />}
-          iconBg="bg-accent"
-          iconColor="text-primary"
-          label="文法リピーティング"
-          sub={`練習中 ${grammarsInProgress} / 完了 ${grammarDone}`}
-        />
-        <CTACard
-          href="/repeating/expression"
-          icon={<MessageSquare className="h-4 w-4" />}
-          iconBg="bg-[#F0FDFA] dark:bg-[#0D9488]/10"
-          iconColor="text-[#0D9488] dark:text-[#14B8A6]"
-          label="フレーズリピーティング"
-          sub={`練習中 ${expressionsInProgress} / 完了 ${expressionDone}`}
-        />
-      </div>
+    <div className="grid grid-cols-2 gap-2">
+      <CTACard
+        href="/repeating/grammar"
+        icon={<BookOpen className="h-4 w-4" />}
+        iconBg="bg-accent"
+        iconColor="text-primary"
+        label="文法リピーティング"
+        sub={`練習中 ${grammarsInProgress} / 完了 ${grammarDone}`}
+      />
+      <CTACard
+        href="/repeating/expression"
+        icon={<MessageSquare className="h-4 w-4" />}
+        iconBg="bg-[#F0FDFA] dark:bg-[#0D9488]/10"
+        iconColor="text-[#0D9488] dark:text-[#14B8A6]"
+        label="フレーズリピーティング"
+        sub={`練習中 ${expressionsInProgress} / 完了 ${expressionDone}`}
+      />
       <CTACard
         href="/speaking"
         icon={<Mic className="h-4 w-4" />}
@@ -78,6 +76,14 @@ export function CTASection({
         iconColor="text-[#D97706] dark:text-[#F59E0B]"
         label="スピーキング"
         sub={`練習中 ${speakingInProgress} / 完了 ${speakingDone}`}
+      />
+      <CTACard
+        href="/shadowing"
+        icon={<Play className="h-4 w-4" />}
+        iconBg="bg-[#FEF2F2] dark:bg-[#DC2626]/10"
+        iconColor="text-[#DC2626] dark:text-[#EF4444]"
+        label="シャドーイング"
+        sub="YouTubeで練習する"
       />
     </div>
   )
