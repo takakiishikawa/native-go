@@ -3,6 +3,7 @@ import { CTASection } from "@/components/cta-section"
 import { MetricsSection } from "@/components/metrics-section"
 import { LineChart, type LineChartPoint } from "@/components/line-chart"
 import { DashboardAutoCheck } from "@/components/dashboard-auto-check"
+import { SpeakingTestReminder } from "@/components/speaking-test-reminder"
 import { StreakPopup } from "@/components/streak-popup"
 import { COLORS } from "@/lib/colors"
 import type { SpeakingScore } from "@/lib/types"
@@ -50,7 +51,7 @@ export default async function HomePage() {
   prev14Start.setDate(prev14Start.getDate() - 13)
   const prev14StartStr = prev14Start.toISOString().split("T")[0]
 
-  const [logsResult, grammarResult, expressionsResult, allRangeLogsResult, scoresResult, allNcLogsResult, speakingLogsResult, allYoutubeLogsResult] =
+  const [logsResult, grammarResult, expressionsResult, allRangeLogsResult, scoresResult, allNcLogsResult, speakingLogsResult, allYoutubeLogsResult, settingsResult] =
     await Promise.all([
       supabase.from("practice_logs").select("practiced_at"),
       supabase.from("grammar").select("id, play_count, image_url"),
@@ -76,6 +77,7 @@ export default async function HomePage() {
         .select("completed_at, youtube_videos(duration)")
         .gte("completed_at", new Date(new Date(prev14Start).setHours(0, 0, 0, 0)).toISOString())
         .lte("completed_at", new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString()),
+      supabase.from("user_settings").select("*").maybeSingle(),
     ])
 
   const allLogs = logsResult.data ?? []
@@ -185,6 +187,9 @@ export default async function HomePage() {
   const prevWeeklyShadowing = [...prevYtByDate.values()].reduce((s, c) => s + c, 0)
   const shadowingDiff = hasPrevData ? weeklyShadowing - prevWeeklyShadowing : null
 
+  // User settings
+  const settings = settingsResult.data ?? null
+
   // Today's native camp check for auto-modal
   const hasNativeCampToday = (ncByDate.get(todayStr) ?? 0) > 0
 
@@ -218,6 +223,13 @@ export default async function HomePage() {
   return (
     <div className="space-y-8 max-w-4xl">
       <StreakPopup streak={streak} />
+
+      {settings?.speaking_test_day && (
+        <SpeakingTestReminder
+          testDay={settings.speaking_test_day}
+          initialScores={scores}
+        />
+      )}
 
       <div>
         <h1 className="text-[22px] font-medium">ダッシュボード</h1>
@@ -254,6 +266,7 @@ export default async function HomePage() {
           latestScore={latestScore}
           scoreDiff={scoreDiff}
           initialScores={scores}
+          settings={settings ?? undefined}
         />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <LineChart

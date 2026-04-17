@@ -13,10 +13,12 @@ export function SpeakingScoreModal({
   open,
   onClose,
   initialScores,
+  onSaved,
 }: {
   open: boolean
   onClose: () => void
   initialScores: SpeakingScore[]
+  onSaved?: () => void
 }) {
   const today = new Date().toISOString().split("T")[0]
   const [date, setDate] = useState(today)
@@ -36,6 +38,7 @@ export function SpeakingScoreModal({
             b.tested_at.localeCompare(a.tested_at)
           )
         )
+        onSaved?.()
       }
     } catch {}
     setSaving(false)

@@ -17,6 +17,7 @@ import {
   ChartBarIcon,
   MicrophoneIcon,
   SpeakerWaveIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -175,6 +176,22 @@ export function Nav() {
               {label}
             </Link>
           ))}
+        </div>
+
+        {/* Settings */}
+        <div className="flex flex-col gap-0.5 pt-3 mt-2 border-t border-[var(--border)]">
+          <Link
+            href="/settings"
+            className={cn(
+              "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[13px] font-medium transition-colors h-8",
+              pathname === "/settings"
+                ? "bg-muted text-foreground"
+                : "text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground"
+            )}
+          >
+            <Cog6ToothIcon className={cn("h-4 w-4 shrink-0", pathname === "/settings" ? "opacity-100" : "opacity-60")} />
+            設定
+          </Link>
         </div>
 
         {/* Footer */}

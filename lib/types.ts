@@ -100,6 +100,18 @@ export interface YoutubeLog {
   completed_at: string
 }
 
+export interface UserSettings {
+  id: string
+  user_id: string
+  baseline_repeating: number
+  baseline_speaking: number
+  baseline_nativecamp: number
+  baseline_shadowing: number
+  speaking_test_day: number
+  created_at: string
+  updated_at: string
+}
+
 export interface ExtractedGrammar {
   name: string
   summary: string
