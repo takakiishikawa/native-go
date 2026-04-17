@@ -43,7 +43,13 @@ function DiffBadge({ diff, unit = "" }: { diff: number | null; unit?: string }) 
   )
 }
 
-function achievementColor(pct: number) {
+function achievementBarColor(pct: number) {
+  if (pct >= 100) return "bg-primary"
+  if (pct >= 70)  return "bg-amber-400"
+  return "bg-destructive"
+}
+
+function achievementTextColor(pct: number) {
   if (pct >= 100) return "text-primary"
   if (pct >= 70)  return "text-amber-500"
   return "text-destructive"
@@ -69,7 +75,6 @@ function MetricCard({
   diffUnit?: string
   action?: React.ReactNode
   baseline?: number
-  baselineUnit?: string
   numericValue?: number
 }) {
   const pct = baseline && numericValue != null && baseline > 0
@@ -90,9 +95,17 @@ function MetricCard({
       </div>
       {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
       {pct !== null && (
-        <p className={`text-xs mt-1 font-medium ${achievementColor(pct)}`}>
-          {baseline}{baselineUnit ?? unit}中 {pct}%達成
-        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex-1 h-1 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${achievementBarColor(pct)}`}
+              style={{ width: `${Math.min(pct, 100)}%` }}
+            />
+          </div>
+          <span className={`text-[11px] font-medium tabular-nums shrink-0 ${achievementTextColor(pct)}`}>
+            {pct}%
+          </span>
+        </div>
       )}
       <div className="mt-1.5 min-h-[16px]">
         <DiffBadge diff={diff} unit={diffUnit} />
@@ -139,7 +152,6 @@ export function MetricsSection({
           sub={`文法 ${weeklyGrammar} / フレーズ ${weeklyExpression}`}
           diff={repeatingDiff}
           baseline={settings?.baseline_repeating}
-          baselineUnit="回"
           numericValue={weeklyRepeating}
         />
         <MetricCard
@@ -148,7 +160,6 @@ export function MetricsSection({
           unit="回"
           diff={speakingDiff}
           baseline={settings?.baseline_speaking}
-          baselineUnit="回"
           numericValue={weeklySpeaking}
         />
         <MetricCard
@@ -160,7 +171,6 @@ export function MetricsSection({
           diffUnit="分"
           action={editBtn(() => setNcOpen(true))}
           baseline={settings?.baseline_nativecamp}
-          baselineUnit="分"
           numericValue={weeklyNativeCampCount * 25}
         />
         <MetricCard
@@ -170,7 +180,6 @@ export function MetricsSection({
           diff={shadowingDiff}
           diffUnit="分"
           baseline={settings?.baseline_shadowing}
-          baselineUnit="分"
           numericValue={weeklyShadowing}
         />
         <div className="rounded-[8px] bg-muted px-4 py-3.5">
