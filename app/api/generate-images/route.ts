@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   }
   console.log("[generate-images] ユーザー:", user.id)
 
-  const { items } = await request.json() as { items: { id: string; name: string }[] }
+  const { items, force } = await request.json() as { items: { id: string; name: string }[]; force?: boolean }
   if (!items?.length) return NextResponse.json({ results: [] })
   console.log("[generate-images] 対象:", items.map(i => i.name).join(", "))
 
@@ -36,14 +36,22 @@ export async function POST(request: NextRequest) {
       .eq("id", item.id)
       .single()
 
-    if (existing?.image_url) {
+    if (existing?.image_url && !force) {
       console.log(`[generate-images] スキップ (既存画像あり): ${item.name}`)
       results.push({ id: item.id, status: "skipped" })
       continue
     }
 
     try {
-      const imagePrompt = `A realistic everyday scene in Ho Chi Minh City that naturally demonstrates the grammar point: ${item.name}. Scene ideas: café, gym, street market, apartment, park. Style: natural photo-realistic, warm lighting, no text in the image.`
+      const imagePrompt = `A 2x2 comic-style illustration with 4 panels showing a short story in Ho Chi Minh City that naturally demonstrates the grammar point: ${item.name}.
+
+Panel layout (2 columns, 2 rows):
+- Top-left: Scene setting, introducing characters and situation
+- Top-right: Something happens that requires ${item.name}
+- Bottom-left: Characters interact using ${item.name} naturally
+- Bottom-right: Resolution or reaction
+
+Style: warm, simple illustration with clear panel borders between each frame. Characters should be consistent across all 4 panels. No text or speech bubbles inside the image.`
 
       console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`)
 

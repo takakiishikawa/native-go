@@ -4,57 +4,97 @@ import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Loader2, Star, ImageIcon, FileText, Sparkles, Mic, Globe, CheckCircle2, TrendingUp, BookOpen } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
+import { Loader2, CheckCircle2, Volume2, BookOpen } from "lucide-react"
 
-const SCORE_LABELS: { label: string; Icon: LucideIcon }[] = [
-  { label: "画像の描写度",    Icon: ImageIcon },
-  { label: "推奨文法の使用",  Icon: FileText  },
-  { label: "表現の豊かさ",    Icon: Sparkles  },
-  { label: "流暢さ・話した量", Icon: Mic       },
-  { label: "全体の自然さ",    Icon: Globe     },
-]
+const SCORE_LABELS = ["語彙", "文法", "流暢さ", "発音"]
 
-// Parse structured comment: [GOOD]...\n[UPGRADE]...\n[GRAMMAR]...
-function parseComment(raw: string) {
-  const goodMatch = raw.match(/\[GOOD\]([\s\S]*?)(?=\[UPGRADE\]|\[GRAMMAR\]|$)/)
-  const upgradeMatch = raw.match(/\[UPGRADE\]([\s\S]*?)(?=\[GRAMMAR\]|$)/)
-  const grammarMatch = raw.match(/\[GRAMMAR\]([\s\S]*)$/)
-  if (goodMatch && upgradeMatch && grammarMatch) {
-    return {
-      goodPoint: goodMatch[1].trim(),
-      upgrade: upgradeMatch[1].trim(),
-      grammarNote: grammarMatch[1].trim(),
-    }
-  }
-  return null
+function getSection(raw: string, tag: string) {
+  const m = raw.match(new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[|$)`))
+  return m ? m[1].trim() : null
 }
 
-function StarRow({ score }: { score: number }) {
+function parseComment(raw: string) {
+  const good = getSection(raw, "GOOD")
+  if (!good) return null
+  return {
+    good,
+    grammarBefore: getSection(raw, "GRAMMAR_BEFORE"),
+    grammarAfter: getSection(raw, "GRAMMAR_AFTER"),
+    phraseBefore: getSection(raw, "PHRASE_BEFORE"),
+    phraseAfter: getSection(raw, "PHRASE_AFTER"),
+    example1: getSection(raw, "EXAMPLE1"),
+    example2: getSection(raw, "EXAMPLE2"),
+  }
+}
+
+function ScoreBar({ label, score }: { label: string; score: number }) {
+  const pct = Math.min(100, Math.max(0, score))
+  const color =
+    pct >= 80 ? "bg-indigo-500" :
+    pct >= 60 ? "bg-indigo-400" :
+    pct >= 40 ? "bg-amber-400" : "bg-rose-400"
+
   return (
-    <span className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-3.5 w-3.5 ${i <= score ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
-        />
-      ))}
-    </span>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-sm font-semibold tabular-nums">
+          {score}<span className="text-xs text-muted-foreground font-normal"> / 100</span>
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
   )
 }
 
-function TotalStars({ total }: { total: number }) {
+function BeforeAfterCard({ before, after, type }: { before: string | null; after: string | null; type: "grammar" | "phrase" }) {
+  if (!before || !after || before === "-" || after === "-") return null
+  const label = type === "grammar" ? "文法" : "フレーズ"
   return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-6 w-6 ${i <= Math.round(total) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`}
-        />
-      ))}
-      <span className="text-xl font-bold ml-1">{total}</span>
-      <span className="text-muted-foreground">/ 5</span>
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
+      <div className="grid grid-cols-[1fr_16px_1fr] items-center gap-1.5">
+        <div className="rounded-lg bg-muted/60 px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60 mb-1">Before</p>
+          <p className="text-sm leading-snug text-muted-foreground">{before}</p>
+        </div>
+        <span className="text-muted-foreground text-center text-sm">→</span>
+        <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-500/70 mb-1">After</p>
+          <p className="text-sm leading-snug text-indigo-900 dark:text-indigo-100">{after}</p>
+        </div>
+      </div>
     </div>
+  )
+}
+
+function SpeakButton({ text }: { text: string }) {
+  const [speaking, setSpeaking] = useState(false)
+
+  function speak() {
+    if (typeof window === "undefined" || !window.speechSynthesis) return
+    window.speechSynthesis.cancel()
+    const u = new SpeechSynthesisUtterance(text)
+    u.lang = "en-US"
+    u.rate = 0.9
+    u.onstart = () => setSpeaking(true)
+    u.onend = () => setSpeaking(false)
+    u.onerror = () => setSpeaking(false)
+    window.speechSynthesis.speak(u)
+  }
+
+  return (
+    <button
+      onClick={speak}
+      className={`flex-shrink-0 p-1.5 rounded-full transition-colors ${
+        speaking ? "text-indigo-500" : "text-muted-foreground hover:text-foreground"
+      }`}
+      aria-label="音声を再生"
+    >
+      <Volume2 className="h-4 w-4" />
+    </button>
   )
 }
 
@@ -99,7 +139,6 @@ function ResultContent() {
   async function goToNext() {
     setNextLoading(true)
 
-    // Get current grammar's created_at to find the next item in list order
     const { data: curr } = await supabase
       .from("grammar")
       .select("created_at")
@@ -109,7 +148,6 @@ function ResultContent() {
     let next: { id: string } | null = null
 
     if (curr) {
-      // List is ordered by created_at DESC, so "next" = earlier created_at
       const { data } = await supabase
         .from("grammar")
         .select("id")
@@ -125,7 +163,6 @@ function ResultContent() {
     if (next?.id) {
       router.push(`/speaking/${next.id}`)
     } else {
-      // Reached the end of the list → go back to speaking list
       router.push("/speaking")
     }
   }
@@ -158,53 +195,62 @@ function ResultContent() {
         </div>
       )}
 
-      {/* Total score */}
-      <div className="rounded-xl border bg-card p-5 space-y-1">
-        <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">総合評価</p>
-        <TotalStars total={data.total_score} />
-      </div>
-
       {/* Score breakdown */}
-      <div className="rounded-xl border bg-card p-5 space-y-3">
-        <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">内訳</p>
-        {SCORE_LABELS.map(({ label, Icon }, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground flex-1">{label}</span>
-            <StarRow score={data.scores[i] ?? 0} />
-            <span className="text-sm font-medium w-4 text-right tabular-nums">{data.scores[i] ?? 0}</span>
-          </div>
+      <div className="rounded-xl border bg-card p-5 space-y-4">
+        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">スコア</p>
+        {SCORE_LABELS.map((label, i) => (
+          <ScoreBar key={label} label={label} score={data.scores[i] ?? 0} />
         ))}
       </div>
 
-      {/* Comment */}
+      {/* Feedback */}
       {data.comment && (
-        <div className="rounded-xl border bg-card p-5 space-y-3">
-          <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">コメント</p>
+        <div className="rounded-xl border bg-card p-5 space-y-5">
+          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">スピーキングを改善しましょう</p>
+
           {sections ? (
-            <div className="space-y-3 text-sm leading-relaxed">
-              <div>
-                <p className="flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400 mb-1">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  グッドポイント
-                </p>
-                <p className="text-foreground pl-5">{sections.goodPoint}</p>
+            <>
+              {/* Good point */}
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-green-500" />
+                <p className="text-sm leading-relaxed text-foreground">{sections.good}</p>
               </div>
-              <div>
-                <p className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400 mb-1">
-                  <TrendingUp className="h-4 w-4 shrink-0" />
-                  アップグレード提案
-                </p>
-                <p className="text-foreground pl-5">{sections.upgrade}</p>
-              </div>
-              <div>
-                <p className="flex items-center gap-1.5 font-medium text-muted-foreground mb-1">
-                  <BookOpen className="h-4 w-4 shrink-0" />
-                  文法について
-                </p>
-                <p className="text-foreground pl-5">{sections.grammarNote}</p>
-              </div>
-            </div>
+
+              {/* Before / After cards */}
+              {(sections.grammarBefore || sections.grammarAfter) && (
+                <BeforeAfterCard
+                  before={sections.grammarBefore}
+                  after={sections.grammarAfter}
+                  type="grammar"
+                />
+              )}
+              {(sections.phraseBefore || sections.phraseAfter) && (
+                <BeforeAfterCard
+                  before={sections.phraseBefore}
+                  after={sections.phraseAfter}
+                  type="phrase"
+                />
+              )}
+
+              {/* Example sentences */}
+              {(sections.example1 || sections.example2) && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">こう言うと自然</p>
+                  </div>
+                  <div className="space-y-2">
+                    {[sections.example1, sections.example2].filter(Boolean).map((ex, i) => (
+                      <div key={i} className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5">
+                        <span className="text-xs font-bold text-muted-foreground/50 mt-0.5 shrink-0">{i + 1}</span>
+                        <p className="text-sm leading-relaxed flex-1">{ex}</p>
+                        <SpeakButton text={ex!} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-sm text-foreground leading-relaxed">{data.comment}</p>
           )}
@@ -217,7 +263,7 @@ function ResultContent() {
           一覧に戻る
         </Button>
         <Button onClick={goToNext} disabled={nextLoading} className="flex-1">
-          {nextLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {nextLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           次へ進む
         </Button>
       </div>

@@ -7,7 +7,17 @@ import { toast } from "sonner"
 
 const BATCH_SIZE = 3
 
-export function GenerateImagesButton({ items }: { items: { id: string; name: string }[] }) {
+export function GenerateImagesButton({
+  items,
+  force = false,
+  label: customLabel,
+  variant = "outline",
+}: {
+  items: { id: string; name: string }[]
+  force?: boolean
+  label?: string
+  variant?: "outline" | "destructive" | "default" | "secondary" | "ghost" | "link"
+}) {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
 
@@ -25,7 +35,7 @@ export function GenerateImagesButton({ items }: { items: { id: string; name: str
           const res = await fetch("/api/generate-images", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: batch }),
+            body: JSON.stringify({ items: batch, force }),
           })
 
           // Read as text first to handle non-JSON responses (e.g. timeout HTML page)
@@ -63,10 +73,10 @@ export function GenerateImagesButton({ items }: { items: { id: string; name: str
 
   const label = loading
     ? `生成中... (${progress}/${items.length}件)`
-    : `画像を生成 (${items.length}件)`
+    : (customLabel ?? `画像を生成 (${items.length}件)`)
 
   return (
-    <Button variant="outline" size="sm" onClick={handleGenerate} disabled={loading} className="gap-2">
+    <Button variant={variant} size="sm" onClick={handleGenerate} disabled={loading} className="gap-2">
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
       {label}
     </Button>

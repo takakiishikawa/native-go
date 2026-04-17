@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Loader2, Star, CheckCircle2, TrendingUp, BookOpen } from "lucide-react"
+import { Loader2, CheckCircle2 } from "lucide-react"
 import type { PastLog } from "./page"
 
 const DURATION = 30
@@ -33,43 +33,32 @@ function CountdownRing({ remaining, total }: { remaining: number; total: number 
   )
 }
 
-// Parse [GOOD]/[UPGRADE]/[GRAMMAR] comment format
-function parseComment(raw: string) {
-  const goodMatch = raw.match(/\[GOOD\]([\s\S]*?)(?=\[UPGRADE\]|\[GRAMMAR\]|$)/)
-  const upgradeMatch = raw.match(/\[UPGRADE\]([\s\S]*?)(?=\[GRAMMAR\]|$)/)
-  const grammarMatch = raw.match(/\[GRAMMAR\]([\s\S]*)$/)
-  if (goodMatch && upgradeMatch && grammarMatch) {
-    return {
-      goodPoint: goodMatch[1].trim(),
-      upgrade: upgradeMatch[1].trim(),
-      grammarNote: grammarMatch[1].trim(),
-    }
-  }
-  return null
+function parseGoodPoint(raw: string) {
+  // Support both new format [GOOD] and old format [GOOD]/[UPGRADE]/[GRAMMAR]
+  const m = raw.match(/\[GOOD\]([\s\S]*?)(?=\[|$)/)
+  return m ? m[1].trim() : null
 }
 
 function PastFeedbackCard({ log, index }: { log: PastLog; index: number }) {
-  const sections = parseComment(log.comment)
+  const good = parseGoodPoint(log.comment)
   const label = index === 0 ? "前回のフィードバック" : `${index + 1}回前のフィードバック`
+  const avg = Array.isArray(log.scores) && log.scores.length > 0
+    ? Math.round(log.scores.reduce((a: number, b: number) => a + b, 0) / log.scores.length)
+    : log.total_score
 
   return (
     <div className="rounded-lg border bg-muted/20 px-3 py-2.5 space-y-2 text-sm">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <span className="flex gap-0.5">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Star key={i} className={`h-3 w-3 ${i <= log.total_score ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40"}`} />
-          ))}
-        </span>
+        <span className="text-xs font-semibold tabular-nums text-muted-foreground">{avg}<span className="font-normal">/100</span></span>
       </div>
-      {sections ? (
-        <div className="space-y-1.5 text-xs leading-relaxed">
-          <p className="flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-green-600 dark:text-green-400" /><span className="text-foreground">{sections.goodPoint}</span></p>
-          <p className="flex items-start gap-1.5"><TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" /><span className="text-foreground">{sections.upgrade}</span></p>
-          <p className="flex items-start gap-1.5"><BookOpen className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground" /><span className="text-foreground">{sections.grammarNote}</span></p>
-        </div>
+      {good ? (
+        <p className="flex items-start gap-1.5 text-xs leading-relaxed">
+          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-green-600 dark:text-green-400" />
+          <span className="text-foreground">{good}</span>
+        </p>
       ) : (
-        <p className="text-xs text-foreground leading-relaxed">{log.comment}</p>
+        <p className="text-xs text-foreground leading-relaxed line-clamp-3">{log.comment}</p>
       )}
     </div>
   )
@@ -240,8 +229,8 @@ export function PracticeClient({
       </div>
 
       {/* Image */}
-      <div className="-mx-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[40vh]">
-        <img src={imageUrl} alt={grammarName} className="w-full max-h-[40vh] object-contain" />
+      <div className="-mx-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[60vh]">
+        <img src={imageUrl} alt={grammarName} className="w-full max-h-[60vh] object-contain" />
       </div>
 
       <div className="max-w-lg mx-auto space-y-3">

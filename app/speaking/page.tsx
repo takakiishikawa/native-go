@@ -21,14 +21,26 @@ export default async function SpeakingPage() {
       .order("created_at", { ascending: false }),
   ])
 
+  const allWithImages = (grammars ?? []).map(g => ({ id: g.id, name: g.name }))
+
   const items = grammars ?? []
   const pending = pendingGrammars ?? []
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div>
-        <h1 className="text-[25px] font-medium">スピーキング</h1>
-        <p className="text-sm text-muted-foreground mt-1">画像を見ながら英語で説明する練習</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[25px] font-medium">スピーキング</h1>
+          <p className="text-sm text-muted-foreground mt-1">画像を見ながら英語で説明する練習</p>
+        </div>
+        {allWithImages.length > 0 && (
+          <GenerateImagesButton
+            items={allWithImages}
+            force
+            label="全画像を再生成"
+            variant="outline"
+          />
+        )}
       </div>
 
       {/* Pending image generation banner */}

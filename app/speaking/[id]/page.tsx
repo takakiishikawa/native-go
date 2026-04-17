@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { PracticeClient } from "./practice-client"
 
 export type PastLog = {
+  scores: number[]
   total_score: number
   comment: string
   created_at: string
@@ -19,7 +20,7 @@ export default async function SpeakingPracticePage({ params }: { params: Promise
     supabase.from("grammar").select("id, name, summary, image_url").eq("id", id).single(),
     supabase
       .from("speaking_logs")
-      .select("total_score, comment, created_at")
+      .select("scores, total_score, comment, created_at")
       .eq("grammar_id", id)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
