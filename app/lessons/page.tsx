@@ -130,7 +130,7 @@ export default function LessonsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px] font-medium">レッスン管理</h1>
+        <h1 className="text-[25px] font-medium">レッスン管理</h1>
         <p className="text-muted-foreground mt-1">受講状況の管理</p>
       </div>
 

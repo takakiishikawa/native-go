@@ -232,7 +232,7 @@ export default async function HomePage() {
       )}
 
       <div>
-        <h1 className="text-[22px] font-medium">ダッシュボード</h1>
+        <h1 className="text-[25px] font-medium">ダッシュボード</h1>
         <p className="text-sm text-muted-foreground mt-1">学習進捗のまとめ</p>
       </div>
 

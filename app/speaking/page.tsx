@@ -27,7 +27,7 @@ export default async function SpeakingPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-[22px] font-medium">スピーキング</h1>
+        <h1 className="text-[25px] font-medium">スピーキング</h1>
         <p className="text-sm text-muted-foreground mt-1">画像を見ながら英語で説明する練習</p>
       </div>
 

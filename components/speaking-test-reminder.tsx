@@ -36,7 +36,7 @@ export function SpeakingTestReminder({
 
   return (
     <>
-      <div className="flex items-center justify-between rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4 py-3 text-[13px]">
+      <div className="flex items-center justify-between rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4 py-3 text-[15px]">
         <span className="text-foreground">
           今月の NC AI Speaking Test の受検日です。記録しましょう。
         </span>

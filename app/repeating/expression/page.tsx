@@ -244,7 +244,7 @@ export default function ExpressionRepeatingPage() {
       <div className="space-y-6 max-w-2xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[22px] font-medium">フレーズリピーティング</h1>
+            <h1 className="text-[25px] font-medium">フレーズリピーティング</h1>
             <p className="text-muted-foreground mt-1">
               {index + 1} / {items.length} 件
             </p>

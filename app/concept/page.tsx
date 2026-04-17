@@ -3,7 +3,7 @@ import { LightBulbIcon } from "@heroicons/react/24/outline"
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-[14px] font-medium text-foreground">{title}</h2>
+      <h2 className="text-[16px] font-medium text-foreground">{title}</h2>
       {children}
     </section>
   )
@@ -16,7 +16,7 @@ function ConceptTable({ headers, rows }: { headers: string[]; rows: string[][] }
         <thead>
           <tr className="border-b bg-muted">
             {headers.map((h) => (
-              <th key={h} className="px-4 py-2.5 text-left text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.05em]">
+              <th key={h} className="px-4 py-2.5 text-left text-[13px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.05em]">
                 {h}
               </th>
             ))}
@@ -26,7 +26,7 @@ function ConceptTable({ headers, rows }: { headers: string[]; rows: string[][] }
           {rows.map((row, i) => (
             <tr key={i} className="border-b last:border-0">
               {row.map((cell, j) => (
-                <td key={j} className={`px-4 py-3 text-[13px] text-[var(--text-secondary)] ${j === 0 ? "font-medium text-foreground" : ""}`}>
+                <td key={j} className={`px-4 py-3 text-[15px] text-[var(--text-secondary)] ${j === 0 ? "font-medium text-foreground" : ""}`}>
                   {cell}
                 </td>
               ))}
@@ -41,7 +41,7 @@ function ConceptTable({ headers, rows }: { headers: string[]; rows: string[][] }
 function FlowStep({ children, isLast = false }: { children: React.ReactNode; isLast?: boolean }) {
   return (
     <div className="flex flex-col items-start">
-      <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4 py-3 text-[13px] text-[var(--text-secondary)] w-full">
+      <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4 py-3 text-[15px] text-[var(--text-secondary)] w-full">
         {children}
       </div>
       {!isLast && <div className="pl-4 py-1 text-[var(--text-tertiary)] text-base leading-none">↓</div>}
@@ -57,13 +57,13 @@ export default function ConceptPage() {
           <div className="rounded-[6px] bg-accent p-1.5">
             <LightBulbIcon className="h-4 w-4 text-primary" />
           </div>
-          <h1 className="text-[22px] font-medium">NativeGo Concept</h1>
+          <h1 className="text-[25px] font-medium">NativeGo Concept</h1>
         </div>
       </div>
 
       <Section title="プロダクトコアバリュー">
         <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-5 py-4">
-          <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+          <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
             Native Camp のレッスンで学んだ英語を、使える状態として定着させる。
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function ConceptPage() {
       </Section>
 
       <Section title="習得ロジック">
-        <p className="text-[13px] text-muted-foreground">英語習得に必要な3要素を NativeGo で鍛える。</p>
+        <p className="text-[15px] text-muted-foreground">英語習得に必要な3要素を NativeGo で鍛える。</p>
         <ConceptTable
           headers={["要素", "内容", "NativeGoでの手段"]}
           rows={[
@@ -122,7 +122,7 @@ export default function ConceptPage() {
 
       <Section title="結果指標">
         <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-5 py-4">
-          <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
+          <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
             Native Camp の AI Speaking Test の点数
           </p>
         </div>

@@ -515,7 +515,7 @@ export default function TextsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px] font-medium">テキスト</h1>
+        <h1 className="text-[25px] font-medium">テキスト</h1>
         <p className="text-muted-foreground mt-1">
           レッスンごとの文法・フレーズ登録状況
         </p>

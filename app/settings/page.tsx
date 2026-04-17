@@ -69,7 +69,7 @@ export default function SettingsPage() {
   function FieldRow({ label, fieldKey, unit }: { label: string; fieldKey: keyof SettingsValues; unit: string }) {
     return (
       <div className="flex items-center justify-between py-3 border-b border-[var(--border-subtle,rgba(0,0,0,0.08))] last:border-0">
-        <span className="text-[14px] text-foreground">{label}</span>
+        <span className="text-[16px] text-foreground">{label}</span>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -78,7 +78,7 @@ export default function SettingsPage() {
             onChange={set(fieldKey)}
             className="w-24 text-right"
           />
-          <span className="text-[13px] text-muted-foreground w-12 shrink-0">{unit}</span>
+          <span className="text-[15px] text-muted-foreground w-12 shrink-0">{unit}</span>
         </div>
       </div>
     )
@@ -87,12 +87,12 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8 max-w-lg">
       <div>
-        <h1 className="text-[22px] font-medium">設定</h1>
+        <h1 className="text-[25px] font-medium">設定</h1>
       </div>
 
       <section className="space-y-3">
         <h2 className="section-label">ベースライン</h2>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <p className="text-[15px] text-muted-foreground leading-relaxed">
           週間ベースラインとは、毎週維持したい最低限の学習量です。
           目標ではなく、このペースを下回らないことを意識する基準です。
         </p>
@@ -106,7 +106,7 @@ export default function SettingsPage() {
 
       <section className="space-y-3">
         <h2 className="section-label">NC AI Speaking Test</h2>
-        <p className="text-[13px] text-muted-foreground">毎月何日に受けますか？</p>
+        <p className="text-[15px] text-muted-foreground">毎月何日に受けますか？</p>
         <div className="rounded-[8px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-4">
           <FieldRow label="受検日" fieldKey="speaking_test_day" unit="日" />
         </div>

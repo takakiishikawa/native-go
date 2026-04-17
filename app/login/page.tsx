@@ -26,25 +26,25 @@ function LoginContent() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </div>
-          <span className="text-[16px] font-medium tracking-tight">NativeGo</span>
+          <span className="text-[18px] font-medium tracking-tight">NativeGo</span>
         </div>
 
         {/* Card */}
         <div className="rounded-[12px] border border-[var(--border-subtle,rgba(0,0,0,0.08))] bg-card px-8 py-8 shadow-sm">
           <div className="text-center mb-6">
-            <h1 className="text-[22px] font-medium mb-1">ログイン</h1>
-            <p className="text-[13px] text-muted-foreground">Native Camp 学習管理アプリ</p>
+            <h1 className="text-[25px] font-medium mb-1">ログイン</h1>
+            <p className="text-[15px] text-muted-foreground">Native Camp 学習管理アプリ</p>
           </div>
 
           {error && (
-            <p className="text-[13px] text-destructive text-center mb-4">
+            <p className="text-[15px] text-destructive text-center mb-4">
               認証エラーが発生しました。再度お試しください。
             </p>
           )}
 
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 rounded-[8px] border border-[var(--border-default,rgba(0,0,0,0.12))] bg-card px-4 py-2.5 text-[14px] font-medium text-foreground hover:bg-muted transition-colors"
+            className="w-full flex items-center justify-center gap-3 rounded-[8px] border border-[var(--border-default,rgba(0,0,0,0.12))] bg-card px-4 py-2.5 text-[16px] font-medium text-foreground hover:bg-muted transition-colors"
           >
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

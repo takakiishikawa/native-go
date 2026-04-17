@@ -152,7 +152,7 @@ export function Nav() {
             <div className="rounded-[6px] bg-primary p-1.5">
               <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="text-[14px] font-medium tracking-tight">NativeGo</span>
+            <span className="text-[16px] font-medium tracking-tight">NativeGo</span>
           </Link>
         </div>
 
@@ -163,7 +163,7 @@ export function Nav() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[13px] font-medium transition-colors h-8",
+                "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[15px] font-medium transition-colors h-8",
                 isActive(href, pathname)
                   ? "bg-muted text-foreground"
                   : "text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground"
@@ -178,22 +178,6 @@ export function Nav() {
           ))}
         </div>
 
-        {/* Settings */}
-        <div className="flex flex-col gap-0.5 pt-3 mt-2 border-t border-[var(--border)]">
-          <Link
-            href="/settings"
-            className={cn(
-              "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[13px] font-medium transition-colors h-8",
-              pathname === "/settings"
-                ? "bg-muted text-foreground"
-                : "text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground"
-            )}
-          >
-            <Cog6ToothIcon className={cn("h-4 w-4 shrink-0", pathname === "/settings" ? "opacity-100" : "opacity-60")} />
-            設定
-          </Link>
-        </div>
-
         {/* Footer */}
         <div className="mt-auto flex flex-col gap-0.5 pt-3 border-t border-[var(--border)]">
           {/* User */}
@@ -202,7 +186,7 @@ export function Nav() {
             className="flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 w-full text-left hover:bg-muted/60 transition-colors group h-8"
           >
             <Avatar url={avatarUrl} name={displayName || "U"} size={5} />
-            <span className="text-[13px] font-medium text-foreground truncate flex-1 min-w-0">
+            <span className="text-[15px] font-medium text-foreground truncate flex-1 min-w-0">
               {displayName || "—"}
             </span>
             <PencilSquareIcon className="h-3.5 w-3.5 text-[var(--text-tertiary)] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -212,7 +196,7 @@ export function Nav() {
           <Link
             href="/concept"
             className={cn(
-              "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[13px] font-medium transition-colors h-8",
+              "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[15px] font-medium transition-colors h-8",
               pathname === "/concept"
                 ? "bg-muted text-foreground"
                 : "text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground"
@@ -222,10 +206,24 @@ export function Nav() {
             コンセプト
           </Link>
 
+          {/* Settings */}
+          <Link
+            href="/settings"
+            className={cn(
+              "flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[15px] font-medium transition-colors h-8",
+              pathname === "/settings"
+                ? "bg-muted text-foreground"
+                : "text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground"
+            )}
+          >
+            <Cog6ToothIcon className={cn("h-4 w-4 shrink-0", pathname === "/settings" ? "opacity-100" : "opacity-60")} />
+            設定
+          </Link>
+
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[13px] font-medium text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground transition-colors h-8"
+            className="flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[15px] font-medium text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground transition-colors h-8"
           >
             {isDark
               ? <MoonIcon className="h-4 w-4 shrink-0 opacity-60" />
@@ -237,7 +235,7 @@ export function Nav() {
           {/* Logout */}
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[13px] font-medium text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground transition-colors h-8"
+            className="flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-[15px] font-medium text-[var(--text-secondary)] hover:bg-muted/60 hover:text-foreground transition-colors h-8"
           >
             <ArrowRightOnRectangleIcon className="h-4 w-4 shrink-0 opacity-60" />
             ログアウト

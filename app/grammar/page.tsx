@@ -53,7 +53,7 @@ export default function GrammarPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[22px] font-medium">文法一覧</h1>
+        <h1 className="text-[25px] font-medium">文法一覧</h1>
         <span className="text-2xl font-bold">
           {items.length}
           <span className="text-base font-normal text-muted-foreground ml-1">件</span>

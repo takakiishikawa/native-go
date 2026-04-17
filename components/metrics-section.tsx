@@ -83,13 +83,13 @@ function MetricCard({
   return (
     <div className="rounded-[8px] bg-muted px-4 py-3.5">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.05em]">
+        <span className="text-[13px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.05em]">
           {label}
         </span>
         {action}
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-[28px] font-medium leading-none tabular-nums">{value}</span>
+        <span className="text-[32px] font-medium leading-none tabular-nums">{value}</span>
         <span className="text-sm text-muted-foreground">{unit}</span>
       </div>
       {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
@@ -101,7 +101,7 @@ function MetricCard({
               style={{ width: `${Math.min(pct, 100)}%` }}
             />
           </div>
-          <span className={`text-[11px] font-medium tabular-nums shrink-0 ${achievementTextColor(pct)}`}>
+          <span className={`text-[13px] font-medium tabular-nums shrink-0 ${achievementTextColor(pct)}`}>
             {pct}%
           </span>
         </div>
@@ -183,7 +183,7 @@ export function MetricsSection({
         />
         <div className="rounded-[8px] bg-muted px-4 py-3.5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.05em]">
+            <span className="text-[13px] font-medium text-[var(--text-tertiary)] uppercase tracking-[0.05em]">
               AI Speaking Test
             </span>
             {editBtn(() => setScoreOpen(true))}
@@ -191,7 +191,7 @@ export function MetricsSection({
           {latestScore !== null ? (
             <>
               <div className="flex items-baseline gap-1">
-                <span className="text-[28px] font-medium leading-none tabular-nums">{latestScore}</span>
+                <span className="text-[32px] font-medium leading-none tabular-nums">{latestScore}</span>
                 <span className="text-sm text-muted-foreground">点</span>
               </div>
               {scoreDiff !== null && (

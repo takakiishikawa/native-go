@@ -39,7 +39,7 @@ export default async function ReportPage() {
   return (
     <div className="space-y-8 max-w-4xl">
       <div>
-        <h1 className="text-[22px] font-medium">レポート</h1>
+        <h1 className="text-[25px] font-medium">レポート</h1>
         <p className="text-sm text-muted-foreground mt-1">学習データの集計・推移</p>
       </div>
 

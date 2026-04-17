@@ -24,7 +24,7 @@ function PracticeCard({
       <div className={`rounded-[8px] p-2.5 ${iconBg}`}>
         <span className={iconColor}>{icon}</span>
       </div>
-      <p className="text-[13px] font-medium text-foreground text-center leading-snug">{title}</p>
+      <p className="text-[15px] font-medium text-foreground text-center leading-snug">{title}</p>
     </button>
   )
 }
@@ -35,7 +35,7 @@ export default function PracticePage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-[22px] font-medium">練習を始める</h1>
+        <h1 className="text-[25px] font-medium">練習を始める</h1>
         <p className="text-sm text-muted-foreground mt-1">練習するカテゴリを選んでください</p>
       </div>
 

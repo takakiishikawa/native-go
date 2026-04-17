@@ -65,14 +65,14 @@ export function LineChart({
   return (
     <Card className="shadow-none border border-[var(--border-subtle,rgba(0,0,0,0.08))]">
       <CardHeader className="pb-1 pt-4 px-5">
-        <CardTitle className="text-[11px] font-medium text-[var(--text-tertiary,#A0A09D)] uppercase tracking-[0.05em]">
+        <CardTitle className="text-[13px] font-medium text-[var(--text-tertiary,#A0A09D)] uppercase tracking-[0.05em]">
           {title}
         </CardTitle>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1.5">
           {series.map((s) => {
             const total = data.reduce((sum, d) => sum + ((d[s.key] as number) ?? 0), 0)
             return (
-              <span key={s.key} className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: s.color }}>
+              <span key={s.key} className="flex items-center gap-1.5 text-[15px] font-medium" style={{ color: s.color }}>
                 <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
                 {s.label}{" "}<span className="tabular-nums">{total}{unit}</span>
               </span>

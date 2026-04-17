@@ -162,7 +162,7 @@ export default function AddPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-[22px] font-medium">教材追加</h1>
+        <h1 className="text-[25px] font-medium">教材追加</h1>
         <p className="text-muted-foreground mt-1">
           Native Campの教材テキストを貼り付けてください
         </p>

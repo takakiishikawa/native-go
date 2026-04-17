@@ -141,14 +141,14 @@
   --font-sans: var(--font-inter), var(--font-noto-sans), -apple-system, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  /* Typography scale */
-  --font-size-xs:   11px;
-  --font-size-sm:   13px;
-  --font-size-base: 14px;
-  --font-size-lg:   16px;
-  --font-size-xl:   22px;
-  --font-size-2xl:  28px;
-  --font-size-3xl:  28px;
+  /* Typography scale (+15%) */
+  --font-size-xs:   13px;
+  --font-size-sm:   15px;
+  --font-size-base: 16px;
+  --font-size-lg:   18px;
+  --font-size-xl:   25px;
+  --font-size-2xl:  32px;
+  --font-size-3xl:  32px;
 }
 
 @layer base {
@@ -160,7 +160,7 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -169,7 +169,7 @@
 /* ── Utility classes ───────────────────────────────────────── */
 @layer utilities {
   .section-label {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-tertiary, #A0A09D);
     letter-spacing: 0.05em;
