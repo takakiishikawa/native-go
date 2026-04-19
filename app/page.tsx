@@ -75,9 +75,9 @@ function trendFromDiff(diff: number | null, unit: string): KpiCard["trend"] {
   }
 }
 
-function weeklyDesc(baseline: number | undefined, unit: string): string | undefined {
+function weeklyDesc(value: number, baseline: number | undefined): string | undefined {
   if (!baseline || baseline <= 0) return undefined
-  return `今週 ${baseline}${unit}`
+  return `${Math.round((value / baseline) * 100)}%`
 }
 
 function weeklyProgress(value: number, baseline: number | undefined): number | undefined {
@@ -258,28 +258,28 @@ export default async function HomePage() {
     {
       title: "リピーティング",
       value: `${weeklyRepeating}回`,
-      description: weeklyDesc(settings?.baseline_repeating, "回"),
+      description: weeklyDesc(weeklyRepeating, settings?.baseline_repeating),
       progress: weeklyProgress(weeklyRepeating, settings?.baseline_repeating),
       trend: trendFromDiff(repeatingDiff, "回"),
     },
     {
       title: "スピーキング",
       value: `${weeklySpeaking}回`,
-      description: weeklyDesc(settings?.baseline_speaking, "回"),
+      description: weeklyDesc(weeklySpeaking, settings?.baseline_speaking),
       progress: weeklyProgress(weeklySpeaking, settings?.baseline_speaking),
       trend: trendFromDiff(speakingDiff, "回"),
     },
     {
       title: "Native Camp",
       value: `${weeklyNativeCampCount * 25}分`,
-      description: weeklyDesc(settings?.baseline_nativecamp, "分"),
+      description: weeklyDesc(weeklyNativeCampCount * 25, settings?.baseline_nativecamp),
       progress: weeklyProgress(weeklyNativeCampCount * 25, settings?.baseline_nativecamp),
       trend: trendFromDiff(ncCountDiff !== null ? ncCountDiff * 25 : null, "分"),
     },
     {
       title: "シャドーイング",
       value: `${weeklyShadowing}分`,
-      description: weeklyDesc(settings?.baseline_shadowing, "分"),
+      description: weeklyDesc(weeklyShadowing, settings?.baseline_shadowing),
       progress: weeklyProgress(weeklyShadowing, settings?.baseline_shadowing),
       trend: trendFromDiff(shadowingDiff, "分"),
     },
