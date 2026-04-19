@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { Inter, Noto_Sans_JP } from "next/font/google"
-import "@takaki/go-design-system/globals.css"
 import "./globals.css"
 import { AppLayout } from "@takaki/go-design-system"
 import { NativeGoSidebar } from "@/components/layout/native-go-sidebar"
