@@ -1,18 +1,12 @@
 @import "tailwindcss";
 @source "../node_modules/@takaki/go-design-system/dist";
-@import "@takaki/go-design-system/tokens.css";
-@import "@takaki/go-design-system/globals.css";
 @import "react-day-picker/src/style.css";
 
 /* class-based dark mode: responds to .dark on <html> */
 @variant dark (&:where(.dark, .dark *));
 
-/* NativeGo プライマリカラー上書き */
+/* NativeGo 固有セマンティックカラー（チャート等） */
 :root {
-  --color-primary: #E74C3C;
-  --color-primary-hover: #C0392B;
-
-  /* NativeGo 固有セマンティックカラー（チャート等） */
   --color-grammar:  #5B6AF0;
   --color-phrase:   #0D9488;
   --color-speaking: #D97706;

@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
 import { Inter, Noto_Sans_JP } from "next/font/google"
 import "./globals.css"
-import { AppLayout } from "@takaki/go-design-system"
+import { DesignTokens, AppLayout, Toaster } from "@takaki/go-design-system"
 import { NativeGoSidebar } from "@/components/layout/native-go-sidebar"
 import { createClient } from "@/lib/supabase/server"
-import { Toaster } from "@takaki/go-design-system"
 import { DarkModeInit } from "@/components/dark-mode-init"
 import { LoginToast } from "@/components/login-toast"
 import { Suspense } from "react"
@@ -46,6 +45,7 @@ export default async function RootLayout({
     >
       <head>
         <DarkModeInit />
+        <DesignTokens primaryColor="#E74C3C" primaryColorHover="#C0392B" />
       </head>
       <body className="min-h-full">
         {user ? (
