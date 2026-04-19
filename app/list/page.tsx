@@ -20,7 +20,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-4 w-4 ${i <= value ? "fill-[--color-warning] text-[--color-warning]" : "text-muted-foreground"}`}
+          className={`h-4 w-4 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground"}`}
         />
       ))}
     </span>
@@ -107,7 +107,7 @@ function GrammarTab() {
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">全 {items.length} 件</span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-[--color-success-subtle] text-[--color-success]">
+        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-[color:var(--color-success-subtle)] text-[color:var(--color-success)]">
           完了 {items.filter((i) => i.play_count >= 10).length}
         </span>
       </div>
@@ -222,7 +222,7 @@ function PhraseTab() {
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">全 {items.length} 件</span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-[--color-success-subtle] text-[--color-success]">
+        <span className="inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-full bg-[color:var(--color-success-subtle)] text-[color:var(--color-success)]">
           完了 {items.filter((i) => i.play_count >= 10).length}
         </span>
       </div>
@@ -253,8 +253,8 @@ function PhraseTab() {
                         key={i}
                         className={`rounded-lg px-3 py-2 text-sm ${
                           isA
-                            ? "bg-[--color-grammar]/10 text-[--color-grammar]"
-                            : "bg-[--color-phrase]/10 text-[--color-phrase]"
+                            ? "bg-[color:var(--color-grammar)]/10 text-[color:var(--color-grammar)]"
+                            : "bg-[color:var(--color-phrase)]/10 text-[color:var(--color-phrase)]"
                         }`}
                       >
                         {line}

@@ -15,7 +15,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  AppSwitcher,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Avatar,
   AvatarImage,
   AvatarFallback,
@@ -41,6 +46,8 @@ import {
   Moon,
   Pencil,
   RefreshCcw,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react"
 
 const GO_APPS = [
@@ -162,18 +169,51 @@ export function NativeGoSidebar() {
   return (
     <>
       <Sidebar>
-        {/* ヘッダー：ロゴ */}
+        {/* ヘッダー：ロゴ + アプリ切り替え */}
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
-                <Link href="/">
-                  <div className="flex items-center justify-center rounded-md bg-primary p-1.5 shrink-0">
-                    <RefreshCcw className="h-3.5 w-3.5 text-white" />
-                  </div>
-                  <span className="text-[16px] font-medium tracking-tight">NativeGo</span>
-                </Link>
-              </SidebarMenuButton>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <div className="flex items-center justify-center rounded-md bg-primary p-1.5 shrink-0">
+                      <RefreshCcw className="h-3.5 w-3.5 text-white" />
+                    </div>
+                    <div className="flex flex-col gap-0.5 leading-none min-w-0">
+                      <span className="text-xs text-muted-foreground">App</span>
+                      <span className="text-[15px] font-medium tracking-tight truncate">NativeGo</span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-52"
+                  align="start"
+                  side="bottom"
+                  sideOffset={4}
+                >
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Goシリーズ</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {GO_APPS.map((app) => (
+                    <DropdownMenuItem
+                      key={app.name}
+                      onSelect={() => { window.location.href = app.url }}
+                      className="gap-2"
+                    >
+                      <span
+                        className="shrink-0 rounded-full"
+                        style={{ width: 8, height: 8, backgroundColor: app.color }}
+                        aria-hidden
+                      />
+                      <span className="flex-1">{app.name}</span>
+                      {app.name === "NativeGo" && <Check className="h-4 w-4 shrink-0 opacity-70" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
@@ -244,9 +284,6 @@ export function NativeGoSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-
-          {/* Apps 切り替え */}
-          <AppSwitcher currentApp="NativeGo" apps={[...GO_APPS]} />
         </SidebarFooter>
 
         <SidebarRail />

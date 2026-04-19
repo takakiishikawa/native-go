@@ -15,7 +15,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-5 w-5 ${i <= value ? "fill-[--color-warning] text-[--color-warning]" : "text-muted-foreground"}`}
+          className={`h-5 w-5 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground"}`}
         />
       ))}
     </span>
@@ -41,7 +41,7 @@ function CompletionNavButton({
     >
       <span className="flex items-center gap-2">
         {done
-          ? <CheckCircle2 className="h-4 w-4 text-[--color-success] shrink-0" />
+          ? <CheckCircle2 className="h-4 w-4 text-[color:var(--color-success)] shrink-0" />
           : <ArrowRight className="h-4 w-4 shrink-0" />
         }
         {label}
@@ -329,8 +329,8 @@ export default function ExpressionRepeatingPage() {
       {showComplete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card border rounded-lg p-8 text-center space-y-4 w-full max-w-sm shadow-sm">
-            <div className="rounded-full bg-[--color-success-subtle] p-4 w-20 h-20 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-10 w-10 text-[--color-success]" />
+            <div className="rounded-full bg-[color:var(--color-success-subtle)] p-4 w-20 h-20 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-10 w-10 text-[color:var(--color-success)]" />
             </div>
             <h2 className="text-2xl font-bold">お疲れ様でした！</h2>
             <p className="text-muted-foreground">フレーズリピーティング 1周完了</p>

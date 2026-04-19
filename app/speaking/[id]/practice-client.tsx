@@ -23,7 +23,7 @@ function CountdownRing({ remaining, total }: { remaining: number; total: number 
         <circle
           cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="6"
           strokeDasharray={circumference} strokeDashoffset={dashOffset} strokeLinecap="round"
-          className={`transition-all duration-1000 ${remaining <= 10 ? "text-destructive" : "text-[--color-grammar]"}`}
+          className={`transition-all duration-1000 ${remaining <= 10 ? "text-destructive" : "text-[color:var(--color-grammar)]"}`}
         />
       </svg>
       <span className={`absolute text-3xl font-bold tabular-nums ${remaining <= 10 ? "text-destructive" : "text-foreground"}`}>
@@ -54,7 +54,7 @@ function PastFeedbackCard({ log, index }: { log: PastLog; index: number }) {
       </div>
       {good ? (
         <p className="flex items-start gap-1.5 text-xs leading-relaxed">
-          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-[--color-success]" />
+          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-[color:var(--color-success)]" />
           <span className="text-foreground">{good}</span>
         </p>
       ) : (

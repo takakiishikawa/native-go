@@ -19,7 +19,7 @@ function PracticeCard({
   return (
     <button
       onClick={onClick}
-      className="group w-full text-left flex flex-col items-center gap-3 rounded-lg border border-[--color-border-subtle] bg-card px-4 py-5 hover:border-[--color-border-default] hover:shadow-sm transition-all"
+      className="group w-full text-left flex flex-col items-center gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-card px-4 py-5 hover:border-[var(--color-border-default)] hover:shadow-sm transition-all"
     >
       <div className={`rounded-lg p-2.5 ${iconBg}`}>
         <span className={iconColor}>{icon}</span>
@@ -50,15 +50,15 @@ export default function PracticePage() {
         <PracticeCard
           onClick={() => router.push("/repeating/expression")}
           icon={<MessageSquare className="h-5 w-5" />}
-          iconBg="bg-[--color-phrase]/10"
-          iconColor="text-[--color-phrase]"
+          iconBg="bg-[color:var(--color-phrase)]/10"
+          iconColor="text-[color:var(--color-phrase)]"
           title="フレーズ練習"
         />
         <PracticeCard
           onClick={() => router.push("/speaking")}
           icon={<Mic className="h-5 w-5" />}
-          iconBg="bg-[--color-speaking]/10"
-          iconColor="text-[--color-speaking]"
+          iconBg="bg-[color:var(--color-speaking)]/10"
+          iconColor="text-[color:var(--color-speaking)]"
           title="スピーキング"
         />
         <PracticeCard

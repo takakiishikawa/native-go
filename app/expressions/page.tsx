@@ -16,7 +16,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-3 w-3 ${i <= value ? "fill-[--color-warning] text-[--color-warning]" : "text-muted-foreground"}`}
+          className={`h-3 w-3 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground"}`}
         />
       ))}
     </span>
@@ -80,8 +80,8 @@ export default function ExpressionsPage() {
       id: "status",
       header: "ステータス",
       cell: ({ row }) => row.original.play_count >= 10
-        ? <Badge className="border-transparent bg-[--color-success-subtle] text-[--color-success]">習得済み</Badge>
-        : <Badge className="border-transparent bg-[--color-warning-subtle] text-[--color-warning]">練習中</Badge>,
+        ? <Badge className="border-transparent bg-[color:var(--color-success-subtle)] text-[color:var(--color-success)]">習得済み</Badge>
+        : <Badge className="border-transparent bg-[color:var(--color-warning-subtle)] text-[color:var(--color-warning)]">練習中</Badge>,
     },
   ], [])
 
@@ -133,7 +133,7 @@ export default function ExpressionsPage() {
                       <div
                         key={i}
                         className={`rounded-lg px-3 py-2.5 text-base ${
-                          isA ? "bg-[--color-grammar]/10 text-[--color-grammar]" : "bg-[--color-phrase]/10 text-[--color-phrase]"
+                          isA ? "bg-[color:var(--color-grammar)]/10 text-[color:var(--color-grammar)]" : "bg-[color:var(--color-phrase)]/10 text-[color:var(--color-phrase)]"
                         }`}
                       >
                         {line}
@@ -148,7 +148,7 @@ export default function ExpressionsPage() {
                   <StarRating value={selected.frequency} />
                 </div>
                 <span className="text-sm text-muted-foreground">練習回数: {selected.play_count} / 10</span>
-                <Badge className={selected.play_count >= 10 ? "border-transparent bg-[--color-success-subtle] text-[--color-success]" : "border-transparent bg-[--color-warning-subtle] text-[--color-warning]"}>
+                <Badge className={selected.play_count >= 10 ? "border-transparent bg-[color:var(--color-success-subtle)] text-[color:var(--color-success)]" : "border-transparent bg-[color:var(--color-warning-subtle)] text-[color:var(--color-warning)]"}>
                   {selected.play_count >= 10 ? "習得済み" : "練習中"}
                 </Badge>
               </div>

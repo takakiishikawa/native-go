@@ -44,8 +44,8 @@ export default async function SpeakingPage() {
 
       {/* Pending image generation banner */}
       {pending.length > 0 && (
-        <div className="rounded-lg border border-[--color-warning]/30 bg-[--color-warning]/10 px-4 py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-[--color-warning]">
+        <div className="rounded-lg border border-[color:var(--color-warning)]/30 bg-[color:var(--color-warning)]/10 px-4 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-[color:var(--color-warning)]">
             {pending.length}件の文法の画像がまだ生成されていません
           </p>
           <GenerateImagesButton items={pending} />
@@ -63,7 +63,7 @@ export default async function SpeakingPage() {
             const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons
             return (
               <Link key={g.id} href={`/speaking/${g.id}`}>
-                <Card className="cursor-pointer hover:shadow-sm hover:border-[--color-border-default] transition-all overflow-hidden group p-0 border-[--color-border-subtle] shadow-none">
+                <Card className="cursor-pointer hover:shadow-sm hover:border-[var(--color-border-default)] transition-all overflow-hidden group p-0 border-[var(--color-border-subtle)] shadow-none">
                   <div className="aspect-[4/3] overflow-hidden relative">
                     <img
                       src={g.image_url!}

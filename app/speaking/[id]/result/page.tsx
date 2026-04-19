@@ -30,9 +30,9 @@ function parseComment(raw: string) {
 function ScoreBar({ label, score }: { label: string; score: number }) {
   const pct = Math.min(100, Math.max(0, score))
   const color =
-    pct >= 80 ? "bg-[--color-grammar]" :
-    pct >= 60 ? "bg-[--color-grammar]/70" :
-    pct >= 40 ? "bg-[--color-warning]" : "bg-destructive"
+    pct >= 80 ? "bg-[color:var(--color-grammar)]" :
+    pct >= 60 ? "bg-[color:var(--color-grammar)]/70" :
+    pct >= 40 ? "bg-[color:var(--color-warning)]" : "bg-destructive"
 
   return (
     <div className="space-y-1.5">
@@ -61,8 +61,8 @@ function BeforeAfterCard({ before, after, type }: { before: string | null; after
           <p className="text-sm leading-snug text-muted-foreground">{before}</p>
         </div>
         <span className="text-muted-foreground text-center text-sm">→</span>
-        <div className="rounded-lg bg-[--color-grammar]/10 border border-[--color-grammar]/30 px-3 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[--color-grammar]/70 mb-1">After</p>
+        <div className="rounded-lg bg-[color:var(--color-grammar)]/10 border border-[color:var(--color-grammar)]/30 px-3 py-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--color-grammar)]/70 mb-1">After</p>
           <p className="text-sm leading-snug text-foreground">{after}</p>
         </div>
       </div>
@@ -89,7 +89,7 @@ function SpeakButton({ text }: { text: string }) {
     <button
       onClick={speak}
       className={`flex-shrink-0 p-1.5 rounded-full transition-colors ${
-        speaking ? "text-[--color-grammar]" : "text-muted-foreground hover:text-foreground"
+        speaking ? "text-[color:var(--color-grammar)]" : "text-muted-foreground hover:text-foreground"
       }`}
       aria-label="音声を再生"
     >
@@ -212,7 +212,7 @@ function ResultContent() {
             <>
               {/* Good point */}
               <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[--color-success]" />
+                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[color:var(--color-success)]" />
                 <p className="text-sm leading-relaxed text-foreground">{sections.good}</p>
               </div>
 

@@ -28,7 +28,7 @@ function CTACard({
 }) {
   return (
     <Link href={href}>
-      <div className="group flex items-center gap-3 rounded-lg border border-[--color-border-subtle] bg-card px-4 py-3 hover:border-[--color-border-default] hover:shadow-sm transition-all cursor-pointer">
+      <div className="group flex items-center gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-card px-4 py-3 hover:border-[var(--color-border-default)] hover:shadow-sm transition-all cursor-pointer">
         <div className={`rounded-lg p-2 shrink-0 transition-colors ${iconBg}`}>
           <span className={iconColor}>{icon}</span>
         </div>
@@ -75,10 +75,14 @@ function trendFromDiff(diff: number | null, unit: string): KpiCard["trend"] {
   }
 }
 
-function pctDesc(value: number, baseline: number | undefined, unit: string): string | undefined {
+function weeklyDesc(baseline: number | undefined, unit: string): string | undefined {
   if (!baseline || baseline <= 0) return undefined
-  const pct = Math.min(Math.round((value / baseline) * 100), 100)
-  return `週目標 ${baseline}${unit}・達成率 ${pct}%`
+  return `週目標 ${baseline}${unit}`
+}
+
+function weeklyProgress(value: number, baseline: number | undefined): number | undefined {
+  if (!baseline || baseline <= 0) return undefined
+  return Math.min(Math.round((value / baseline) * 100), 100)
 }
 
 // ─── Chart configs ────────────────────────────────────────────────────────────
@@ -254,25 +258,29 @@ export default async function HomePage() {
     {
       title: "リピーティング",
       value: `${weeklyRepeating}回`,
-      description: pctDesc(weeklyRepeating, settings?.baseline_repeating, "回"),
+      description: weeklyDesc(settings?.baseline_repeating, "回"),
+      progress: weeklyProgress(weeklyRepeating, settings?.baseline_repeating),
       trend: trendFromDiff(repeatingDiff, "回"),
     },
     {
       title: "スピーキング",
       value: `${weeklySpeaking}回`,
-      description: pctDesc(weeklySpeaking, settings?.baseline_speaking, "回"),
+      description: weeklyDesc(settings?.baseline_speaking, "回"),
+      progress: weeklyProgress(weeklySpeaking, settings?.baseline_speaking),
       trend: trendFromDiff(speakingDiff, "回"),
     },
     {
       title: "Native Camp",
       value: `${weeklyNativeCampCount * 25}分`,
-      description: pctDesc(weeklyNativeCampCount * 25, settings?.baseline_nativecamp, "分"),
+      description: weeklyDesc(settings?.baseline_nativecamp, "分"),
+      progress: weeklyProgress(weeklyNativeCampCount * 25, settings?.baseline_nativecamp),
       trend: trendFromDiff(ncCountDiff !== null ? ncCountDiff * 25 : null, "分"),
     },
     {
       title: "シャドーイング",
       value: `${weeklyShadowing}分`,
-      description: pctDesc(weeklyShadowing, settings?.baseline_shadowing, "分"),
+      description: weeklyDesc(settings?.baseline_shadowing, "分"),
+      progress: weeklyProgress(weeklyShadowing, settings?.baseline_shadowing),
       trend: trendFromDiff(shadowingDiff, "分"),
     },
     {
@@ -339,16 +347,16 @@ export default async function HomePage() {
           <CTACard
             href="/repeating/expression"
             icon={<MessageSquare className="h-4 w-4" />}
-            iconBg="bg-[--color-phrase]/10"
-            iconColor="text-[--color-phrase]"
+            iconBg="bg-[color:var(--color-phrase)]/10"
+            iconColor="text-[color:var(--color-phrase)]"
             label="フレーズリピーティング"
             sub={`練習中 ${expressionsInProgress} / 完了 ${expressionDone}`}
           />
           <CTACard
             href="/speaking"
             icon={<Mic className="h-4 w-4" />}
-            iconBg="bg-[--color-speaking]/10"
-            iconColor="text-[--color-speaking]"
+            iconBg="bg-[color:var(--color-speaking)]/10"
+            iconColor="text-[color:var(--color-speaking)]"
             label="スピーキング"
             sub={`練習中 ${speakingInProgress} / 完了 ${speakingDone}`}
           />

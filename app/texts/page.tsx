@@ -41,8 +41,8 @@ function sortLessons(lessons: Lesson[]): Lesson[] {
 function StatusBadge({ status }: { status: Lesson["status"] }) {
   const styles: Record<Lesson["status"], string> = {
     未登録: "border-transparent bg-muted text-muted-foreground",
-    練習中: "border-transparent bg-[--color-warning-subtle] text-[--color-warning]",
-    習得済み: "border-transparent bg-[--color-success-subtle] text-[--color-success]",
+    練習中: "border-transparent bg-[color:var(--color-warning-subtle)] text-[color:var(--color-warning)]",
+    習得済み: "border-transparent bg-[color:var(--color-success-subtle)] text-[color:var(--color-success)]",
   }
   return (
     <Badge variant="outline" className={styles[status]}>
@@ -57,7 +57,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-3 w-3 ${i <= value ? "fill-[--color-warning] text-[--color-warning]" : "text-muted-foreground"}`}
+          className={`h-3 w-3 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground"}`}
         />
       ))}
     </span>
@@ -66,10 +66,10 @@ function StarRating({ value }: { value: number }) {
 
 function GrammarPreview({ item }: { item: ExtractedGrammar }) {
   return (
-    <Card className="border-[--color-grammar]/30">
+    <Card className="border-[color:var(--color-grammar)]/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base text-[--color-grammar]">{item.name}</CardTitle>
+          <CardTitle className="text-base text-[color:var(--color-grammar)]">{item.name}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">文法</Badge>
             <StarRating value={item.frequency} />
@@ -81,7 +81,7 @@ function GrammarPreview({ item }: { item: ExtractedGrammar }) {
         {item.detail && <p className="text-muted-foreground">{item.detail}</p>}
         <ul className="space-y-1">
           {item.examples.map((ex, i) => (
-            <li key={i} className="text-muted-foreground pl-2 border-l-2 border-[--color-grammar]/30">{ex}</li>
+            <li key={i} className="text-muted-foreground pl-2 border-l-2 border-[color:var(--color-grammar)]/30">{ex}</li>
           ))}
         </ul>
       </CardContent>
@@ -91,10 +91,10 @@ function GrammarPreview({ item }: { item: ExtractedGrammar }) {
 
 function ExpressionPreview({ item }: { item: ExtractedExpression }) {
   return (
-    <Card className="border-[--color-phrase]/30">
+    <Card className="border-[color:var(--color-phrase)]/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base text-[--color-phrase]">{item.expression}</CardTitle>
+          <CardTitle className="text-base text-[color:var(--color-phrase)]">{item.expression}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">{item.category}</Badge>
             <StarRating value={item.frequency} />
@@ -108,8 +108,8 @@ function ExpressionPreview({ item }: { item: ExtractedExpression }) {
             key={i}
             className={`text-sm pl-2 py-0.5 ${
               line.startsWith("A:")
-                ? "text-[--color-grammar] border-l-2 border-[--color-grammar]/40"
-                : "text-[--color-phrase] border-l-2 border-[--color-phrase]/40"
+                ? "text-[color:var(--color-grammar)] border-l-2 border-[color:var(--color-grammar)]/40"
+                : "text-[color:var(--color-phrase)] border-l-2 border-[color:var(--color-phrase)]/40"
             }`}
           >
             {line}
@@ -541,8 +541,8 @@ export default function TextsPage() {
                   {s.total}
                   <span className="text-base font-normal text-muted-foreground ml-1">件</span>
                 </span>
-                <Badge className="border-transparent bg-[--color-warning-subtle] text-[--color-warning]">練習中 {s.inProgress}</Badge>
-                <Badge className="border-transparent bg-[--color-success-subtle] text-[--color-success]">習得済み {s.done}</Badge>
+                <Badge className="border-transparent bg-[color:var(--color-warning-subtle)] text-[color:var(--color-warning)]">練習中 {s.inProgress}</Badge>
+                <Badge className="border-transparent bg-[color:var(--color-success-subtle)] text-[color:var(--color-success)]">習得済み {s.done}</Badge>
                 <Badge className="border-transparent bg-muted text-muted-foreground">未登録 {s.unregistered}</Badge>
               </div>
               <Button size="sm" onClick={() => setShowAddModal(true)}>
