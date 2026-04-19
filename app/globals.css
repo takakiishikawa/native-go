@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source "../node_modules/@takaki/go-design-system/dist";
+@import "@takaki/go-design-system/theme.css";
 @import "react-day-picker/src/style.css";
 
 /* class-based dark mode: responds to .dark on <html> */
