@@ -121,7 +121,7 @@ export default function LessonsPage() {
       <PageHeader title="レッスン管理" description="受講状況の管理" />
 
       <Tabs defaultValue="1">
-        <TabsList>
+        <TabsList variant="underline">
           <TabsTrigger value="1">Level 1</TabsTrigger>
           <TabsTrigger value="2">Level 2</TabsTrigger>
           <TabsTrigger value="3">Level 3</TabsTrigger>

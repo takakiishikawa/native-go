@@ -178,9 +178,7 @@ export function NativeGoSidebar() {
                     size="lg"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="flex items-center justify-center rounded-md bg-primary p-1.5 shrink-0">
-                      <RefreshCcw className="h-3.5 w-3.5 text-white" />
-                    </div>
+                    <RefreshCcw className="h-4 w-4 shrink-0 text-primary" />
                     <div className="flex flex-col gap-0.5 leading-none min-w-0">
                       <span className="text-xs text-muted-foreground">App</span>
                       <span className="text-[15px] font-medium tracking-tight truncate">NativeGo</span>
