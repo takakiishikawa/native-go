@@ -25,6 +25,10 @@ export async function POST(request: NextRequest) {
     console.error("[generate-images] GOOGLE_IMAGEN_API_KEY が未設定")
     return NextResponse.json({ error: "GOOGLE_IMAGEN_API_KEY not configured" }, { status: 500 })
   }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("[generate-images] SUPABASE_SERVICE_ROLE_KEY が未設定")
+    return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY not configured" }, { status: 500 })
+  }
   console.log("[generate-images] APIキー確認: OK")
 
   const results = []

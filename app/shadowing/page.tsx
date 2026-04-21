@@ -23,9 +23,8 @@ export default function ShadowingPage() {
   const [videosByChannel, setVideosByChannel] = useState<Record<string, VideoWithLap[]>>({})
   const [filter, setFilter] = useState<Filter>("todo")
   const [loading, setLoading] = useState(true)
-  const [showArchived, setShowArchived] = useState(false)
-
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showArchiveModal, setShowArchiveModal] = useState(false)
   const [channelUrl, setChannelUrl] = useState("")
   const [sinceYear, setSinceYear] = useState("")
   const [fetching, setFetching] = useState(false)
@@ -206,7 +205,7 @@ export default function ShadowingPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowArchived((v) => !v)}
+                onClick={() => setShowArchiveModal(true)}
               >
                 <Archive className="h-4 w-4 mr-1.5" />
                 アーカイブ済み
@@ -263,33 +262,6 @@ export default function ShadowingPage() {
             </div>
           )}
 
-          {/* Archived channels (shown when toggled from header) */}
-          {showArchived && archivedChannels.length > 0 && (
-            <div className="flex gap-2 flex-wrap items-center">
-              {archivedChannels.map((ch) => (
-                <div key={ch.id} className="group relative flex items-center">
-                  <button
-                    onClick={() => setSelectedChannelId(ch.id)}
-                    className={cn(
-                      "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors opacity-60",
-                      selectedChannelId === ch.id
-                        ? "bg-primary text-primary-foreground opacity-100"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {ch.channel_name}
-                  </button>
-                  <button
-                    onClick={() => handleArchiveChannel(ch.id, false)}
-                    title="アーカイブ解除"
-                    className="absolute right-2 p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground transition-opacity"
-                  >
-                    <ArchiveRestore className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Content for selected channel */}
           {selectedChannelId && (
@@ -352,6 +324,33 @@ export default function ShadowingPage() {
           )}
         </>
       )}
+
+      {/* Archive modal */}
+      <Dialog open={showArchiveModal} onOpenChange={setShowArchiveModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>アーカイブ済みチャンネル</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {archivedChannels.map((ch) => (
+              <div key={ch.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-border-default)] px-4 py-3">
+                <span className="text-sm font-medium">{ch.channel_name}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleArchiveChannel(ch.id, false)}
+                >
+                  <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />
+                  戻す
+                </Button>
+              </div>
+            ))}
+          </div>
+          <FormActions>
+            <Button variant="outline" onClick={() => setShowArchiveModal(false)}>閉じる</Button>
+          </FormActions>
+        </DialogContent>
+      </Dialog>
 
       {/* Add channel modal */}
       <Dialog

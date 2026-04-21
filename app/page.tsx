@@ -76,6 +76,7 @@ function weeklyProgress(value: number, baseline: number | undefined): number | u
 const repeatingConfig: ChartConfig = {
   grammar:    { label: "文法",     color: "var(--color-primary)" },
   expression: { label: "フレーズ", color: "var(--color-primary-chart-2)" },
+  total:      { label: "合計",     color: "var(--color-foreground)" },
 }
 const speakingConfig: ChartConfig = {
   count: { label: "練習回数", color: "var(--color-primary)" },
@@ -284,7 +285,9 @@ export default async function HomePage() {
 
   const repeatingChartData = days.map(({ str, label }) => {
     const l = logMap.get(str)
-    return { label, grammar: l?.grammar_done_count ?? 0, expression: l?.expression_done_count ?? 0 }
+    const grammar = l?.grammar_done_count ?? 0
+    const expression = l?.expression_done_count ?? 0
+    return { label, grammar, expression, total: grammar + expression }
   })
   const speakingChartData = days.map(({ str, label }) => {
     const l = logMap.get(str)
@@ -339,6 +342,7 @@ export default async function HomePage() {
             config={repeatingConfig}
             xKey="label"
             yKeys={["grammar", "expression"]}
+            lineKeys={["total"]}
             unit="回"
             baseline={settings ? Math.round(settings.baseline_repeating / 7) : undefined}
           />

@@ -15,6 +15,7 @@ interface DashboardChartProps {
   config: ChartConfig
   xKey: string
   yKeys: string[]
+  lineKeys?: string[]
   unit?: string
   baseline?: number
   yDomain?: [number | string, number | string]
@@ -22,17 +23,18 @@ interface DashboardChartProps {
 }
 
 export function DashboardChart({
-  title, data, config, xKey, yKeys, unit = "", baseline, yDomain, emptyText,
+  title, data, config, xKey, yKeys, lineKeys = [], unit = "", baseline, yDomain, emptyText,
 }: DashboardChartProps) {
   const uid = useId().replace(/:/g, "")
-  const hasData = data.some((d) => yKeys.some((k) => (d[k] as number) > 0))
+  const allKeys = [...yKeys, ...lineKeys]
+  const hasData = data.some((d) => allKeys.some((k) => (d[k] as number) > 0))
 
   const augmentedData = baseline != null
     ? data.map((d) => ({ ...d, [TARGET_KEY]: baseline }))
     : data
 
   const augmentedConfig: ChartConfig = baseline != null
-    ? { ...config, [TARGET_KEY]: { label: "1日目標", color: "var(--color-muted-foreground)" } }
+    ? { ...config, [TARGET_KEY]: { label: "1日平均", color: "var(--color-muted-foreground)" } }
     : config
 
   return (
@@ -105,6 +107,21 @@ export function DashboardChart({
                     stroke={color}
                     strokeWidth={1.5}
                     fill={`url(#${uid}-${key})`}
+                    dot={false}
+                    activeDot={{ r: 3, strokeWidth: 0 }}
+                    isAnimationActive={false}
+                  />
+                )
+              })}
+              {lineKeys.map((key) => {
+                const color = (config[key]?.color as string | undefined) ?? "var(--color-muted-foreground)"
+                return (
+                  <Line
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    stroke={color}
+                    strokeWidth={1.5}
                     dot={false}
                     activeDot={{ r: 3, strokeWidth: 0 }}
                     isAnimationActive={false}

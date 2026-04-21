@@ -53,15 +53,15 @@ export function NativeCampModal({
           <DialogTitle>Native Camp 記録</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <label className="text-sm font-medium">日付</label>
               <DatePicker
                 value={toDateObj(date)}
                 onChange={(d) => { if (d) setDate(toDateStr(d)) }}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label className="text-sm font-medium">回数</label>
               <Input
                 type="number"
