@@ -65,7 +65,8 @@ Panel layout (2 columns, 2 rows):
 - Bottom-left: Characters interact using ${item.name} naturally
 - Bottom-right: Resolution or reaction
 
-Style: warm, simple illustration with clear panel borders between each frame. Characters should be consistent across all 4 panels. No text or speech bubbles inside the image.`
+Style: warm, simple illustration with clear panel borders between each frame. Characters should be consistent across all 4 panels.
+No text, no speech bubbles, no written words in any language, no letters, no numbers anywhere in the image.`
 
       console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`)
 

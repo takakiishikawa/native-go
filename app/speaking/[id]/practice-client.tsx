@@ -203,9 +203,18 @@ export function PracticeClient({
         </span>
       </div>
 
-      {/* Image */}
-      <div className="-mx-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[60vh]">
+      {/* Image with panel numbers overlay */}
+      <div className="-mx-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[60vh] relative">
         <img src={imageUrl} alt={grammarName} className="w-full max-h-[60vh] object-contain" />
+        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none">
+          {["①", "②", "③", "④"].map((num) => (
+            <div key={num} className="flex items-start justify-start p-1.5">
+              <span className="text-xs font-bold leading-none px-1 py-0.5 rounded bg-black/40 text-white/90 select-none">
+                {num}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="max-w-lg mx-auto space-y-3">
