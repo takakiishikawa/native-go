@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  Button,
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Expression } from "@/lib/types";
@@ -59,12 +60,13 @@ export default function ExpressionsPage() {
         accessorKey: "expression",
         header: "表現",
         cell: ({ row }) => (
-          <button
+          <Button
             onClick={() => setSelected(row.original)}
-            className="font-medium text-left hover:underline text-foreground"
+            variant="ghost"
+            className="font-medium text-left hover:underline text-foreground p-0 h-auto"
           >
             {row.original.expression}
-          </button>
+          </Button>
         ),
       },
       {

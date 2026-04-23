@@ -276,20 +276,21 @@ export default function ShadowingPage() {
             <div className="flex gap-2 flex-wrap items-center">
               {activeChannels.map((ch) => (
                 <div key={ch.id} className="group relative flex items-center">
-                  <button
+                  <Button
                     onClick={() => setSelectedChannelId(ch.id)}
+                    variant={selectedChannelId === ch.id ? "default" : "secondary"}
+                    size="sm"
                     className={cn(
-                      "pl-4 pr-8 py-1.5 rounded-full text-sm font-medium transition-colors",
-                      selectedChannelId === ch.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80",
+                      "pl-4 pr-8 rounded-full",
                     )}
                   >
                     {ch.channel_name}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => handleArchiveChannel(ch.id, true)}
                     title="アーカイブ"
+                    variant="ghost"
+                    size="sm"
                     className={cn(
                       "absolute right-2 p-0.5 rounded transition-opacity",
                       selectedChannelId === ch.id
@@ -298,7 +299,7 @@ export default function ShadowingPage() {
                     )}
                   >
                     <Archive className="h-3 w-3" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -528,7 +529,7 @@ function VideoCard({
         {isCompleted ? (
           <div
             className="absolute inset-0 flex items-center justify-center"
-            style={{ background: "rgba(0,0,0,0.45)" }}
+            style={{ background: "var(--color-overlay-default)" }}
           >
             <CheckCircle className="h-6 w-6 text-white drop-shadow" />
           </div>
@@ -538,14 +539,16 @@ function VideoCard({
           </div>
         )}
         {/* Delete button */}
-        <button
+        <Button
           onClick={handleDelete}
           disabled={deleting}
           title="削除"
+          variant="ghost"
+          size="sm"
           className="absolute top-2 left-2 p-1 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all disabled:opacity-30 cursor-pointer"
         >
           <Trash2 className="h-3 w-3" />
-        </button>
+        </Button>
       </div>
 
       {/* Title + duration */}

@@ -143,9 +143,11 @@ function SpeakButton({ text }: { text: string }) {
   }
 
   return (
-    <button
+    <Button
       onClick={speak}
       disabled={speaking}
+      variant="ghost"
+      size="sm"
       className={`flex-shrink-0 p-1.5 rounded-full transition-colors ${
         speaking
           ? "text-[color:var(--color-grammar)]"
@@ -158,7 +160,7 @@ function SpeakButton({ text }: { text: string }) {
       ) : (
         <Volume2 className="h-4 w-4" />
       )}
-    </button>
+    </Button>
   );
 }
 
