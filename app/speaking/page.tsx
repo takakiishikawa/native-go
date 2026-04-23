@@ -1,16 +1,24 @@
-import { createClient } from "@/lib/supabase/server"
-import { PageHeader } from "@takaki/go-design-system"
-import { GenerateImagesButton } from "./GenerateImagesButton"
-import { SpeakingGrid } from "@/components/speaking-grid"
+import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@takaki/go-design-system";
+import { GenerateImagesButton } from "./GenerateImagesButton";
+import { SpeakingGrid } from "@/components/speaking-grid";
 
 export default async function SpeakingPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const [{ data: grammars }, { data: pendingGrammars }, { data: speakingLogs }] = await Promise.all([
+  const [
+    { data: grammars },
+    { data: pendingGrammars },
+    { data: speakingLogs },
+  ] = await Promise.all([
     supabase
       .from("grammar")
-      .select("id, name, summary, image_url, play_count, lessons!lesson_id(lesson_no)")
+      .select(
+        "id, name, summary, image_url, play_count, lessons!lesson_id(lesson_no)",
+      )
       .not("image_url", "is", null)
       .or("play_count.is.null,play_count.lt.10")
       .order("created_at", { ascending: false }),
@@ -20,20 +28,30 @@ export default async function SpeakingPage() {
       .is("image_url", null)
       .order("created_at", { ascending: false }),
     user
-      ? supabase.from("speaking_logs").select("grammar_id").eq("user_id", user.id)
+      ? supabase
+          .from("speaking_logs")
+          .select("grammar_id")
+          .eq("user_id", user.id)
       : Promise.resolve({ data: [] }),
-  ])
+  ]);
 
   // grammar_id ごとのセッション数を集計
-  const sessionCounts = new Map<string, number>()
+  const sessionCounts = new Map<string, number>();
   for (const log of speakingLogs ?? []) {
-    sessionCounts.set(log.grammar_id, (sessionCounts.get(log.grammar_id) ?? 0) + 1)
+    sessionCounts.set(
+      log.grammar_id,
+      (sessionCounts.get(log.grammar_id) ?? 0) + 1,
+    );
   }
 
-  const allWithImages = (grammars ?? []).map(g => ({ id: g.id, name: g.name }))
-  const items = grammars ?? []
-  const pending = pendingGrammars ?? []
-  const sessionCountsObj: Record<string, number> = Object.fromEntries(sessionCounts)
+  const allWithImages = (grammars ?? []).map((g) => ({
+    id: g.id,
+    name: g.name,
+  }));
+  const items = grammars ?? [];
+  const pending = pendingGrammars ?? [];
+  const sessionCountsObj: Record<string, number> =
+    Object.fromEntries(sessionCounts);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -61,5 +79,5 @@ export default async function SpeakingPage() {
         <SpeakingGrid items={items} sessionCounts={sessionCountsObj} />
       )}
     </div>
-  )
+  );
 }

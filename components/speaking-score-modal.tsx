@@ -1,23 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
-  Button, Input, FormActions,
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Button,
+  Input,
+  FormActions,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DatePicker,
-} from "@takaki/go-design-system"
-import { saveSpeakingScore } from "@/app/actions/practice"
-import type { SpeakingScore } from "@/lib/types"
+} from "@takaki/go-design-system";
+import { saveSpeakingScore } from "@/app/actions/practice";
+import type { SpeakingScore } from "@/lib/types";
 
 function toDateObj(str: string): Date {
-  return new Date(str + "T00:00:00")
+  return new Date(str + "T00:00:00");
 }
 
 function toDateStr(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  return `${y}-${m}-${d}`
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export function SpeakingScoreModal({
@@ -26,30 +31,35 @@ export function SpeakingScoreModal({
   initialScores,
   onSaved,
 }: {
-  open: boolean
-  onClose: () => void
-  initialScores: SpeakingScore[]
-  onSaved?: () => void
+  open: boolean;
+  onClose: () => void;
+  initialScores: SpeakingScore[];
+  onSaved?: () => void;
 }) {
-  const today = new Date().toISOString().split("T")[0]
-  const [date, setDate] = useState(today)
-  const [score, setScore] = useState(70)
-  const [saving, setSaving] = useState(false)
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
+  const [score, setScore] = useState(70);
+  const [saving, setSaving] = useState(false);
 
   async function handleSave() {
-    setSaving(true)
+    setSaving(true);
     try {
-      const newScore = await saveSpeakingScore(date, score)
+      const newScore = await saveSpeakingScore(date, score);
       if (newScore) {
-        onSaved?.()
+        onSaved?.();
       }
     } catch {}
-    setSaving(false)
-    onClose()
+    setSaving(false);
+    onClose();
   }
 
   return (
-    <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>NC AI Speaking Test スコア記録</DialogTitle>
@@ -60,7 +70,9 @@ export function SpeakingScoreModal({
               <label className="text-sm font-medium">日付</label>
               <DatePicker
                 value={toDateObj(date)}
-                onChange={(d) => { if (d) setDate(toDateStr(d)) }}
+                onChange={(d) => {
+                  if (d) setDate(toDateStr(d));
+                }}
               />
             </div>
             <div className="space-y-2">
@@ -71,18 +83,24 @@ export function SpeakingScoreModal({
                 max={100}
                 value={score}
                 onChange={(e) =>
-                  setScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))
+                  setScore(
+                    Math.min(100, Math.max(0, parseInt(e.target.value) || 0)),
+                  )
                 }
               />
             </div>
           </div>
 
           <FormActions>
-            <Button variant="outline" onClick={onClose}>キャンセル</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? "保存中..." : "保存"}</Button>
+            <Button variant="outline" onClick={onClose}>
+              キャンセル
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "保存中..." : "保存"}
+            </Button>
           </FormActions>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

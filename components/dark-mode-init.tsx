@@ -11,6 +11,6 @@ export function DarkModeInit() {
     var t=localStorage.getItem('theme')||'auto';
     applyTheme(t);
     if(t==='auto') setInterval(function(){applyTheme('auto');},60000);
-  })();`
-  return <script dangerouslySetInnerHTML={{ __html: script }} />
+  })();`;
+  return <script dangerouslySetInnerHTML={{ __html: script }} />;
 }

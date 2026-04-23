@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { createClient } from "@/lib/supabase/client"
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
-import { LoginPage } from "@takaki/go-design-system"
-import { RefreshCcw } from "lucide-react"
+import { createClient } from "@/lib/supabase/client";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { LoginPage } from "@takaki/go-design-system";
+import { RefreshCcw } from "lucide-react";
 
 function LoginContent() {
-  const supabase = createClient()
-  const searchParams = useSearchParams()
-  const error = searchParams.get("error")
+  const supabase = createClient();
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
 
   async function handleGoogleSignIn() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
-    })
+    });
   }
 
   return (
@@ -29,7 +29,7 @@ function LoginContent() {
       tagline="Native Camp 学習管理アプリ"
       onGoogleSignIn={handleGoogleSignIn}
     />
-  )
+  );
 }
 
 export default function LoginPageRoute() {
@@ -37,5 +37,5 @@ export default function LoginPageRoute() {
     <Suspense>
       <LoginContent />
     </Suspense>
-  )
+  );
 }

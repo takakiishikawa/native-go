@@ -1,130 +1,194 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Tabs, TabsList, TabsTrigger, TabsContent, ChartArea, PageHeader } from "@takaki/go-design-system"
-import type { ChartConfig } from "@takaki/go-design-system"
+import { useState } from "react";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  ChartArea,
+  PageHeader,
+} from "@takaki/go-design-system";
+import type { ChartConfig } from "@takaki/go-design-system";
 
 type PracticeLog = {
-  practiced_at: string
-  grammar_done_count: number
-  expression_done_count: number
-  speaking_count: number
-}
+  practiced_at: string;
+  grammar_done_count: number;
+  expression_done_count: number;
+  speaking_count: number;
+};
 
 type NcLog = {
-  logged_at: string
-  count: number
-  minutes: number
-}
+  logged_at: string;
+  count: number;
+  minutes: number;
+};
 
 type YoutubeLog = {
-  completed_at: string
-  youtube_videos: { duration: string | null } | null
-}
+  completed_at: string;
+  youtube_videos: { duration: string | null } | null;
+};
 
 function parseDurToMin(dur: string | null | undefined): number {
-  if (!dur) return 0
-  const parts = dur.split(":").map(Number)
-  if (parts.length === 3) return parts[0] * 60 + parts[1]
-  if (parts.length === 2) return parts[0]
-  return 0
+  if (!dur) return 0;
+  const parts = dur.split(":").map(Number);
+  if (parts.length === 3) return parts[0] * 60 + parts[1];
+  if (parts.length === 2) return parts[0];
+  return 0;
 }
 
 function fmtMonth(ym: string): string {
-  const [y, m] = ym.split("-")
-  return `${y}/${m}`
+  const [y, m] = ym.split("-");
+  return `${y}/${m}`;
 }
 
 function fmtDate(str: string): string {
-  const [, m, d] = str.split("-")
-  return `${m}/${d}`
+  const [, m, d] = str.split("-");
+  return `${m}/${d}`;
 }
 
-type ChartRow = Record<string, string | number>
+type ChartRow = Record<string, string | number>;
 
-function buildMonthlyData(logs: PracticeLog[], ncLogs: NcLog[]): {
-  repeating: ChartRow[]
-  speaking: ChartRow[]
-  nativeCamp: ChartRow[]
+function buildMonthlyData(
+  logs: PracticeLog[],
+  ncLogs: NcLog[],
+): {
+  repeating: ChartRow[];
+  speaking: ChartRow[];
+  nativeCamp: ChartRow[];
 } {
-  const rMap = new Map<string, { grammar: number; expression: number; speaking: number }>()
+  const rMap = new Map<
+    string,
+    { grammar: number; expression: number; speaking: number }
+  >();
   for (const l of logs) {
-    const ym = l.practiced_at.slice(0, 7)
-    const e = rMap.get(ym) ?? { grammar: 0, expression: 0, speaking: 0 }
-    rMap.set(ym, { grammar: e.grammar + l.grammar_done_count, expression: e.expression + l.expression_done_count, speaking: e.speaking + l.speaking_count })
+    const ym = l.practiced_at.slice(0, 7);
+    const e = rMap.get(ym) ?? { grammar: 0, expression: 0, speaking: 0 };
+    rMap.set(ym, {
+      grammar: e.grammar + l.grammar_done_count,
+      expression: e.expression + l.expression_done_count,
+      speaking: e.speaking + l.speaking_count,
+    });
   }
-  const ncMap = new Map<string, number>()
+  const ncMap = new Map<string, number>();
   for (const nc of ncLogs) {
-    const ym = nc.logged_at.slice(0, 7)
-    ncMap.set(ym, (ncMap.get(ym) ?? 0) + nc.minutes)
+    const ym = nc.logged_at.slice(0, 7);
+    ncMap.set(ym, (ncMap.get(ym) ?? 0) + nc.minutes);
   }
-  const allMonths = [...new Set([...rMap.keys(), ...ncMap.keys()])].sort()
+  const allMonths = [...new Set([...rMap.keys(), ...ncMap.keys()])].sort();
   return {
-    repeating:  allMonths.map((ym) => ({ label: fmtMonth(ym), grammar: rMap.get(ym)?.grammar ?? 0, expression: rMap.get(ym)?.expression ?? 0 })),
-    speaking:   allMonths.map((ym) => ({ label: fmtMonth(ym), speaking: rMap.get(ym)?.speaking ?? 0 })),
-    nativeCamp: allMonths.map((ym) => ({ label: fmtMonth(ym), minutes: ncMap.get(ym) ?? 0 })),
-  }
+    repeating: allMonths.map((ym) => ({
+      label: fmtMonth(ym),
+      grammar: rMap.get(ym)?.grammar ?? 0,
+      expression: rMap.get(ym)?.expression ?? 0,
+    })),
+    speaking: allMonths.map((ym) => ({
+      label: fmtMonth(ym),
+      speaking: rMap.get(ym)?.speaking ?? 0,
+    })),
+    nativeCamp: allMonths.map((ym) => ({
+      label: fmtMonth(ym),
+      minutes: ncMap.get(ym) ?? 0,
+    })),
+  };
 }
 
-function buildAllTimeData(logs: PracticeLog[], ncLogs: NcLog[]): {
-  repeating: ChartRow[]
-  speaking: ChartRow[]
-  nativeCamp: ChartRow[]
+function buildAllTimeData(
+  logs: PracticeLog[],
+  ncLogs: NcLog[],
+): {
+  repeating: ChartRow[];
+  speaking: ChartRow[];
+  nativeCamp: ChartRow[];
 } {
-  const sorted = [...logs].sort((a, b) => a.practiced_at.localeCompare(b.practiced_at))
-  const ncDayMap = new Map<string, number>()
-  for (const nc of ncLogs) ncDayMap.set(nc.logged_at, (ncDayMap.get(nc.logged_at) ?? 0) + nc.minutes)
-  const sortedNcDays = [...ncDayMap.keys()].sort()
+  const sorted = [...logs].sort((a, b) =>
+    a.practiced_at.localeCompare(b.practiced_at),
+  );
+  const ncDayMap = new Map<string, number>();
+  for (const nc of ncLogs)
+    ncDayMap.set(nc.logged_at, (ncDayMap.get(nc.logged_at) ?? 0) + nc.minutes);
+  const sortedNcDays = [...ncDayMap.keys()].sort();
   return {
-    repeating:  sorted.map((l) => ({ label: fmtDate(l.practiced_at), grammar: l.grammar_done_count, expression: l.expression_done_count })),
-    speaking:   sorted.map((l) => ({ label: fmtDate(l.practiced_at), speaking: l.speaking_count })),
-    nativeCamp: sortedNcDays.map((d) => ({ label: fmtDate(d), minutes: ncDayMap.get(d)! })),
-  }
+    repeating: sorted.map((l) => ({
+      label: fmtDate(l.practiced_at),
+      grammar: l.grammar_done_count,
+      expression: l.expression_done_count,
+    })),
+    speaking: sorted.map((l) => ({
+      label: fmtDate(l.practiced_at),
+      speaking: l.speaking_count,
+    })),
+    nativeCamp: sortedNcDays.map((d) => ({
+      label: fmtDate(d),
+      minutes: ncDayMap.get(d)!,
+    })),
+  };
 }
 
-function buildShadowingData(youtubeLogs: YoutubeLog[], mode: "monthly" | "alltime"): ChartRow[] {
+function buildShadowingData(
+  youtubeLogs: YoutubeLog[],
+  mode: "monthly" | "alltime",
+): ChartRow[] {
   if (mode === "monthly") {
-    const map = new Map<string, number>()
+    const map = new Map<string, number>();
     for (const l of youtubeLogs) {
-      const ym = l.completed_at.slice(0, 7)
-      map.set(ym, (map.get(ym) ?? 0) + parseDurToMin(l.youtube_videos?.duration))
+      const ym = l.completed_at.slice(0, 7);
+      map.set(
+        ym,
+        (map.get(ym) ?? 0) + parseDurToMin(l.youtube_videos?.duration),
+      );
     }
-    return [...map.keys()].sort().map((ym) => ({ label: fmtMonth(ym), minutes: map.get(ym) ?? 0 }))
+    return [...map.keys()]
+      .sort()
+      .map((ym) => ({ label: fmtMonth(ym), minutes: map.get(ym) ?? 0 }));
   }
-  const map = new Map<string, number>()
+  const map = new Map<string, number>();
   for (const l of youtubeLogs) {
-    const d = l.completed_at.slice(0, 10)
-    map.set(d, (map.get(d) ?? 0) + parseDurToMin(l.youtube_videos?.duration))
+    const d = l.completed_at.slice(0, 10);
+    map.set(d, (map.get(d) ?? 0) + parseDurToMin(l.youtube_videos?.duration));
   }
-  return [...map.keys()].sort().map((d) => ({ label: fmtDate(d), minutes: map.get(d) ?? 0 }))
+  return [...map.keys()]
+    .sort()
+    .map((d) => ({ label: fmtDate(d), minutes: map.get(d) ?? 0 }));
 }
 
-const noRanges: never[] = []
-const xFmt = (v: string) => v
+const noRanges: never[] = [];
+const xFmt = (v: string) => v;
 
 const repeatingConfig: ChartConfig = {
-  grammar:    { label: "文法",     color: "var(--color-primary)" },
+  grammar: { label: "文法", color: "var(--color-primary)" },
   expression: { label: "フレーズ", color: "var(--color-primary-chart-2)" },
-}
+};
 const speakingConfig: ChartConfig = {
   speaking: { label: "スピーキング", color: "var(--color-primary)" },
-}
+};
 const ncConfig: ChartConfig = {
   minutes: { label: "学習時間", color: "var(--color-primary)" },
-}
+};
 const shadowingConfig: ChartConfig = {
   minutes: { label: "視聴時間", color: "var(--color-primary)" },
-}
+};
 
-export function ReportCharts({ logs, ncLogs, youtubeLogs }: { logs: PracticeLog[]; ncLogs: NcLog[]; youtubeLogs: YoutubeLog[] }) {
-  const [mode, setMode] = useState<"monthly" | "alltime">("monthly")
-  const monthly = buildMonthlyData(logs, ncLogs)
-  const alltime = buildAllTimeData(logs, ncLogs)
-  const data = mode === "monthly" ? monthly : alltime
-  const shadowingData = buildShadowingData(youtubeLogs, mode)
+export function ReportCharts({
+  logs,
+  ncLogs,
+  youtubeLogs,
+}: {
+  logs: PracticeLog[];
+  ncLogs: NcLog[];
+  youtubeLogs: YoutubeLog[];
+}) {
+  const [mode, setMode] = useState<"monthly" | "alltime">("monthly");
+  const monthly = buildMonthlyData(logs, ncLogs);
+  const alltime = buildAllTimeData(logs, ncLogs);
+  const data = mode === "monthly" ? monthly : alltime;
+  const shadowingData = buildShadowingData(youtubeLogs, mode);
 
   return (
-    <Tabs value={mode} onValueChange={(v) => setMode(v as "monthly" | "alltime")}>
+    <Tabs
+      value={mode}
+      onValueChange={(v) => setMode(v as "monthly" | "alltime")}
+    >
       <TabsList>
         <TabsTrigger value="monthly">月次</TabsTrigger>
         <TabsTrigger value="alltime">全期間</TabsTrigger>
@@ -172,5 +236,5 @@ export function ReportCharts({ logs, ncLogs, youtubeLogs }: { logs: PracticeLog[
         />
       </TabsContent>
     </Tabs>
-  )
+  );
 }

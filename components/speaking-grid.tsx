@@ -1,16 +1,23 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Card, Badge, Tabs, TabsList, TabsTrigger, TabsContent } from "@takaki/go-design-system"
+import Link from "next/link";
+import {
+  Card,
+  Badge,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@takaki/go-design-system";
 
-const SESSIONS_REQUIRED = 3
+const SESSIONS_REQUIRED = 3;
 
 type GrammarItem = {
-  id: string
-  name: string
-  image_url: string | null
-  lessons: { lesson_no: string } | { lesson_no: string }[] | null
-}
+  id: string;
+  name: string;
+  image_url: string | null;
+  lessons: { lesson_no: string } | { lesson_no: string }[] | null;
+};
 
 function SessionDots({ count }: { count: number }) {
   return (
@@ -19,16 +26,18 @@ function SessionDots({ count }: { count: number }) {
         <span
           key={i}
           className={`inline-block w-2 h-2 rounded-full transition-colors ${
-            i < count ? "bg-[color:var(--color-grammar)]" : "bg-muted-foreground/20"
+            i < count
+              ? "bg-[color:var(--color-grammar)]"
+              : "bg-muted-foreground/20"
           }`}
         />
       ))}
     </div>
-  )
+  );
 }
 
 function GrammarCard({ g, sessions }: { g: GrammarItem; sessions: number }) {
-  const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons
+  const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons;
   return (
     <Link href={`/speaking/${g.id}`}>
       <Card className="cursor-pointer hover:shadow-md transition-all overflow-hidden group p-0 border-[var(--color-border-default)] shadow-sm">
@@ -42,47 +51,67 @@ function GrammarCard({ g, sessions }: { g: GrammarItem; sessions: number }) {
         <div className="p-3 space-y-1.5">
           <div className="flex items-center justify-between gap-2">
             {lesson ? (
-              <Badge variant="outline">No.{(lesson as { lesson_no: string }).lesson_no}</Badge>
-            ) : <span />}
+              <Badge variant="outline">
+                No.{(lesson as { lesson_no: string }).lesson_no}
+              </Badge>
+            ) : (
+              <span />
+            )}
             <SessionDots count={sessions} />
           </div>
-          <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2">{g.name}</p>
+          <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2">
+            {g.name}
+          </p>
         </div>
       </Card>
     </Link>
-  )
+  );
 }
 
 export function SpeakingGrid({
   items,
   sessionCounts,
 }: {
-  items: GrammarItem[]
-  sessionCounts: Record<string, number>
+  items: GrammarItem[];
+  sessionCounts: Record<string, number>;
 }) {
-  const todoItems = items.filter((g) => (sessionCounts[g.id] ?? 0) < SESSIONS_REQUIRED)
-  const practicedItems = items.filter((g) => (sessionCounts[g.id] ?? 0) >= SESSIONS_REQUIRED)
+  const todoItems = items.filter(
+    (g) => (sessionCounts[g.id] ?? 0) < SESSIONS_REQUIRED,
+  );
+  const practicedItems = items.filter(
+    (g) => (sessionCounts[g.id] ?? 0) >= SESSIONS_REQUIRED,
+  );
 
   return (
     <Tabs defaultValue="todo">
       <TabsList>
         <TabsTrigger value="todo">
           これから
-          <Badge variant="secondary" className="ml-2 rounded-full">{todoItems.length}</Badge>
+          <Badge variant="secondary" className="ml-2 rounded-full">
+            {todoItems.length}
+          </Badge>
         </TabsTrigger>
         <TabsTrigger value="practiced">
           練習した
-          <Badge variant="secondary" className="ml-2 rounded-full">{practicedItems.length}</Badge>
+          <Badge variant="secondary" className="ml-2 rounded-full">
+            {practicedItems.length}
+          </Badge>
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="todo" className="mt-4">
         {todoItems.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm">全部練習しました！</div>
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            全部練習しました！
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {todoItems.map((g) => (
-              <GrammarCard key={g.id} g={g} sessions={sessionCounts[g.id] ?? 0} />
+              <GrammarCard
+                key={g.id}
+                g={g}
+                sessions={sessionCounts[g.id] ?? 0}
+              />
             ))}
           </div>
         )}
@@ -90,15 +119,21 @@ export function SpeakingGrid({
 
       <TabsContent value="practiced" className="mt-4">
         {practicedItems.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm">まだ3回完了した文法がありません</div>
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            まだ3回完了した文法がありません
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {practicedItems.map((g) => (
-              <GrammarCard key={g.id} g={g} sessions={sessionCounts[g.id] ?? 0} />
+              <GrammarCard
+                key={g.id}
+                g={g}
+                sessions={sessionCounts[g.id] ?? 0}
+              />
             ))}
           </div>
         )}
       </TabsContent>
     </Tabs>
-  )
+  );
 }

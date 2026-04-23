@@ -8,26 +8,26 @@
 
 /* NativeGo 固有セマンティックカラー（チャート等） */
 :root {
-  --color-grammar:         #5B6AF0;
-  --color-phrase:          #0D9488;
-  --color-speaking:        #D97706;
-  --color-shadow:          #7C3AED;
-  --color-primary-chart-2: #6699FF;
+  --color-grammar: #5b6af0;
+  --color-phrase: #0d9488;
+  --color-speaking: #d97706;
+  --color-shadow: #7c3aed;
+  --color-primary-chart-2: #6699ff;
 
   /* Sidebar accent: primary-tinted background for hover/active/current-page */
-  --color-sidebar-accent:            #DEEBFF;
-  --color-sidebar-accent-foreground: #0052CC;
-  --color-sidebar-foreground:        var(--color-text-primary);
-  --color-sidebar-background:        var(--color-surface);
-  --color-sidebar-border:            var(--color-border-subtle);
-  --color-sidebar-ring:              var(--color-primary);
-  --color-sidebar-primary:           var(--color-primary);
+  --color-sidebar-accent: #deebff;
+  --color-sidebar-accent-foreground: #0052cc;
+  --color-sidebar-foreground: var(--color-text-primary);
+  --color-sidebar-background: var(--color-surface);
+  --color-sidebar-border: var(--color-border-subtle);
+  --color-sidebar-ring: var(--color-primary);
+  --color-sidebar-primary: var(--color-primary);
   --color-sidebar-primary-foreground: var(--color-primary-text);
 }
 
 .dark {
-  --color-sidebar-accent:            #1B2E52;
-  --color-sidebar-accent-foreground: #85B8FF;
+  --color-sidebar-accent: #1b2e52;
+  --color-sidebar-accent-foreground: #85b8ff;
 }
 
 /* ベースカラー — ダークモードで見出しが消えないよう本文色を継承させる */
@@ -58,35 +58,47 @@
 
 /* フォント設定 + サイドバートークンをTailwindテーマに登録 */
 @theme inline {
-  --font-sans: var(--font-inter), var(--font-noto-sans), -apple-system, sans-serif;
+  --font-sans:
+    var(--font-inter), var(--font-noto-sans), -apple-system, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   /* sidebar-* ユーティリティが参照するトークン */
-  --color-sidebar-accent:            var(--color-sidebar-accent);
+  --color-sidebar-accent: var(--color-sidebar-accent);
   --color-sidebar-accent-foreground: var(--color-sidebar-accent-foreground);
-  --color-sidebar-foreground:        var(--color-sidebar-foreground);
-  --color-sidebar-background:        var(--color-sidebar-background);
-  --color-sidebar-border:            var(--color-sidebar-border);
-  --color-sidebar-ring:              var(--color-sidebar-ring);
-  --color-sidebar-primary:           var(--color-sidebar-primary);
+  --color-sidebar-foreground: var(--color-sidebar-foreground);
+  --color-sidebar-background: var(--color-sidebar-background);
+  --color-sidebar-border: var(--color-sidebar-border);
+  --color-sidebar-ring: var(--color-sidebar-ring);
+  --color-sidebar-primary: var(--color-sidebar-primary);
   --color-sidebar-primary-foreground: var(--color-sidebar-primary-foreground);
 }
 
 /* react-day-picker dark mode */
 .dark .rdp-root {
-  --rdp-accent-color: #7B8AF5;
-  --rdp-accent-background-color: rgba(123,138,245,0.15);
+  --rdp-accent-color: #7b8af5;
+  --rdp-accent-background-color: rgba(123, 138, 245, 0.15);
   color: var(--color-text-primary);
 }
-.dark .rdp-day_button:hover { background-color: var(--color-surface-subtle); }
-.dark .rdp-month_caption, .dark .rdp-nav { color: var(--color-text-primary); }
-.dark .rdp-nav button { color: var(--color-text-secondary); }
-.dark .rdp-nav button:hover { background-color: var(--color-surface-subtle); color: var(--color-text-primary); }
-.rdp-root {
-  --rdp-day-height: 36px;  --rdp-day-width: 36px;
-  --rdp-day_button-height: 34px;  --rdp-day_button-width: 34px;
+.dark .rdp-day_button:hover {
+  background-color: var(--color-surface-subtle);
 }
-
+.dark .rdp-month_caption,
+.dark .rdp-nav {
+  color: var(--color-text-primary);
+}
+.dark .rdp-nav button {
+  color: var(--color-text-secondary);
+}
+.dark .rdp-nav button:hover {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+.rdp-root {
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+}
 
 @layer utilities {
   .section-label {

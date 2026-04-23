@@ -1,18 +1,18 @@
-import { UserRound } from "lucide-react"
+import { UserRound } from "lucide-react";
 
 export function ConversationLines({
   lines,
   currentLine,
 }: {
-  lines: string[]
-  currentLine: number
+  lines: string[];
+  currentLine: number;
 }) {
   return (
     <div className="space-y-3">
       {lines.map((line, i) => {
-        const isA = line.startsWith("A:")
-        const isActive = i === currentLine
-        const text = line.replace(/^[AB]:\s*/, "")
+        const isA = line.startsWith("A:");
+        const isActive = i === currentLine;
+        const text = line.replace(/^[AB]:\s*/, "");
 
         return (
           <div key={i} className="flex items-end gap-3">
@@ -40,8 +40,8 @@ export function ConversationLines({
               {text}
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk"
-import { createClient } from "@/lib/supabase/server"
-import { NextResponse, type NextRequest } from "next/server"
+import Anthropic from "@anthropic-ai/sdk";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
-})
+});
 
 const SYSTEM_PROMPT = `You are an English learning assistant. Extract grammar points and expressions from Native Camp lesson materials.
 
@@ -43,21 +43,21 @@ Rules:
 - Use Ho Chi Minh locations naturally (District 3, Nguyen Trai, Thao Dien, etc.)
 - Natural conversational tone (not too formal, not too casual)
 - detail can be null if summary is sufficient
-- Return ONLY valid JSON, no markdown, no explanation`
+- Return ONLY valid JSON, no markdown, no explanation`;
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { text } = await request.json()
+  const { text } = await request.json();
   if (!text?.trim()) {
-    return NextResponse.json({ error: "Text is required" }, { status: 400 })
+    return NextResponse.json({ error: "Text is required" }, { status: 400 });
   }
 
   const message = await anthropic.messages.create({
@@ -70,21 +70,27 @@ export async function POST(request: NextRequest) {
         content: `Extract grammar points and expressions from this Native Camp lesson material:\n\n${text}`,
       },
     ],
-  })
+  });
 
-  const content = message.content[0]
+  const content = message.content[0];
   if (content.type !== "text") {
-    return NextResponse.json({ error: "Unexpected response" }, { status: 500 })
+    return NextResponse.json({ error: "Unexpected response" }, { status: 500 });
   }
 
   // Strip markdown code blocks if present
-  const rawText = content.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim()
+  const rawText = content.text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
 
-  let result
+  let result;
   try {
-    result = JSON.parse(rawText)
+    result = JSON.parse(rawText);
   } catch {
-    return NextResponse.json({ error: "Failed to parse response" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to parse response" },
+      { status: 500 },
+    );
   }
-  return NextResponse.json(result)
+  return NextResponse.json(result);
 }
