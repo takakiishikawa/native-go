@@ -24,7 +24,7 @@
     "@tailwindcss/postcss": "^4.2.4",
     "@takaki/go-design-system": "github:takakiishikawa/go-design-system",
     "@tanstack/react-table": "^8.21.3",
-    "@types/node": "^20",
+    "@types/node": "^25.6.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vercel/analytics": "^2.0.1",
@@ -43,10 +43,10 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.4",
-    "typescript": "^5"
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "eslint": "^9",
+    "eslint": "^10.2.1",
     "eslint-config-next": "^16.2.4"
   }
 }
