@@ -48,7 +48,7 @@ function CountdownRing({
         />
       </svg>
       <span
-        className={`absolute text-3xl font-bold tabular-nums ${remaining <= 10 ? "text-destructive" : "text-foreground"}`}
+        className={`absolute text-3xl font-semibold tabular-nums ${remaining <= 10 ? "text-destructive" : "text-foreground"}`}
       >
         {remaining}
       </span>

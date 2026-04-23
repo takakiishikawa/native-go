@@ -116,7 +116,7 @@ export default function GrammarPage() {
       <PageHeader
         title="文法一覧"
         actions={
-          <span className="text-2xl font-bold">
+          <span className="text-2xl font-semibold">
             {items.length}
             <span className="text-base font-normal text-muted-foreground ml-1">
               件

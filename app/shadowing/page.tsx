@@ -508,8 +508,8 @@ function VideoCard({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "group relative rounded-lg border border-[var(--color-border-default)] bg-card overflow-hidden flex flex-col transition-all cursor-pointer shadow-sm",
-        "hover:border-[var(--color-border-strong)] hover:shadow-md hover:-translate-y-0.5",
+        "group relative rounded-lg border border-[var(--color-border-default)] bg-card overflow-hidden flex flex-col transition-all cursor-pointer border border-border",
+        "hover:border-[var(--color-border-strong)] hover:border border-border hover:-translate-y-0.5",
       )}
     >
       {/* Thumbnail */}

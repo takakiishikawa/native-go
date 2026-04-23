@@ -180,7 +180,7 @@ function GrammarModal({
                         className={`flex items-start gap-2.5 ${isB ? "pl-6" : ""}`}
                       >
                         <span
-                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold ${
                             isA
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted-foreground/20 text-foreground"
@@ -271,7 +271,7 @@ function PhraseModal({
                         className={`flex items-start gap-2.5 ${isB ? "pl-6" : ""}`}
                       >
                         <span
-                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold ${
                             isA
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted-foreground/20 text-foreground"

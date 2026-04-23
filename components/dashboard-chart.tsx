@@ -68,7 +68,7 @@ export function DashboardChart({
       : config;
 
   return (
-    <Card className="shadow-sm border border-[var(--color-border-default)]">
+    <Card className="border border-border border border-[var(--color-border-default)]">
       <CardHeader className="pb-1 pt-4 px-5">
         <CardTitle className="text-[13px] font-medium text-muted-foreground uppercase tracking-[0.05em]">
           {title}

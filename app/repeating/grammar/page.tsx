@@ -380,11 +380,11 @@ export default function GrammarRepeatingPage() {
 
       {showComplete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border rounded-lg p-8 text-center space-y-4 w-full max-w-sm shadow-sm">
+          <div className="bg-card border rounded-lg p-8 text-center space-y-4 w-full max-w-sm border border-border">
             <div className="rounded-full bg-[color:var(--color-success-subtle)] p-4 w-20 h-20 flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-10 w-10 text-[color:var(--color-success)]" />
             </div>
-            <h2 className="text-2xl font-bold">お疲れ様でした！</h2>
+            <h2 className="text-2xl font-semibold">お疲れ様でした！</h2>
             <p className="text-muted-foreground">文法リピーティング 1周完了</p>
             {commentLoading ? (
               <div className="flex justify-center py-2">

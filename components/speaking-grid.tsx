@@ -40,7 +40,7 @@ function GrammarCard({ g, sessions }: { g: GrammarItem; sessions: number }) {
   const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons;
   return (
     <Link href={`/speaking/${g.id}`}>
-      <Card className="cursor-pointer hover:shadow-md transition-all overflow-hidden group p-0 border-[var(--color-border-default)] shadow-sm">
+      <Card className="cursor-pointer hover:border border-border transition-all overflow-hidden group p-0 border-[var(--color-border-default)] border border-border">
         <div className="aspect-[4/3] overflow-hidden relative">
           <img
             src={g.image_url!}

@@ -28,7 +28,7 @@ function CTACard({
 }) {
   return (
     <Link href={href}>
-      <div className="group flex items-center gap-3 rounded-lg border border-[var(--color-border-default)] bg-card px-4 py-3 shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all cursor-pointer">
+      <div className="group flex items-center gap-3 rounded-lg border border-[var(--color-border-default)] bg-card px-4 py-3 border border-border hover:border-[var(--color-border-strong)] hover:border border-border transition-all cursor-pointer">
         <span className="shrink-0 flex items-center justify-center rounded-md bg-[var(--color-surface-subtle)] p-2 text-muted-foreground">
           {icon}
         </span>

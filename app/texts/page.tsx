@@ -209,7 +209,7 @@ function LessonCombobox({
         }}
       />
       {open && filtered.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md max-h-52 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover border border-border max-h-52 overflow-y-auto">
           {filtered.map((lesson) => (
             <button
               key={lesson.id}

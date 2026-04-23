@@ -277,7 +277,7 @@ function ResultContent() {
         <div className="space-y-5">
           {/* Thumbnail */}
           {data.grammar?.image_url && (
-            <div className="rounded-xl overflow-hidden bg-muted w-full aspect-[4/3]">
+            <div className="rounded-lg overflow-hidden bg-muted w-full aspect-[4/3]">
               <img
                 src={data.grammar.image_url}
                 alt=""
@@ -296,7 +296,7 @@ function ResultContent() {
                 {scoreLabel.label}
               </p>
             </div>
-            <p className="text-4xl font-bold tabular-nums">
+            <p className="text-4xl font-semibold tabular-nums">
               {avgScore}
               <span className="text-base font-normal text-muted-foreground">
                 {" "}
@@ -396,7 +396,7 @@ function ResultContent() {
                               key={i}
                               className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5"
                             >
-                              <span className="text-xs font-bold text-muted-foreground/50 mt-0.5 shrink-0">
+                              <span className="text-xs font-semibold text-muted-foreground/50 mt-0.5 shrink-0">
                                 {i + 1}
                               </span>
                               <p className="text-sm leading-relaxed flex-1">

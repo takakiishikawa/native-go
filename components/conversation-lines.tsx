@@ -29,7 +29,7 @@ export function ConversationLines({
             {/* Bubble */}
             <div
               className={[
-                "max-w-[85%] rounded-2xl rounded-bl-sm px-4 py-3 text-xl leading-relaxed transition-all duration-200",
+                "max-w-[85%] rounded-lg rounded-bl-sm px-4 py-3 text-xl leading-relaxed transition-all duration-200",
                 isActive
                   ? isA
                     ? "bg-[color:var(--color-grammar)] text-white"
