@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { PageHeader } from "@takaki/go-design-system";
+import { PageHeader, Button } from "@takaki/go-design-system";
 import { BookOpen, MessageSquare, Mic, Play } from "lucide-react";
 
 function PracticeCard({
@@ -14,7 +14,7 @@ function PracticeCard({
   title: string;
 }) {
   return (
-    <button
+    <Button
       onClick={onClick}
       className="group w-full text-left flex flex-col items-center gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-card px-4 py-5 hover:border-[var(--color-border-default)] hover:shadow-sm transition-all"
     >
@@ -22,7 +22,7 @@ function PracticeCard({
       <p className="text-[15px] font-medium text-foreground text-center leading-snug">
         {title}
       </p>
-    </button>
+    </Button>
   );
 }
 

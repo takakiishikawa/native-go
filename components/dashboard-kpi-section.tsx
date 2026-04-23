@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SectionCards, type KpiCard } from "@takaki/go-design-system";
+import { SectionCards, type KpiCard, Button } from "@takaki/go-design-system";
 import { NativeCampModal } from "@/components/native-camp-modal";
 import { SpeakingScoreModal } from "@/components/speaking-score-modal";
 import { Pencil } from "lucide-react";
@@ -16,13 +16,14 @@ const SPEAKING_SCORE_INDEX = 4;
 
 function EditIconButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
+    <Button
       onClick={onClick}
       className="p-1 rounded-md text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
       aria-label="編集"
+      variant="ghost"
     >
       <Pencil className="h-3.5 w-3.5" />
-    </button>
+    </Button>
   );
 }
 
