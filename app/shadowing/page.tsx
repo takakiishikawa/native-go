@@ -278,11 +278,11 @@ export default function ShadowingPage() {
                 <div key={ch.id} className="group relative flex items-center">
                   <Button
                     onClick={() => setSelectedChannelId(ch.id)}
-                    variant={selectedChannelId === ch.id ? "default" : "secondary"}
+                    variant={
+                      selectedChannelId === ch.id ? "default" : "secondary"
+                    }
                     size="sm"
-                    className={cn(
-                      "pl-4 pr-8 rounded-full",
-                    )}
+                    className={cn("pl-4 pr-8 rounded-full")}
                   >
                     {ch.channel_name}
                   </Button>
