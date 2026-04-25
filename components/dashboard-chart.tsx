@@ -1,26 +1,18 @@
 "use client";
 
-import { useId } from "react";
+import dynamic from "next/dynamic";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
 } from "@takaki/go-design-system";
-import {
-  ComposedChart,
-  Area,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
 
-const TARGET_KEY = "_target";
+const RechartsChart = dynamic(
+  () => import("./dashboard-chart-recharts").then((m) => m.RechartsChart),
+  { ssr: false, loading: () => <div className="h-[160px]" /> },
+);
 
 interface DashboardChartProps {
   title: string;
@@ -47,25 +39,8 @@ export function DashboardChart({
   yDomain,
   emptyText,
 }: DashboardChartProps) {
-  const uid = useId().replace(/:/g, "");
   const allKeys = [...yKeys, ...lineKeys];
   const hasData = data.some((d) => allKeys.some((k) => (d[k] as number) > 0));
-
-  const augmentedData =
-    baseline != null
-      ? data.map((d) => ({ ...d, [TARGET_KEY]: baseline }))
-      : data;
-
-  const augmentedConfig: ChartConfig =
-    baseline != null
-      ? {
-          ...config,
-          [TARGET_KEY]: {
-            label: "1日平均",
-            color: "var(--color-muted-foreground)",
-          },
-        }
-      : config;
 
   return (
     <Card className="border border-border border border-[var(--color-border-default)]">
@@ -108,104 +83,15 @@ export function DashboardChart({
             {emptyText ?? "データが溜まるとグラフが表示されます"}
           </div>
         ) : (
-          <ChartContainer config={augmentedConfig} className="h-[160px] w-full">
-            <ComposedChart
-              data={augmentedData}
-              margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
-            >
-              <defs>
-                {yKeys.map((key) => {
-                  const color =
-                    (config[key]?.color as string | undefined) ??
-                    "var(--color-primary)";
-                  return (
-                    <linearGradient
-                      key={key}
-                      id={`${uid}-${key}`}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-                    </linearGradient>
-                  );
-                })}
-              </defs>
-              <CartesianGrid vertical={false} strokeOpacity={0.15} />
-              <XAxis
-                dataKey={xKey}
-                tick={{ fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-              />
-              <YAxis
-                tick={{ fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                width={30}
-                domain={yDomain ?? [0, "auto"]}
-                tickCount={4}
-                allowDecimals={false}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
-              />
-              {yKeys.map((key) => {
-                const color =
-                  (config[key]?.color as string | undefined) ??
-                  "var(--color-primary)";
-                return (
-                  <Area
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={color}
-                    strokeWidth={1.5}
-                    fill={`url(#${uid}-${key})`}
-                    dot={false}
-                    activeDot={{ r: 3, strokeWidth: 0 }}
-                    isAnimationActive={false}
-                  />
-                );
-              })}
-              {lineKeys.map((key) => {
-                const color =
-                  (config[key]?.color as string | undefined) ??
-                  "var(--color-muted-foreground)";
-                return (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={color}
-                    strokeWidth={1.5}
-                    strokeOpacity={0.45}
-                    strokeDasharray="4 3"
-                    dot={false}
-                    activeDot={{ r: 3, strokeWidth: 0 }}
-                    isAnimationActive={false}
-                  />
-                );
-              })}
-              {baseline != null && (
-                <Line
-                  type="monotone"
-                  dataKey={TARGET_KEY}
-                  stroke="var(--color-muted-foreground)"
-                  strokeOpacity={0.5}
-                  strokeWidth={1}
-                  strokeDasharray="4 3"
-                  dot={false}
-                  activeDot={false}
-                  isAnimationActive={false}
-                />
-              )}
-            </ComposedChart>
-          </ChartContainer>
+          <RechartsChart
+            data={data}
+            config={config}
+            xKey={xKey}
+            yKeys={yKeys}
+            lineKeys={lineKeys}
+            baseline={baseline}
+            yDomain={yDomain}
+          />
         )}
       </CardContent>
     </Card>

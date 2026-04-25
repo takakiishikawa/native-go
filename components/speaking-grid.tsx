@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   Card,
@@ -41,12 +42,17 @@ function GrammarCard({ g, sessions }: { g: GrammarItem; sessions: number }) {
   return (
     <Link href={`/speaking/${g.id}`}>
       <Card className="cursor-pointer hover:border border-border transition-all overflow-hidden group p-0 border-[var(--color-border-default)] border border-border">
-        <div className="aspect-[4/3] overflow-hidden relative">
-          <img
-            src={g.image_url!}
-            alt={g.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+        <div className="aspect-[4/3] overflow-hidden relative bg-muted">
+          {g.image_url && (
+            <Image
+              src={g.image_url}
+              alt={g.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          )}
         </div>
         <div className="p-3 space-y-1.5">
           <div className="flex items-center justify-between gap-2">
