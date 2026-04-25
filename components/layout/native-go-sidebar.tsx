@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -21,15 +21,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
   Button,
   Input,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  UserMenu,
 } from "@takaki/go-design-system";
 import {
   Home,
@@ -41,12 +39,12 @@ import {
   BarChart3,
   Settings,
   Lightbulb,
-  LogOut,
   Sun,
   Moon,
   RefreshCcw,
   ChevronsUpDown,
   Check,
+  UserCog,
 } from "lucide-react";
 
 const GO_APPS = [
@@ -92,11 +90,6 @@ const navItems = [
   { href: "/report", label: "レポート", icon: BarChart3 },
 ];
 
-const footerItems = [
-  { href: "/concept", label: "コンセプト", icon: Lightbulb },
-  { href: "/settings", label: "設定", icon: Settings },
-];
-
 function isActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
   if (href === "/practice")
@@ -118,10 +111,12 @@ function isActive(href: string, pathname: string) {
 
 export function NativeGoSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [editName, setEditName] = useState("");
@@ -137,6 +132,7 @@ export function NativeGoSidebar() {
       setDisplayName(
         user.user_metadata?.display_name || user.email?.split("@")[0] || "User",
       );
+      setEmail(user.email || "");
       setAvatarUrl(user.user_metadata?.avatar_url || "");
     });
     const update = () =>
@@ -300,65 +296,36 @@ export function NativeGoSidebar() {
 
         {/* フッター */}
         <SidebarFooter>
-          <SidebarMenu>
-            {/* ユーザー */}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={openProfile}
-                className="cursor-pointer"
-              >
-                <Avatar className="h-5 w-5 shrink-0">
-                  {avatarUrl && (
-                    <AvatarImage src={avatarUrl} alt={displayName} />
-                  )}
-                  <AvatarFallback className="text-xs">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate flex-1 min-w-0">
-                  {displayName || "—"}
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            {/* サブページ（コンセプト・設定） */}
-            {footerItems.map(({ href, label, icon: Icon }) => (
-              <SidebarMenuItem key={href}>
-                <SidebarMenuButton asChild isActive={pathname === href}>
-                  <Link href={href}>
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {label}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-
-            {/* テーマ切り替え */}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={toggleTheme}
-                className="cursor-pointer"
-              >
-                {isDark ? (
-                  <Moon className="h-4 w-4 shrink-0" />
-                ) : (
-                  <Sun className="h-4 w-4 shrink-0" />
-                )}
-                {isDark ? "ダーク" : "ライト"}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            {/* ログアウト */}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={handleSignOut}
-                className="cursor-pointer"
-              >
-                <LogOut className="h-4 w-4 shrink-0" />
-                ログアウト
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <UserMenu
+            displayName={displayName || "—"}
+            email={email}
+            avatarUrl={avatarUrl}
+            items={[
+              {
+                title: "プロフィール編集",
+                icon: UserCog,
+                onSelect: openProfile,
+              },
+              {
+                title: "コンセプト",
+                icon: Lightbulb,
+                onSelect: () => router.push("/concept"),
+                isActive: pathname.startsWith("/concept"),
+              },
+              {
+                title: "設定",
+                icon: Settings,
+                onSelect: () => router.push("/settings"),
+                isActive: pathname.startsWith("/settings"),
+              },
+              {
+                title: isDark ? "ダーク" : "ライト",
+                icon: isDark ? Moon : Sun,
+                onSelect: toggleTheme,
+              },
+            ]}
+            signOut={{ onSelect: handleSignOut }}
+          />
         </SidebarFooter>
 
         <SidebarRail />
