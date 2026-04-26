@@ -1,5 +1,3 @@
-The fix is clear. I'll inline the recharts chart component directly into `dashboard-chart.tsx`, removing the dynamic import of the non-existent module.
-
 "use client";
 
 import {
