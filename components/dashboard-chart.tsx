@@ -1,6 +1,18 @@
+The fix is clear. I'll inline the recharts chart component directly into `dashboard-chart.tsx`, removing the dynamic import of the non-existent module.
+
 "use client";
 
-import dynamic from "next/dynamic";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   Card,
   CardContent,
@@ -9,10 +21,77 @@ import {
   type ChartConfig,
 } from "@takaki/go-design-system";
 
-const RechartsChart = dynamic(
-  () => import("./dashboard-chart-recharts").then((m) => m.RechartsChart),
-  { ssr: false, loading: () => <div className="h-[160px]" /> },
-);
+interface RechartsChartProps {
+  data: Record<string, unknown>[];
+  config: ChartConfig;
+  xKey: string;
+  yKeys: string[];
+  lineKeys: string[];
+  baseline?: number;
+  yDomain?: [number | string, number | string];
+}
+
+function RechartsChart({
+  data,
+  config,
+  xKey,
+  yKeys,
+  lineKeys,
+  baseline,
+  yDomain,
+}: RechartsChartProps) {
+  return (
+    <div className="h-[160px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+          <XAxis
+            dataKey={xKey}
+            tick={{ fontSize: 10, fill: "var(--color-text-secondary)" }}
+            tickLine={false}
+            axisLine={{ stroke: "var(--color-border)" }}
+          />
+          <YAxis
+            domain={yDomain ?? ["auto", "auto"]}
+            tick={{ fontSize: 10, fill: "var(--color-text-secondary)" }}
+            tickLine={false}
+            axisLine={{ stroke: "var(--color-border)" }}
+          />
+          <Tooltip
+            contentStyle={{
+              fontSize: 12,
+              borderRadius: 8,
+              border: "1px solid var(--color-border)",
+            }}
+          />
+          {yKeys.map((key) => (
+            <Bar
+              key={key}
+              dataKey={key}
+              name={config[key]?.label as string | undefined}
+              fill={(config[key]?.color as string | undefined) ?? "var(--color-primary)"}
+              radius={[2, 2, 0, 0]}
+            />
+          ))}
+          {lineKeys.map((key) => (
+            <Line
+              key={key}
+              type="monotone"
+              dataKey={key}
+              name={config[key]?.label as string | undefined}
+              stroke={(config[key]?.color as string | undefined) ?? "var(--color-primary)"}
+              strokeWidth={1.5}
+              dot={false}
+            />
+          ))}
+          {baseline !== undefined && (
+            <ReferenceLine y={baseline} stroke="var(--color-border)" strokeDasharray="4 2" />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 interface DashboardChartProps {
   title: string;
