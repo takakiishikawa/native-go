@@ -29,7 +29,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-dropzone": "^15.0.0",
-    "react-hook-form": "^7.73.1",
+    "react-hook-form": "^7.74.0",
     "recharts": "^3.8.1",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3",
