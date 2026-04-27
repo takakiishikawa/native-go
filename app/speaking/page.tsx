@@ -16,9 +16,7 @@ export default async function SpeakingPage() {
   ] = await Promise.all([
     supabase
       .from("grammar")
-      .select(
-        "id, name, summary, image_url, lessons!lesson_id(lesson_no)",
-      )
+      .select("id, name, summary, image_url, lessons!lesson_id(lesson_no)")
       .not("image_url", "is", null)
       .order("created_at", { ascending: false }),
     supabase
