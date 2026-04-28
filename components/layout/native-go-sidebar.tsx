@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import {
   Sidebar,
@@ -21,12 +22,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Button,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   UserMenu,
 } from "@takaki/go-design-system";
 import {
@@ -46,6 +41,12 @@ import {
   Check,
   UserCog,
 } from "lucide-react";
+
+const ProfileDialog = dynamic(
+  () =>
+    import("./profile-dialog").then((m) => ({ default: m.ProfileDialog })),
+  { ssr: false },
+);
 
 const GO_APPS = [
   {
@@ -113,17 +114,11 @@ export function NativeGoSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [uploadError, setUploadError] = useState("");
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -152,67 +147,14 @@ export function NativeGoSidebar() {
     document.documentElement.classList.toggle("dark", next === "dark");
   }
 
-  function openProfile() {
-    setEditName(displayName);
-    setPreviewUrl(avatarUrl);
-    setPendingFile(null);
-    setUploadError("");
-    setProfileOpen(true);
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPendingFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setUploadError("");
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    setUploadError("");
-    try {
-      let finalUrl = avatarUrl;
-      if (pendingFile) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) throw new Error("Not logged in");
-        const ext = pendingFile.name.split(".").pop() || "jpg";
-        const path = `${user.id}/avatar.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("avatars")
-          .upload(path, pendingFile, { upsert: true });
-        if (upErr) throw upErr;
-        const { data: urlData } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(path);
-        finalUrl = urlData.publicUrl;
-      }
-      const { error } = await supabase.auth.updateUser({
-        data: { display_name: editName.trim(), avatar_url: finalUrl },
-      });
-      if (error) throw error;
-      setDisplayName(editName.trim() || displayName);
-      setAvatarUrl(finalUrl);
-      setProfileOpen(false);
-    } catch (err: unknown) {
-      setUploadError(err instanceof Error ? err.message : "保存に失敗しました");
-    }
-    setSaving(false);
-  }
-
   async function handleSignOut() {
     await supabase.auth.signOut();
     window.location.href = "/login";
   }
 
-  const initials = (displayName || "U").charAt(0).toUpperCase();
-
   return (
     <>
       <Sidebar>
-        {/* ヘッダー：ロゴ + アプリ切り替え */}
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -271,7 +213,6 @@ export function NativeGoSidebar() {
           </SidebarMenu>
         </SidebarHeader>
 
-        {/* メインナビ */}
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
@@ -294,7 +235,6 @@ export function NativeGoSidebar() {
           </SidebarGroup>
         </SidebarContent>
 
-        {/* フッター */}
         <SidebarFooter>
           <UserMenu
             displayName={displayName || "—"}
@@ -304,7 +244,7 @@ export function NativeGoSidebar() {
               {
                 title: "プロフィール編集",
                 icon: UserCog,
-                onSelect: openProfile,
+                onSelect: () => setProfileOpen(true),
               },
               {
                 title: "コンセプト",
@@ -331,71 +271,16 @@ export function NativeGoSidebar() {
         <SidebarRail />
       </Sidebar>
 
-      {/* プロフィール編集ダイアログ */}
-      <Dialog
+      <ProfileDialog
         open={profileOpen}
-        onOpenChange={(open) => {
-          if (!open) setProfileOpen(false);
+        onClose={() => setProfileOpen(false)}
+        displayName={displayName}
+        avatarUrl={avatarUrl}
+        onSaved={(newName, newAvatarUrl) => {
+          setDisplayName(newName);
+          setAvatarUrl(newAvatarUrl);
         }}
-      >
-        <DialogContent className="max-w-[560px]">
-          <DialogHeader>
-            <DialogTitle>プロフィール編集</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-full overflow-hidden shrink-0 bg-primary flex items-center justify-center">
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="avatar"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="text-white text-lg font-medium">
-                    {initials}
-                  </span>
-                )}
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{editName || "—"}</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-auto p-0 text-xs text-primary hover:underline"
-                >
-                  画像を変更
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">表示名</label>
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="表示名を入力"
-              />
-            </div>
-            {uploadError && (
-              <p className="text-xs text-destructive">{uploadError}</p>
-            )}
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? "保存中..." : "保存"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      />
     </>
   );
 }
