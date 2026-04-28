@@ -43,8 +43,7 @@ import {
 } from "lucide-react";
 
 const ProfileDialog = dynamic(
-  () =>
-    import("./profile-dialog").then((m) => ({ default: m.ProfileDialog })),
+  () => import("./profile-dialog").then((m) => ({ default: m.ProfileDialog })),
   { ssr: false },
 );
 
