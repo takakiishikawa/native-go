@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Tabs,
   TabsList,
@@ -188,10 +188,13 @@ export function ReportCharts({
   youtubeLogs: YoutubeLog[];
 }) {
   const [mode, setMode] = useState<"monthly" | "alltime">("monthly");
-  const monthly = buildMonthlyData(logs, ncLogs);
-  const alltime = buildAllTimeData(logs, ncLogs);
+  const monthly = useMemo(() => buildMonthlyData(logs, ncLogs), [logs, ncLogs]);
+  const alltime = useMemo(() => buildAllTimeData(logs, ncLogs), [logs, ncLogs]);
   const data = mode === "monthly" ? monthly : alltime;
-  const shadowingData = buildShadowingData(youtubeLogs, mode);
+  const shadowingData = useMemo(
+    () => buildShadowingData(youtubeLogs, mode),
+    [youtubeLogs, mode],
+  );
 
   return (
     <Tabs
