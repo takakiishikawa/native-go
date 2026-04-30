@@ -173,9 +173,7 @@ export function GenerateImagesButton({
           throw new Error(`サーバーエラー (HTTP ${res.status})`);
         }
         if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-        const failed = (data.results ?? []).filter(
-          (r) => r.status === "error",
-        );
+        const failed = (data.results ?? []).filter((r) => r.status === "error");
         totalFailed += failed.length;
         if (failed.length > 0 && !firstError)
           firstError = failed[0]?.reason ?? "APIエラー";
@@ -218,7 +216,8 @@ export function GenerateImagesButton({
       ? `次の${nextBatchSize}件を生成 (残${items.length}件)`
       : `画像を生成 (${items.length}件)`;
   const buttonLabel = !isRunning
-    ? (customLabel ?? (force ? `画像を生成 (${items.length}件)` : simpleIdleLabel))
+    ? (customLabel ??
+      (force ? `画像を生成 (${items.length}件)` : simpleIdleLabel))
     : phase === "waiting"
       ? `次のバッチまで ${countdown}秒...`
       : force

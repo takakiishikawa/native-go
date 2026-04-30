@@ -90,7 +90,8 @@ export async function GET() {
     "studying at a quiet library",
   ];
   let h = 0;
-  for (let i = 0; i < grammar.id.length; i++) h = (h * 31 + grammar.id.charCodeAt(i)) | 0;
+  for (let i = 0; i < grammar.id.length; i++)
+    h = (h * 31 + grammar.id.charCodeAt(i)) | 0;
   const theme = STORY_THEMES[Math.abs(h) % STORY_THEMES.length];
   const prompt = `Four sequential illustration panels arranged in a 2x2 grid, showing a wordless visual story about: ${theme}.
 

@@ -275,9 +275,9 @@ function ResultContent() {
   const scoreLabel = getScoreLabel(avgScore);
   const hasBeforeAfter = Boolean(
     sections?.phraseBefore &&
-      sections.phraseBefore !== "-" &&
-      sections?.phraseAfter &&
-      sections.phraseAfter !== "-",
+    sections.phraseBefore !== "-" &&
+    sections?.phraseAfter &&
+    sections.phraseAfter !== "-",
   );
 
   return (
