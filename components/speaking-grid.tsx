@@ -7,7 +7,6 @@ const SESSIONS_REQUIRED = 3;
 
 type GrammarItem = {
   id: string;
-  name: string;
   image_url: string | null;
   lessons: { lesson_no: string } | { lesson_no: string }[] | null;
 };
@@ -46,7 +45,7 @@ function GrammarCard({
           {g.image_url && (
             <Image
               src={g.image_url}
-              alt={g.name}
+              alt=""
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -67,9 +66,6 @@ function GrammarCard({
             )}
             <SessionDots count={sessions} />
           </div>
-          <p className="font-semibold text-sm text-foreground leading-snug line-clamp-2">
-            {g.name}
-          </p>
         </div>
       </Card>
     </Link>
@@ -111,7 +107,7 @@ export function SpeakingGrid({
   const practicedTab =
     practicedItems.length === 0 ? (
       <div className="text-center py-12 text-muted-foreground text-sm">
-        まだ3回完了した文法がありません
+        まだ3回完了した問題がありません
       </div>
     ) : (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { PracticeClient } from "./practice-client";
 
+export const dynamic = "force-dynamic";
+
 export type PastLog = {
   scores: number[];
   total_score: number;
@@ -22,12 +24,8 @@ export default async function SpeakingPracticePage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/speaking");
 
-  const [{ data: grammar }, { data: logs }] = await Promise.all([
-    supabase
-      .from("grammar")
-      .select("id, image_url")
-      .eq("id", id)
-      .single(),
+  const [{ data: grammar }, { data: logs }, { count }] = await Promise.all([
+    supabase.from("grammar").select("id, image_url").eq("id", id).single(),
     supabase
       .from("speaking_logs")
       .select("scores, total_score, comment, created_at")
@@ -35,6 +33,11 @@ export default async function SpeakingPracticePage({
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(2),
+    supabase
+      .from("speaking_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("grammar_id", id)
+      .eq("user_id", user.id),
   ]);
 
   if (!grammar || !grammar.image_url) redirect("/speaking");
@@ -45,7 +48,7 @@ export default async function SpeakingPracticePage({
     <PracticeClient
       grammarId={grammar.id}
       imageUrl={grammar.image_url}
-      completedCount={pastLogs.length}
+      completedCount={count ?? pastLogs.length}
       pastLogs={pastLogs}
     />
   );
