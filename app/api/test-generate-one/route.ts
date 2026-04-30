@@ -77,14 +77,29 @@ export async function GET() {
   }
 
   // ── 2: Imagen 呼び出し ──────────────────────────────
-  const prompt = `Four sequential illustration panels arranged in a 2x2 grid, showing a wordless visual story that demonstrates the concept: ${grammar.name}.
+  const STORY_THEMES = [
+    "morning routine in a small apartment",
+    "buying coffee at a busy cafe",
+    "commuting on a crowded train",
+    "shopping at a supermarket",
+    "ordering food at a casual restaurant",
+    "meeting a friend at a park",
+    "working at an office desk",
+    "cooking dinner in a kitchen",
+    "walking a dog on a city street",
+    "studying at a quiet library",
+  ];
+  let h = 0;
+  for (let i = 0; i < grammar.id.length; i++) h = (h * 31 + grammar.id.charCodeAt(i)) | 0;
+  const theme = STORY_THEMES[Math.abs(h) % STORY_THEMES.length];
+  const prompt = `Four sequential illustration panels arranged in a 2x2 grid, showing a wordless visual story about: ${theme}.
 
 Panel 1 (top-left): Establish the scene and introduce the characters.
-Panel 2 (top-right): A situation arises naturally.
+Panel 2 (top-right): A small everyday situation arises naturally.
 Panel 3 (bottom-left): Characters interact or react to the situation.
-Panel 4 (bottom-right): The story reaches a resolution.
+Panel 4 (bottom-right): The story reaches a natural resolution.
 
-The setting is everyday urban life. Characters are consistent across all 4 panels. Clear visible borders separate each panel.
+The setting is everyday life. Characters are consistent across all 4 panels. Clear visible borders separate each panel.
 
 ABSOLUTELY NO text, NO letters, NO numbers, NO words, NO speech bubbles, NO thought bubbles, NO signs with writing, NO captions, NO labels of any kind anywhere in the image. Pure visual storytelling only.
 

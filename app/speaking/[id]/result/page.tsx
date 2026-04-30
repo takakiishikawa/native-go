@@ -13,7 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-const SCORE_LABELS = ["語彙", "文法", "流暢さ", "発音"];
+const SCORE_LABELS = ["内容", "文法", "流暢さ", "表現"];
 
 function getScoreLabel(score: number): { label: string; color: string } {
   if (score >= 90)
@@ -39,12 +39,10 @@ function parseComment(raw: string) {
   return {
     good,
     improve: getSection(raw, "IMPROVE"),
-    grammarBefore: getSection(raw, "GRAMMAR_BEFORE"),
-    grammarAfter: getSection(raw, "GRAMMAR_AFTER"),
     phraseBefore: getSection(raw, "PHRASE_BEFORE"),
     phraseAfter: getSection(raw, "PHRASE_AFTER"),
-    example1: getSection(raw, "EXAMPLE1"),
-    example2: getSection(raw, "EXAMPLE2"),
+    model1: getSection(raw, "MODEL1") ?? getSection(raw, "EXAMPLE1"),
+    model2: getSection(raw, "MODEL2") ?? getSection(raw, "EXAMPLE2"),
   };
 }
 
@@ -84,18 +82,15 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
 function BeforeAfterCard({
   before,
   after,
-  type,
 }: {
   before: string | null;
   after: string | null;
-  type: "grammar" | "phrase";
 }) {
   if (!before || !after || before === "-" || after === "-") return null;
-  const label = type === "grammar" ? "文法" : "フレーズ";
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        {label}
+        フレーズ
       </p>
       <div className="grid grid-cols-[1fr_16px_1fr] items-center gap-1.5">
         <div className="rounded-lg bg-muted/60 px-3 py-2.5">
@@ -169,7 +164,7 @@ type LogData = {
   total_score: number;
   comment: string;
   speech_text: string;
-  grammar: { name: string; summary: string; image_url: string | null } | null;
+  grammar: { image_url: string | null } | null;
 };
 
 function ResultContent() {
@@ -192,7 +187,7 @@ function ResultContent() {
     supabase
       .from("speaking_logs")
       .select(
-        "scores, total_score, comment, speech_text, grammar:grammar_id(name, summary, image_url)",
+        "scores, total_score, comment, speech_text, grammar:grammar_id(image_url)",
       )
       .eq("id", logId)
       .single()
@@ -278,19 +273,16 @@ function ResultContent() {
   const sections = parseComment(data.comment);
   const avgScore = data.total_score;
   const scoreLabel = getScoreLabel(avgScore);
-  const hasBeforeAfter =
-    (sections?.grammarBefore &&
-      sections.grammarBefore !== "-" &&
-      sections?.grammarAfter &&
-      sections.grammarAfter !== "-") ||
-    (sections?.phraseBefore &&
+  const hasBeforeAfter = Boolean(
+    sections?.phraseBefore &&
       sections.phraseBefore !== "-" &&
       sections?.phraseAfter &&
-      sections.phraseAfter !== "-");
+      sections.phraseAfter !== "-",
+  );
 
   return (
     <div className="max-w-4xl space-y-5">
-      <PageHeader title="評価結果" description={data.grammar?.name} />
+      <PageHeader title="評価結果" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Left column */}
@@ -387,31 +379,28 @@ function ResultContent() {
                         添削
                       </p>
                       <BeforeAfterCard
-                        before={sections.grammarBefore}
-                        after={sections.grammarAfter}
-                        type="grammar"
-                      />
-                      <BeforeAfterCard
                         before={sections.phraseBefore}
                         after={sections.phraseAfter}
-                        type="phrase"
                       />
                     </div>
                   )}
 
-                  {/* Example sentences */}
-                  {(sections.example1 || sections.example2) && (
-                    <div className="space-y-2 pt-1">
-                      <div className="flex items-center gap-1.5">
-                        <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                          こう言うと自然
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        {[sections.example1, sections.example2]
-                          .filter(Boolean)
-                          .map((ex, i) => (
+                  {/* Model stories */}
+                  {(() => {
+                    const models = [sections.model1, sections.model2].filter(
+                      (m): m is string => Boolean(m) && m !== "-",
+                    );
+                    if (models.length === 0) return null;
+                    return (
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-1.5">
+                          <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            こう言うと自然
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          {models.map((ex, i) => (
                             <div
                               key={i}
                               className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5"
@@ -422,12 +411,13 @@ function ResultContent() {
                               <p className="text-sm leading-relaxed flex-1">
                                 {ex}
                               </p>
-                              <SpeakButton text={ex!} />
+                              <SpeakButton text={ex} />
                             </div>
                           ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </>
               ) : (
                 <p className="text-sm text-foreground leading-relaxed">

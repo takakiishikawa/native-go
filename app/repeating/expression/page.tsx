@@ -95,6 +95,11 @@ export default function ExpressionRepeatingPage() {
   const userCancelledRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const resumeLineRef = useRef(0);
+  const rateRef = useRef(rate);
+
+  useEffect(() => {
+    rateRef.current = rate;
+  }, [rate]);
 
   useEffect(() => {
     async function load() {
@@ -204,7 +209,6 @@ export default function ExpressionRepeatingPage() {
 
     let localItems = [...items];
     let localIndex = index;
-    const playRate = rate;
     const initialCount = localItems.length;
     let playCount = 0;
     let startLine = resumeLineRef.current;
@@ -223,7 +227,7 @@ export default function ExpressionRepeatingPage() {
         for (let i = fromLine; i < lines.length; i++) {
           if (cancelRef.current) break;
           const ttsText = lines[i].replace(/^[AB]:\s*/i, "");
-          await speakLine(ttsText, i, playRate);
+          await speakLine(ttsText, i, rateRef.current);
           if (i < lines.length - 1 && !cancelRef.current) {
             await pause(10);
           }
@@ -254,7 +258,7 @@ export default function ExpressionRepeatingPage() {
         fetchComment();
       }
     }
-  }, [items, index, rate, speakLine, fetchComment]);
+  }, [items, index, speakLine, fetchComment]);
 
   if (loading) {
     return (

@@ -100,15 +100,11 @@ function PastFeedbackCard({ log, index }: { log: PastLog; index: number }) {
 
 export function PracticeClient({
   grammarId,
-  grammarName,
-  grammarSummary,
   imageUrl,
   completedCount,
   pastLogs,
 }: {
   grammarId: string;
-  grammarName: string;
-  grammarSummary: string;
   imageUrl: string;
   completedCount: number;
   pastLogs: PastLog[];
@@ -157,7 +153,7 @@ export function PracticeClient({
         const res = await fetch("/api/speaking-eval", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ grammarId, grammarName, speechText }),
+          body: JSON.stringify({ grammarId, speechText }),
         });
         const data = await res.json();
         if (data.logId) {
@@ -171,7 +167,7 @@ export function PracticeClient({
         setState("error");
       }
     },
-    [grammarId, grammarName, router],
+    [grammarId, router],
   );
 
   function stopRecording() {
@@ -255,25 +251,12 @@ export function PracticeClient({
       <div className="-mx-6 bg-muted/30 flex items-center justify-center overflow-hidden max-h-[60vh]">
         <img
           src={imageUrl}
-          alt={grammarName}
+          alt=""
           className="w-full max-h-[60vh] object-contain"
         />
       </div>
 
       <div className="max-w-lg mx-auto space-y-3">
-        {/* Recommended grammar */}
-        <div className="rounded-lg bg-muted/40 px-3 py-2.5 space-y-1">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-            推奨文法
-          </p>
-          <p className="text-sm font-medium text-foreground">{grammarName}</p>
-          {grammarSummary && (
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {grammarSummary}
-            </p>
-          )}
-        </div>
-
         {/* Past feedback */}
         {pastLogs.length > 0 && state === "idle" && (
           <div className="space-y-2">

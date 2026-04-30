@@ -13,6 +13,57 @@ export async function GET() {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const STORY_THEMES = [
+  "morning routine in a small apartment",
+  "buying coffee at a busy cafe",
+  "commuting on a crowded train",
+  "shopping at a supermarket",
+  "ordering food at a casual restaurant",
+  "meeting a friend at a park",
+  "working at an office desk",
+  "cooking dinner in a kitchen",
+  "walking a dog on a city street",
+  "studying at a quiet library",
+  "trying on clothes at a clothing store",
+  "asking for directions on a sidewalk",
+  "waiting at a bus stop",
+  "browsing books at a bookstore",
+  "having a picnic by a riverside",
+  "running errands at a post office",
+  "celebrating a birthday at home",
+  "exercising at a neighborhood gym",
+  "visiting a small flower shop",
+  "watching a street performance in a plaza",
+];
+
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+function pickTheme(seed: string): string {
+  return STORY_THEMES[hashString(seed) % STORY_THEMES.length];
+}
+
+function buildImagePrompt(seed: string): string {
+  const theme = pickTheme(seed);
+  return `Four sequential illustration panels arranged in a 2x2 grid, showing a wordless visual story about: ${theme}.
+
+Panel 1 (top-left): Establish the scene and introduce the characters.
+Panel 2 (top-right): A small everyday situation arises naturally.
+Panel 3 (bottom-left): Characters interact or react to the situation.
+Panel 4 (bottom-right): The story reaches a natural resolution.
+
+The setting is everyday life. Characters are consistent across all 4 panels. Clear visible borders separate each panel.
+
+ABSOLUTELY NO text, NO letters, NO numbers, NO words, NO speech bubbles, NO thought bubbles, NO signs with writing, NO captions, NO labels of any kind anywhere in the image. Pure visual storytelling only.
+
+Warm, simple illustration style. Clean lines. Not photorealistic.`;
+}
+
 async function callImagenAPI(
   prompt: string,
   apiKey: string,
@@ -96,18 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const imagePrompt = `Four sequential illustration panels arranged in a 2x2 grid, showing a wordless visual story that demonstrates the concept: ${item.name}.
-
-Panel 1 (top-left): Establish the scene and introduce the characters.
-Panel 2 (top-right): A situation arises naturally.
-Panel 3 (bottom-left): Characters interact or react to the situation.
-Panel 4 (bottom-right): The story reaches a resolution.
-
-The setting is everyday urban life. Characters are consistent across all 4 panels. Clear visible borders separate each panel.
-
-ABSOLUTELY NO text, NO letters, NO numbers, NO words, NO speech bubbles, NO thought bubbles, NO signs with writing, NO captions, NO labels of any kind anywhere in the image. Pure visual storytelling only.
-
-Warm, simple illustration style. Clean lines. Not photorealistic.`;
+      const imagePrompt = buildImagePrompt(item.id);
 
       console.log(`[generate-images] Imagen API呼び出し中: ${item.name}`);
       const response = await callImagenAPI(imagePrompt, apiKey);

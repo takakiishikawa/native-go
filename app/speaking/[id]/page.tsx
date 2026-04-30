@@ -25,7 +25,7 @@ export default async function SpeakingPracticePage({
   const [{ data: grammar }, { data: logs }] = await Promise.all([
     supabase
       .from("grammar")
-      .select("id, name, summary, image_url")
+      .select("id, image_url")
       .eq("id", id)
       .single(),
     supabase
@@ -44,8 +44,6 @@ export default async function SpeakingPracticePage({
   return (
     <PracticeClient
       grammarId={grammar.id}
-      grammarName={grammar.name}
-      grammarSummary={grammar.summary}
       imageUrl={grammar.image_url}
       completedCount={pastLogs.length}
       pastLogs={pastLogs}
