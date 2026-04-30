@@ -50,7 +50,9 @@ function GrammarCard({
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              {...(priority ? { priority: true } : { loading: "lazy" as const })}
+              {...(priority
+                ? { priority: true }
+                : { loading: "lazy" as const })}
             />
           )}
         </div>
@@ -114,11 +116,7 @@ export function SpeakingGrid({
     ) : (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {practicedItems.map((g) => (
-          <GrammarCard
-            key={g.id}
-            g={g}
-            sessions={sessionCounts[g.id] ?? 0}
-          />
+          <GrammarCard key={g.id} g={g} sessions={sessionCounts[g.id] ?? 0} />
         ))}
       </div>
     );
