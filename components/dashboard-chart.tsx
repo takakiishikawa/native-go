@@ -1,3 +1,6 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import {
   Card,
   CardContent,
@@ -5,7 +8,17 @@ import {
   CardTitle,
   type ChartConfig,
 } from "@takaki/go-design-system";
-import { DashboardChartInner } from "./dashboard-chart-inner";
+
+const RechartsChart = dynamic(
+  () =>
+    import("./recharts-line-chart").then((m) => ({
+      default: m.RechartsLineChart,
+    })),
+  {
+    ssr: false,
+    loading: () => <div className="h-[160px]" />,
+  },
+);
 
 interface DashboardChartProps {
   title: string;
@@ -76,7 +89,7 @@ export function DashboardChart({
             {emptyText ?? "データが溜まるとグラフが表示されます"}
           </div>
         ) : (
-          <DashboardChartInner
+          <RechartsChart
             data={data}
             config={config}
             xKey={xKey}
