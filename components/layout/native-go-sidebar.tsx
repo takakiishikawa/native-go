@@ -32,9 +32,10 @@ import {
   Sun,
   Moon,
   Languages,
-  Leaf,
+  Wallet,
   Zap,
   ChefHat,
+  Palette,
   UserCog,
 } from "lucide-react";
 
@@ -54,7 +55,7 @@ const GO_APPS = [
     name: "KenyakuGo",
     url: "https://kenyaku-go.vercel.app/",
     color: "var(--color-orange-500)",
-    icon: Leaf,
+    icon: Wallet,
   },
   {
     name: "TaskGo",
@@ -67,6 +68,12 @@ const GO_APPS = [
     url: "https://cook-go-lovat.vercel.app/dashboard",
     color: "var(--color-teal-500)",
     icon: ChefHat,
+  },
+  {
+    name: "DesignSystem",
+    url: "https://github.com/takakiishikawa/go-design-system",
+    color: "#7C3AED",
+    icon: Palette,
   },
 ];
 
