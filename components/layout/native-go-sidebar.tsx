@@ -17,6 +17,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   AppSwitcher,
+  GO_APPS,
   UserMenu,
 } from "@takaki/go-design-system";
 import {
@@ -31,10 +32,6 @@ import {
   Lightbulb,
   Sun,
   Moon,
-  Languages,
-  Wallet,
-  Zap,
-  ChefHat,
   UserCog,
 } from "lucide-react";
 
@@ -42,33 +39,6 @@ const ProfileDialog = dynamic(
   () => import("./profile-dialog").then((m) => ({ default: m.ProfileDialog })),
   { ssr: false },
 );
-
-const GO_APPS = [
-  {
-    name: "NativeGo",
-    url: "https://english-learning-app-black.vercel.app/",
-    color: "var(--color-blue-500)",
-    icon: Languages,
-  },
-  {
-    name: "KenyakuGo",
-    url: "https://kenyaku-go.vercel.app/",
-    color: "var(--color-orange-500)",
-    icon: Wallet,
-  },
-  {
-    name: "TaskGo",
-    url: "https://taskgo-dun.vercel.app/",
-    color: "var(--color-purple-500)",
-    icon: Zap,
-  },
-  {
-    name: "CookGo",
-    url: "https://cook-go-lovat.vercel.app/dashboard",
-    color: "var(--color-teal-500)",
-    icon: ChefHat,
-  },
-];
 
 const navItems = [
   { href: "/", label: "ホーム", icon: Home },
