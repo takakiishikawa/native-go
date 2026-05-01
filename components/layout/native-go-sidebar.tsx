@@ -54,11 +54,6 @@ const GO_APPS = [
     color: "var(--color-blue-500)",
   },
   {
-    name: "CareGo",
-    url: "https://care-go-mu.vercel.app/dashboard",
-    color: "var(--color-green-500)",
-  },
-  {
     name: "KenyakuGo",
     url: "https://kenyaku-go.vercel.app/",
     color: "var(--color-orange-500)",
@@ -72,11 +67,6 @@ const GO_APPS = [
     name: "CookGo",
     url: "https://cook-go-lovat.vercel.app/dashboard",
     color: "var(--color-teal-500)",
-  },
-  {
-    name: "PhysicalGo",
-    url: "https://physical-go.vercel.app/dashboard",
-    color: "var(--color-red-500)",
   },
 ] as const;
 
