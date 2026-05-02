@@ -44,6 +44,7 @@ import type {
 } from "@/lib/types";
 import Link from "next/link";
 import { Star, BookOpen, MessageSquare, Plus } from "lucide-react";
+import { useCurrentLanguage } from "@/lib/language-context";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -170,13 +171,16 @@ const LOADING_STEPS = [
 
 function AddModal({
   unregisteredLessons,
+  language,
   onClose,
   onSaved,
 }: {
   unregisteredLessons: Lesson[];
+  language: "en" | "vi";
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const isEn = language === "en";
   const [selectedLessonId, setSelectedLessonId] = useState("");
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -200,14 +204,15 @@ function AddModal({
   }, [loading]);
 
   async function handleExtract() {
-    if (!selectedLessonId || !text.trim()) return;
+    if (!text.trim()) return;
+    if (isEn && !selectedLessonId) return;
     setLoading(true);
     setResult(null);
     try {
       const res = await fetch("/api/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, language }),
       });
       if (!res.ok) throw new Error();
       setResult(await res.json());
@@ -219,20 +224,22 @@ function AddModal({
   }
 
   async function handleSave() {
-    if (!result || !selectedLessonId) return;
+    if (!result) return;
+    if (isEn && !selectedLessonId) return;
     setSaving(true);
     try {
       let savedGrammars: { id: string; name: string }[] = [];
+      const lessonId = isEn ? selectedLessonId : undefined;
       if (result.grammar.length > 0)
-        savedGrammars = await saveGrammar(result.grammar, selectedLessonId);
+        savedGrammars = await saveGrammar(result.grammar, lessonId);
       if (result.expressions.length > 0)
-        await saveExpressions(result.expressions, selectedLessonId);
-      await updateLessonStatus(selectedLessonId, "練習中");
+        await saveExpressions(result.expressions, lessonId);
+      if (isEn) await updateLessonStatus(selectedLessonId, "練習中");
       toast.success(
         `文法 ${result.grammar.length}件・フレーズ ${result.expressions.length}件を保存しました`,
       );
-      // Fire image generation in background with visible feedback
-      if (savedGrammars.length > 0) {
+      // 画像生成は EN（スピーキング機能）でだけ走らせる
+      if (isEn && savedGrammars.length > 0) {
         const genPromise = fetch("/api/generate-images", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -280,21 +287,25 @@ function AddModal({
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>テキスト追加</DialogTitle>
           <DialogDescription>
-            Native Campの教材テキストを貼り付けて、AIに文法・フレーズを抽出させます。
+            {isEn
+              ? "Native Campの教材テキストを貼り付けて、AIに文法・フレーズを抽出させます。"
+              : "ベトナム語の文法・フレーズ・例文をコピペすると、AIがCEFR A1相当の項目に仕分けて登録します。"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {result ? (
             <div className="space-y-5">
-              <div className="rounded-md border bg-muted/40 px-4 py-3 flex items-center gap-3">
-                <span className="font-mono text-sm text-muted-foreground w-14 shrink-0">
-                  {selectedLesson?.lesson_no}
-                </span>
-                <span className="text-sm font-medium">
-                  {selectedLesson?.topic}
-                </span>
-              </div>
+              {isEn && selectedLesson && (
+                <div className="rounded-md border bg-muted/40 px-4 py-3 flex items-center gap-3">
+                  <span className="font-mono text-sm text-muted-foreground w-14 shrink-0">
+                    {selectedLesson.lesson_no}
+                  </span>
+                  <span className="text-sm font-medium">
+                    {selectedLesson.topic}
+                  </span>
+                </div>
+              )}
 
               <p className="text-sm text-muted-foreground">
                 文法 {result.grammar.length}件・フレーズ{" "}
@@ -363,31 +374,39 @@ function AddModal({
             </div>
           ) : (
             <div className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="lesson-select">レッスン</Label>
-                {unregisteredLessons.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-2">
-                    未登録のレッスンがありません
-                  </p>
-                ) : (
-                  <Combobox
-                    options={lessonOptions}
-                    value={selectedLessonId}
-                    onValueChange={setSelectedLessonId}
-                    placeholder="レッスンを選択..."
-                    searchPlaceholder="レッスン番号またはトピックで検索..."
-                    emptyText="該当するレッスンがありません"
-                  />
-                )}
-              </div>
+              {isEn && (
+                <div className="space-y-2">
+                  <Label htmlFor="lesson-select">レッスン</Label>
+                  {unregisteredLessons.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-2">
+                      未登録のレッスンがありません
+                    </p>
+                  ) : (
+                    <Combobox
+                      options={lessonOptions}
+                      value={selectedLessonId}
+                      onValueChange={setSelectedLessonId}
+                      placeholder="レッスンを選択..."
+                      searchPlaceholder="レッスン番号またはトピックで検索..."
+                      emptyText="該当するレッスンがありません"
+                    />
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
-                <Label htmlFor="material-text">教材テキスト</Label>
+                <Label htmlFor="material-text">
+                  {isEn ? "教材テキスト" : "ベトナム語の素材"}
+                </Label>
                 <Textarea
                   id="material-text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Native Campの教材テキストをここに貼り付け..."
+                  placeholder={
+                    isEn
+                      ? "Native Campの教材テキストをここに貼り付け..."
+                      : "ベトナム語の単語・フレーズ・例文をここに貼り付け..."
+                  }
                   className="min-h-40 font-mono text-xs"
                 />
               </div>
@@ -418,9 +437,9 @@ function AddModal({
                 </Button>
                 <Button
                   onClick={handleExtract}
-                  disabled={!selectedLessonId || !text.trim()}
+                  disabled={(isEn && !selectedLessonId) || !text.trim()}
                 >
-                  AIで教材を解析する
+                  {isEn ? "AIで教材を解析する" : "AIで仕分けする"}
                 </Button>
               </>
             )}
@@ -534,11 +553,117 @@ function LessonList({
   );
 }
 
+// ─── FlatTextList (VI 用フラット表示) ───────────────────────────────────────────
+
+function FlatTextList({
+  grammars,
+  expressions,
+}: {
+  grammars: { id: string; name: string; play_count: number }[];
+  expressions: { id: string; expression: string; play_count: number }[];
+}) {
+  const grammarColumns: ColumnDef<{
+    id: string;
+    name: string;
+    play_count: number;
+  }>[] = [
+    {
+      accessorKey: "name",
+      header: "文法",
+      cell: ({ row }) => (
+        <span className="font-medium text-foreground">{row.original.name}</span>
+      ),
+    },
+    {
+      accessorKey: "play_count",
+      header: "練習",
+      cell: ({ row }) =>
+        row.original.play_count >= 10 ? (
+          <Tag color="success">完了</Tag>
+        ) : (
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {row.original.play_count}/10
+          </span>
+        ),
+    },
+  ];
+  const expressionColumns: ColumnDef<{
+    id: string;
+    expression: string;
+    play_count: number;
+  }>[] = [
+    {
+      accessorKey: "expression",
+      header: "フレーズ",
+      cell: ({ row }) => (
+        <span className="font-medium text-foreground">
+          {row.original.expression}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "play_count",
+      header: "練習",
+      cell: ({ row }) =>
+        row.original.play_count >= 10 ? (
+          <Tag color="success">完了</Tag>
+        ) : (
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {row.original.play_count}/10
+          </span>
+        ),
+    },
+  ];
+
+  return (
+    <Tabs defaultValue="grammar">
+      <TabsList>
+        <TabsTrigger value="grammar">
+          文法
+          <Badge variant="secondary" className="ml-2 rounded-full">
+            {grammars.length}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger value="phrase">
+          フレーズ
+          <Badge variant="secondary" className="ml-2 rounded-full">
+            {expressions.length}
+          </Badge>
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="grammar" className="mt-4">
+        <DataTable
+          columns={grammarColumns}
+          data={grammars}
+          pageSize={20}
+          emptyMessage="文法が登録されていません。テキスト追加から登録してください。"
+        />
+      </TabsContent>
+      <TabsContent value="phrase" className="mt-4">
+        <DataTable
+          columns={expressionColumns}
+          data={expressions}
+          pageSize={20}
+          emptyMessage="フレーズが登録されていません。テキスト追加から登録してください。"
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function TextsPage() {
   const supabase = createClient();
+  const language = useCurrentLanguage();
+  const isEn = language === "en";
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [grammars, setGrammars] = useState<
+    { id: string; name: string; play_count: number }[]
+  >([]);
+  const [expressions, setExpressions] = useState<
+    { id: string; expression: string; play_count: number }[]
+  >([]);
   const [grammarMap, setGrammarMap] = useState<Map<string, LessonStats>>(
     new Map(),
   );
@@ -550,12 +675,32 @@ export default function TextsPage() {
 
   const loadData = useCallback(async () => {
     const [lessonsRes, grammarRes, expressionRes] = await Promise.all([
-      supabase.from("lessons").select("*"),
-      supabase.from("grammar").select("lesson_id, play_count"),
-      supabase.from("expressions").select("lesson_id, play_count"),
+      supabase.from("lessons").select("*").eq("language", language),
+      supabase
+        .from("grammar")
+        .select("id, name, lesson_id, play_count")
+        .eq("language", language),
+      supabase
+        .from("expressions")
+        .select("id, expression, lesson_id, play_count")
+        .eq("language", language),
     ]);
 
     setLessons(sortLessons((lessonsRes.data as Lesson[]) ?? []));
+    setGrammars(
+      (grammarRes.data ?? []).map((g) => ({
+        id: g.id,
+        name: g.name,
+        play_count: g.play_count ?? 0,
+      })),
+    );
+    setExpressions(
+      (expressionRes.data ?? []).map((e) => ({
+        id: e.id,
+        expression: e.expression,
+        play_count: e.play_count ?? 0,
+      })),
+    );
 
     const gMap = new Map<string, LessonStats>();
     for (const g of grammarRes.data ?? []) {
@@ -580,7 +725,7 @@ export default function TextsPage() {
     setExpressionMap(eMap);
 
     setLoading(false);
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     loadData();
@@ -618,46 +763,51 @@ export default function TextsPage() {
         }
       />
 
-      <Tabs defaultValue="1">
-        <TabsList>
-          <TabsTrigger value="1">
-            Level 1{" "}
-            <Badge variant="secondary" className="ml-2 rounded-full">
-              {byLevel(1).length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="2">
-            Level 2{" "}
-            <Badge variant="secondary" className="ml-2 rounded-full">
-              {byLevel(2).length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="3">
-            Level 3{" "}
-            <Badge variant="secondary" className="ml-2 rounded-full">
-              {byLevel(3).length}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
+      {isEn ? (
+        <Tabs defaultValue="1">
+          <TabsList>
+            <TabsTrigger value="1">
+              Level 1{" "}
+              <Badge variant="secondary" className="ml-2 rounded-full">
+                {byLevel(1).length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="2">
+              Level 2{" "}
+              <Badge variant="secondary" className="ml-2 rounded-full">
+                {byLevel(2).length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="3">
+              Level 3{" "}
+              <Badge variant="secondary" className="ml-2 rounded-full">
+                {byLevel(3).length}
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
 
-        {[1, 2, 3].map((lvl) => (
-          <TabsContent
-            key={lvl}
-            value={String(lvl)}
-            className="space-y-3 mt-4"
-          >
-            <LessonList
-              lessons={byLevel(lvl)}
-              grammarMap={grammarMap}
-              expressionMap={expressionMap}
-            />
-          </TabsContent>
-        ))}
-      </Tabs>
+          {[1, 2, 3].map((lvl) => (
+            <TabsContent
+              key={lvl}
+              value={String(lvl)}
+              className="space-y-3 mt-4"
+            >
+              <LessonList
+                lessons={byLevel(lvl)}
+                grammarMap={grammarMap}
+                expressionMap={expressionMap}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
+      ) : (
+        <FlatTextList grammars={grammars} expressions={expressions} />
+      )}
 
       {showAddModal && (
         <AddModal
           unregisteredLessons={unregisteredLessons}
+          language={language}
           onClose={() => setShowAddModal(false)}
           onSaved={loadData}
         />

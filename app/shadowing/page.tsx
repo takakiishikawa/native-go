@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@takaki/go-design-system";
+import { useCurrentLanguage } from "@/lib/language-context";
 import type { YoutubeChannel, YoutubeVideo } from "@/lib/types";
 
 type VideoWithLap = YoutubeVideo & { lapCount: number };
@@ -33,6 +34,7 @@ type Filter = "todo" | "done";
 
 export default function ShadowingPage() {
   const supabase = createClient();
+  const language = useCurrentLanguage();
 
   const [channels, setChannels] = useState<YoutubeChannel[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(
@@ -61,9 +63,17 @@ export default function ShadowingPage() {
     }
 
     const [channelsResult, videosResult, logsResult] = await Promise.all([
-      supabase.from("youtube_channels").select("*").order("created_at"),
-      supabase.from("youtube_videos").select("*").order("sort_order"),
-      supabase.from("youtube_logs").select("video_id"),
+      supabase
+        .from("youtube_channels")
+        .select("*")
+        .eq("language", language)
+        .order("created_at"),
+      supabase
+        .from("youtube_videos")
+        .select("*")
+        .eq("language", language)
+        .order("sort_order"),
+      supabase.from("youtube_logs").select("video_id").eq("language", language),
     ]);
 
     const chList = channelsResult.data ?? [];
@@ -92,7 +102,7 @@ export default function ShadowingPage() {
       return active?.id ?? null;
     });
     setLoading(false);
-  }, [supabase]);
+  }, [supabase, language]);
 
   useEffect(() => {
     loadData();
@@ -115,6 +125,7 @@ export default function ShadowingPage() {
       user_id: user.id,
       video_id: videoId,
       lap: nextLap,
+      language,
     });
 
     if (error) {
@@ -186,6 +197,7 @@ export default function ShadowingPage() {
     try {
       const body: Record<string, string | number> = {
         channelUrl: channelUrl.trim(),
+        language,
       };
       const yr = parseInt(sinceYear);
       if (!isNaN(yr) && yr > 1990) body.sinceYear = yr;

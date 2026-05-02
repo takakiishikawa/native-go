@@ -14,6 +14,7 @@ import {
   PageHeader,
 } from "@takaki/go-design-system";
 import { incrementGrammarPlayCount } from "@/app/actions/practice";
+import { useCurrentLanguage } from "@/lib/language-context";
 import type { Grammar } from "@/lib/types";
 import {
   Play,
@@ -76,6 +77,7 @@ function CompletionNavButton({
 export default function GrammarRepeatingPage() {
   const router = useRouter();
   const supabase = createClient();
+  const language = useCurrentLanguage();
   const [items, setItems] = useState<Grammar[]>([]);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -102,6 +104,7 @@ export default function GrammarRepeatingPage() {
       const { data } = await supabase
         .from("grammar")
         .select("*")
+        .eq("language", language)
         .lt("play_count", 10)
         .order("created_at", { ascending: true });
       setItems(data ?? []);
@@ -112,7 +115,7 @@ export default function GrammarRepeatingPage() {
       cancelRef.current = true;
       audioRef.current?.pause();
     };
-  }, []);
+  }, [language]);
 
   // Fetch today's completion status when the modal appears
   useEffect(() => {
@@ -122,6 +125,7 @@ export default function GrammarRepeatingPage() {
       .from("practice_logs")
       .select("expression_done_count")
       .eq("practiced_at", today)
+      .eq("language", language)
       .maybeSingle()
       .then(({ data }) => {
         setTodayStatus({
@@ -129,7 +133,7 @@ export default function GrammarRepeatingPage() {
           expression: (data?.expression_done_count ?? 0) > 0,
         });
       });
-  }, [showComplete]);
+  }, [showComplete, language]);
 
   const stopSpeech = useCallback(() => {
     cancelRef.current = true;
@@ -155,7 +159,7 @@ export default function GrammarRepeatingPage() {
         const response = await fetch("/api/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, rate: speakRate }),
+          body: JSON.stringify({ text, rate: speakRate, language }),
         });
         if (!response.ok || cancelRef.current) return;
         const { audioContent } = await response.json();

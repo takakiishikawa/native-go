@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const VOICE_BY_LANGUAGE = {
+  en: { languageCode: "en-US", name: "en-US-Neural2-F" },
+  vi: { languageCode: "vi-VN", name: "vi-VN-Neural2-A" },
+} as const;
+
 export async function POST(req: NextRequest) {
-  const { text, rate = 1.0 } = await req.json();
+  const {
+    text,
+    rate = 1.0,
+    language,
+  } = (await req.json()) as {
+    text: string;
+    rate?: number;
+    language?: "en" | "vi";
+  };
   const apiKey = process.env.GOOGLE_TTS_API_KEY;
 
   if (!apiKey) {
@@ -11,6 +24,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const voice =
+    language === "vi" ? VOICE_BY_LANGUAGE.vi : VOICE_BY_LANGUAGE.en;
+
   const res = await fetch(
     `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`,
     {
@@ -18,7 +34,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         input: { text },
-        voice: { languageCode: "en-US", name: "en-US-Neural2-F" },
+        voice,
         audioConfig: {
           audioEncoding: "MP3",
           speakingRate: Math.min(Math.max(Number(rate), 0.25), 4.0),

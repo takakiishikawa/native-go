@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentLanguage } from "@/lib/language";
+import type { Language } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 export async function incrementGrammarPlayCount(id: string) {
@@ -8,7 +10,7 @@ export async function incrementGrammarPlayCount(id: string) {
 
   const { data: grammar } = await supabase
     .from("grammar")
-    .select("play_count, lesson_id")
+    .select("play_count, lesson_id, language")
     .eq("id", id)
     .single();
 
@@ -22,7 +24,7 @@ export async function incrementGrammarPlayCount(id: string) {
     })
     .eq("id", id);
 
-  await upsertGrammarPracticeLog();
+  await upsertPracticeLog((grammar.language as Language) ?? "en", "grammar");
   await syncLessonStatus(grammar.lesson_id);
   revalidatePath("/");
   revalidatePath("/texts");
@@ -34,7 +36,7 @@ export async function incrementExpressionPlayCount(id: string) {
 
   const { data: expression } = await supabase
     .from("expressions")
-    .select("play_count, lesson_id")
+    .select("play_count, lesson_id, language")
     .eq("id", id)
     .single();
 
@@ -48,7 +50,10 @@ export async function incrementExpressionPlayCount(id: string) {
     })
     .eq("id", id);
 
-  await upsertExpressionPracticeLog();
+  await upsertPracticeLog(
+    (expression.language as Language) ?? "en",
+    "expression",
+  );
   await syncLessonStatus(expression.lesson_id);
   revalidatePath("/");
   revalidatePath("/texts");
@@ -77,7 +82,10 @@ async function syncLessonStatus(lessonId: string | null) {
     .eq("id", lessonId);
 }
 
-async function upsertGrammarPracticeLog() {
+async function upsertPracticeLog(
+  language: Language,
+  kind: "grammar" | "expression",
+) {
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
 
@@ -85,35 +93,20 @@ async function upsertGrammarPracticeLog() {
     .from("practice_logs")
     .select("grammar_done_count, expression_done_count")
     .eq("practiced_at", today)
+    .eq("language", language)
     .maybeSingle();
 
   await supabase.from("practice_logs").upsert(
     {
       practiced_at: today,
-      grammar_done_count: (existing?.grammar_done_count ?? 0) + 1,
-      expression_done_count: existing?.expression_done_count ?? 0,
+      language,
+      grammar_done_count:
+        (existing?.grammar_done_count ?? 0) + (kind === "grammar" ? 1 : 0),
+      expression_done_count:
+        (existing?.expression_done_count ?? 0) +
+        (kind === "expression" ? 1 : 0),
     },
-    { onConflict: "practiced_at" },
-  );
-}
-
-async function upsertExpressionPracticeLog() {
-  const supabase = await createClient();
-  const today = new Date().toISOString().split("T")[0];
-
-  const { data: existing } = await supabase
-    .from("practice_logs")
-    .select("grammar_done_count, expression_done_count")
-    .eq("practiced_at", today)
-    .maybeSingle();
-
-  await supabase.from("practice_logs").upsert(
-    {
-      practiced_at: today,
-      grammar_done_count: existing?.grammar_done_count ?? 0,
-      expression_done_count: (existing?.expression_done_count ?? 0) + 1,
-    },
-    { onConflict: "practiced_at" },
+    { onConflict: "practiced_at,language" },
   );
 }
 
@@ -129,6 +122,7 @@ export async function saveGrammar(
   lessonId?: string,
 ): Promise<{ id: string; name: string }[]> {
   const supabase = await createClient();
+  const language = await getCurrentLanguage();
 
   const rows = grammar.map((g) => ({
     name: g.name,
@@ -139,6 +133,7 @@ export async function saveGrammar(
     frequency: g.frequency,
     play_count: 0,
     lesson_id: lessonId ?? null,
+    language,
   }));
 
   const { data, error } = await supabase
@@ -164,6 +159,7 @@ export async function saveExpressions(
   lessonId?: string,
 ) {
   const supabase = await createClient();
+  const language = await getCurrentLanguage();
 
   const rows = expressions.map((e) => ({
     category: e.category,
@@ -174,6 +170,7 @@ export async function saveExpressions(
     frequency: e.frequency,
     play_count: 0,
     lesson_id: lessonId ?? null,
+    language,
   }));
 
   const { error } = await supabase.from("expressions").insert(rows);

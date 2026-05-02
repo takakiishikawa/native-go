@@ -33,16 +33,26 @@ import {
   Moon,
   UserCog,
 } from "lucide-react";
+import type { Language } from "@/lib/types";
+import { LanguageSwitch } from "./language-switch";
 
 const ProfileDialog = dynamic(
   () => import("./profile-dialog").then((m) => ({ default: m.ProfileDialog })),
   { ssr: false },
 );
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof Home;
+  /** 表示対象の言語。未指定なら全言語で表示 */
+  languages?: Language[];
+};
+
+const navItems: NavItem[] = [
   { href: "/", label: "ダッシュボード", icon: Home },
   { href: "/repeating/grammar", label: "リピーティング", icon: Repeat2 },
-  { href: "/speaking", label: "スピーキング", icon: Mic },
+  { href: "/speaking", label: "スピーキング", icon: Mic, languages: ["en"] },
   { href: "/shadowing", label: "シャドーイング", icon: Volume2 },
   { href: "/texts", label: "テキスト", icon: FileText },
   { href: "/report", label: "レポート", icon: BarChart3 },
@@ -65,7 +75,11 @@ function isActive(href: string, pathname: string) {
   return pathname.startsWith(href);
 }
 
-export function NativeGoSidebar() {
+export function NativeGoSidebar({
+  currentLanguage,
+}: {
+  currentLanguage: Language;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -122,25 +136,35 @@ export function NativeGoSidebar() {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {navItems.map(({ href, label, icon: Icon }) => (
-                  <SidebarMenuItem key={href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(href, pathname)}
-                    >
-                      <Link href={href}>
-                        <Icon className="h-4 w-4 shrink-0" />
-                        {label}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {navItems
+                  .filter(
+                    ({ languages }) =>
+                      !languages || languages.includes(currentLanguage),
+                  )
+                  .map(({ href, label, icon: Icon }) => (
+                    <SidebarMenuItem key={href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive(href, pathname)}
+                      >
+                        <Link href={href}>
+                          <Icon className="h-4 w-4 shrink-0" />
+                          {label}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <LanguageSwitch current={currentLanguage} />
+            </SidebarMenuItem>
+          </SidebarMenu>
           <UserMenu
             displayName={displayName || "—"}
             email={email}

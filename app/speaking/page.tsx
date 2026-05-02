@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentLanguage } from "@/lib/language";
+import { redirect } from "next/navigation";
 import { PageHeader } from "@takaki/go-design-system";
 import { GenerateImagesButton } from "./GenerateImagesButton";
 import { SpeakingGrid } from "@/components/speaking-grid";
@@ -7,6 +9,8 @@ export const dynamic = "force-dynamic";
 
 export default async function SpeakingPage() {
   const supabase = await createClient();
+  const language = await getCurrentLanguage();
+  if (language !== "en") redirect("/");
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -19,11 +23,13 @@ export default async function SpeakingPage() {
     supabase
       .from("grammar")
       .select("id, image_url, lessons!lesson_id(lesson_no)")
+      .eq("language", "en")
       .not("image_url", "is", null)
       .order("created_at", { ascending: false }),
     supabase
       .from("grammar")
       .select("id, name")
+      .eq("language", "en")
       .is("image_url", null)
       .order("created_at", { ascending: false }),
     user

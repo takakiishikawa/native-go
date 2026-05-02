@@ -14,6 +14,7 @@ import {
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Expression } from "@/lib/types";
+import { useCurrentLanguage } from "@/lib/language-context";
 import { Star } from "lucide-react";
 
 function StarRating({ value }: { value: number }) {
@@ -31,6 +32,7 @@ function StarRating({ value }: { value: number }) {
 
 export default function ExpressionsPage() {
   const supabase = createClient();
+  const language = useCurrentLanguage();
   const [items, setItems] = useState<Expression[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Expression | null>(null);
@@ -40,12 +42,13 @@ export default function ExpressionsPage() {
       const { data } = await supabase
         .from("expressions")
         .select("*")
+        .eq("language", language)
         .order("created_at", { ascending: false });
       setItems(data ?? []);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [language]);
 
   const columns = useMemo(
     (): ColumnDef<Expression>[] => [

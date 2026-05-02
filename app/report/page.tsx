@@ -1,8 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentLanguage } from "@/lib/language";
 import { PageHeader } from "@takaki/go-design-system";
 import { ReportCharts } from "@/components/report-charts";
 export default async function ReportPage() {
   const supabase = await createClient();
+  const language = await getCurrentLanguage();
+  const isEn = language === "en";
 
   const [logsResult, ncLogsResult, youtubeLogsResult] = await Promise.all([
     supabase
@@ -10,14 +13,21 @@ export default async function ReportPage() {
       .select(
         "practiced_at, grammar_done_count, expression_done_count, speaking_count",
       )
+      .eq("language", language)
       .order("practiced_at"),
-    supabase
-      .from("native_camp_logs")
-      .select("logged_at, count, minutes")
-      .order("logged_at"),
+    isEn
+      ? supabase
+          .from("native_camp_logs")
+          .select("logged_at, count, minutes")
+          .order("logged_at")
+      : Promise.resolve({
+          data: [] as { logged_at: string; count: number; minutes: number }[],
+          error: null,
+        }),
     supabase
       .from("youtube_logs")
       .select("completed_at, youtube_videos(duration)")
+      .eq("language", language)
       .order("completed_at"),
   ]);
 
@@ -45,7 +55,12 @@ export default async function ReportPage() {
     <div className="space-y-8 max-w-4xl">
       <PageHeader title="レポート" />
 
-      <ReportCharts logs={logs} ncLogs={ncLogs} youtubeLogs={youtubeLogs} />
+      <ReportCharts
+        logs={logs}
+        ncLogs={ncLogs}
+        youtubeLogs={youtubeLogs}
+        showNativeCamp={isEn}
+      />
     </div>
   );
 }

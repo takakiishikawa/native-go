@@ -4,6 +4,7 @@ import "./globals.css";
 import { DesignTokens, Toaster } from "@takaki/go-design-system";
 import { NativeGoShell } from "@/components/layout/native-go-shell";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentLanguage } from "@/lib/language";
 import { DarkModeInit } from "@/components/dark-mode-init";
 import { LoginToast } from "@/components/login-toast";
 import { Suspense } from "react";
@@ -36,6 +37,7 @@ export default async function RootLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const currentLanguage = user ? await getCurrentLanguage() : "en";
 
   return (
     <html
@@ -54,7 +56,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full">
         {user ? (
-          <NativeGoShell>
+          <NativeGoShell currentLanguage={currentLanguage}>
             <Suspense>
               <LoginToast />
             </Suspense>

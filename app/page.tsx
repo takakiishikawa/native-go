@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentLanguage } from "@/lib/language";
 import Link from "next/link";
 import { PageHeader, type ChartConfig } from "@takaki/go-design-system";
 import { DashboardChart } from "@/components/dashboard-chart";
@@ -100,6 +101,7 @@ const scoreConfig: ChartConfig = {
 
 export default async function HomePage() {
   const supabase = await createClient();
+  const currentLanguage = await getCurrentLanguage();
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
@@ -124,12 +126,16 @@ export default async function HomePage() {
     allYoutubeLogsResult,
     settingsResult,
   ] = await Promise.all([
-    supabase.from("practice_logs").select("practiced_at"),
+    supabase
+      .from("practice_logs")
+      .select("practiced_at")
+      .eq("language", currentLanguage),
     supabase
       .from("practice_logs")
       .select(
         "practiced_at, grammar_done_count, expression_done_count, speaking_count",
       )
+      .eq("language", currentLanguage)
       .gte("practiced_at", prev14StartStr)
       .lte("practiced_at", todayStr)
       .order("practiced_at"),
@@ -170,6 +176,7 @@ export default async function HomePage() {
     const { data: fallback } = await supabase
       .from("practice_logs")
       .select("practiced_at, grammar_done_count, expression_done_count")
+      .eq("language", currentLanguage)
       .gte("practiced_at", prev14StartStr)
       .lte("practiced_at", todayStr)
       .order("practiced_at");
@@ -270,6 +277,7 @@ export default async function HomePage() {
   const settings = settingsResult.data ?? null;
   const hasNativeCampToday = (ncByDate.get(todayStr) ?? 0) > 0;
 
+  const isEn = currentLanguage === "en";
   const kpiCards: DashboardKpi[] = [
     {
       title: "リピーティング",
@@ -278,13 +286,17 @@ export default async function HomePage() {
       weekDiff: repeatingDiff,
       diffUnit: "回",
     },
-    {
-      title: "スピーキング",
-      value: `${weeklySpeaking}回`,
-      ratio: ratioOf(weeklySpeaking, settings?.baseline_speaking),
-      weekDiff: speakingDiff,
-      diffUnit: "回",
-    },
+    ...(isEn
+      ? [
+          {
+            title: "スピーキング",
+            value: `${weeklySpeaking}回`,
+            ratio: ratioOf(weeklySpeaking, settings?.baseline_speaking),
+            weekDiff: speakingDiff,
+            diffUnit: "回",
+          },
+        ]
+      : []),
     {
       title: "シャドーイング",
       value: `${weeklyShadowing}分`,
@@ -292,16 +304,20 @@ export default async function HomePage() {
       weekDiff: shadowingDiff,
       diffUnit: "分",
     },
-    {
-      title: "Native Camp",
-      value: `${weeklyNativeCampCount * 25}分`,
-      ratio: ratioOf(
-        weeklyNativeCampCount * 25,
-        settings?.baseline_nativecamp,
-      ),
-      weekDiff: ncCountDiff !== null ? ncCountDiff * 25 : null,
-      diffUnit: "分",
-    },
+    ...(isEn
+      ? [
+          {
+            title: "Native Camp",
+            value: `${weeklyNativeCampCount * 25}分`,
+            ratio: ratioOf(
+              weeklyNativeCampCount * 25,
+              settings?.baseline_nativecamp,
+            ),
+            weekDiff: ncCountDiff !== null ? ncCountDiff * 25 : null,
+            diffUnit: "分",
+          },
+        ]
+      : []),
   ];
 
   // Chart data (7 days)
@@ -336,7 +352,7 @@ export default async function HomePage() {
     <div className="space-y-8 max-w-4xl">
       <StreakPopup streak={streak} />
 
-      {settings?.speaking_test_day && (
+      {isEn && settings?.speaking_test_day && (
         <SpeakingTestReminder
           testDay={settings.speaking_test_day}
           initialScores={scores}
@@ -363,12 +379,14 @@ export default async function HomePage() {
             label="フレーズリピーティング"
             sub="音読で覚える"
           />
-          <CTACard
-            href="/speaking"
-            icon={<Mic className="h-4 w-4" />}
-            label="スピーキング"
-            sub="4コマを話す"
-          />
+          {isEn && (
+            <CTACard
+              href="/speaking"
+              icon={<Mic className="h-4 w-4" />}
+              label="スピーキング"
+              sub="4コマを話す"
+            />
+          )}
           <CTACard
             href="/shadowing"
             icon={<Play className="h-4 w-4" />}
@@ -395,17 +413,21 @@ export default async function HomePage() {
               settings ? Math.round(settings.baseline_repeating / 7) : undefined
             }
           />
-          <DashboardChart
-            title="スピーキング（7日間）"
-            data={speakingChartData}
-            config={speakingConfig}
-            xKey="label"
-            yKeys={["count"]}
-            unit="回"
-            baseline={
-              settings ? Math.round(settings.baseline_speaking / 7) : undefined
-            }
-          />
+          {isEn && (
+            <DashboardChart
+              title="スピーキング（7日間）"
+              data={speakingChartData}
+              config={speakingConfig}
+              xKey="label"
+              yKeys={["count"]}
+              unit="回"
+              baseline={
+                settings
+                  ? Math.round(settings.baseline_speaking / 7)
+                  : undefined
+              }
+            />
+          )}
           <DashboardChart
             title="シャドーイング（7日間）"
             data={shadowingChartData}
@@ -417,33 +439,39 @@ export default async function HomePage() {
               settings ? Math.round(settings.baseline_shadowing / 7) : undefined
             }
           />
-          <DashboardChart
-            title="Native Camp（7日間）"
-            data={ncChartData}
-            config={ncConfig}
-            xKey="label"
-            yKeys={["minutes"]}
-            unit="分"
-            baseline={
-              settings
-                ? Math.round(settings.baseline_nativecamp / 7)
-                : undefined
-            }
-          />
-          <DashboardChart
-            title="NC AI Speaking Test スコア"
-            data={scoreChartData}
-            config={scoreConfig}
-            xKey="label"
-            yKeys={["score"]}
-            unit="点"
-            yDomain={[0, 100]}
-            emptyText="スコアを記録するとグラフが表示されます"
-          />
+          {isEn && (
+            <DashboardChart
+              title="Native Camp（7日間）"
+              data={ncChartData}
+              config={ncConfig}
+              xKey="label"
+              yKeys={["minutes"]}
+              unit="分"
+              baseline={
+                settings
+                  ? Math.round(settings.baseline_nativecamp / 7)
+                  : undefined
+              }
+            />
+          )}
+          {isEn && (
+            <DashboardChart
+              title="NC AI Speaking Test スコア"
+              data={scoreChartData}
+              config={scoreConfig}
+              xKey="label"
+              yKeys={["score"]}
+              unit="点"
+              yDomain={[0, 100]}
+              emptyText="スコアを記録するとグラフが表示されます"
+            />
+          )}
         </div>
       </div>
 
-      <DashboardAutoCheck hasNativeCampToday={hasNativeCampToday} />
+      {isEn && (
+        <DashboardAutoCheck hasNativeCampToday={hasNativeCampToday} />
+      )}
     </div>
   );
 }

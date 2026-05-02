@@ -1,12 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentLanguage } from "@/lib/language";
 import { PageHeader } from "@takaki/go-design-system";
 import { GrammarClient } from "./grammar-client";
 
 export default async function GrammarPage() {
   const supabase = await createClient();
+  const language = await getCurrentLanguage();
   const { data } = await supabase
     .from("grammar")
     .select("*")
+    .eq("language", language)
     .order("created_at", { ascending: false });
 
   const items = data ?? [];

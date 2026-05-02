@@ -22,6 +22,7 @@ import {
   TabsTrigger,
 } from "@takaki/go-design-system";
 import { updateLessonStatus } from "@/app/actions/practice";
+import { useCurrentLanguage } from "@/lib/language-context";
 import type { Lesson } from "@/lib/types";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -86,6 +87,7 @@ function LessonTable({
 
 export default function LessonsPage() {
   const supabase = createClient();
+  const language = useCurrentLanguage();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -94,6 +96,7 @@ export default function LessonsPage() {
       const { data } = await supabase
         .from("lessons")
         .select("*")
+        .eq("language", language)
         .order("level");
       const sorted = ((data as Lesson[]) ?? []).sort((a, b) => {
         if (a.level !== b.level) return a.level - b.level;
@@ -110,7 +113,7 @@ export default function LessonsPage() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [language]);
 
   function handleStatusChange(id: string, status: Lesson["status"]) {
     setLessons((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));

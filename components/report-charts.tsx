@@ -182,10 +182,12 @@ export function ReportCharts({
   logs,
   ncLogs,
   youtubeLogs,
+  showNativeCamp = true,
 }: {
   logs: PracticeLog[];
   ncLogs: NcLog[];
   youtubeLogs: YoutubeLog[];
+  showNativeCamp?: boolean;
 }) {
   const [mode, setMode] = useState<"monthly" | "alltime">("monthly");
   const monthly = useMemo(() => buildMonthlyData(logs, ncLogs), [logs, ncLogs]);
@@ -230,14 +232,16 @@ export function ReportCharts({
           title="シャドーイング"
           unit="分"
         />
-        <ReportAreaChart
-          data={data.nativeCamp as Record<string, unknown>[]}
-          config={ncConfig}
-          xKey="label"
-          yKeys={["minutes"]}
-          title="Native Camp"
-          unit="分"
-        />
+        {showNativeCamp && (
+          <ReportAreaChart
+            data={data.nativeCamp as Record<string, unknown>[]}
+            config={ncConfig}
+            xKey="label"
+            yKeys={["minutes"]}
+            title="Native Camp"
+            unit="分"
+          />
+        )}
       </TabsContent>
     </Tabs>
   );

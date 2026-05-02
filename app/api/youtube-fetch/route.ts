@@ -35,9 +35,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { channelUrl, sinceYear } = body as {
+  const { channelUrl, sinceYear, language } = body as {
     channelUrl: string;
     sinceYear?: number;
+    language?: "en" | "vi";
   };
   if (!channelUrl) {
     return NextResponse.json(
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+  const lang: "en" | "vi" = language === "vi" ? "vi" : "en";
 
   const handleMatch = (channelUrl as string).match(/@([^/?\s]+)/);
   if (!handleMatch) {
@@ -176,6 +178,7 @@ export async function POST(request: NextRequest) {
     published_at: string | null;
     duration: string | null;
     sort_order: number;
+    language: "en" | "vi";
   };
 
   // Create channel record first
@@ -185,6 +188,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       channel_name: channelName,
       channel_url: channelUrl,
+      language: lang,
     })
     .select("id")
     .single();
@@ -213,6 +217,7 @@ export async function POST(request: NextRequest) {
       published_at: v.publishedAt,
       duration: isoDuration ? formatDuration(isoDuration) : null,
       sort_order: sortOrder++,
+      language: lang,
     });
   }
 

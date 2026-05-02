@@ -13,6 +13,7 @@ import {
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Grammar, Expression } from "@/lib/types";
+import { useCurrentLanguage } from "@/lib/language-context";
 import { Star } from "lucide-react";
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
@@ -72,6 +73,7 @@ function GrammarTab({
   onCountChange?: (n: number) => void;
 }) {
   const supabase = createClient();
+  const language = useCurrentLanguage();
   const [items, setItems] = useState<GrammarWithLesson[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,14 +81,15 @@ function GrammarTab({
     async function load() {
       const { data } = await supabase
         .from("grammar")
-        .select("*, lessons(lesson_no)");
+        .select("*, lessons(lesson_no)")
+        .eq("language", language);
       const sorted = sortByLessonNo((data ?? []) as GrammarWithLesson[]);
       setItems(sorted);
       onCountChange?.(sorted.length);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [language]);
 
   const columns = useMemo(
     (): ColumnDef<GrammarWithLesson>[] => [
@@ -155,6 +158,7 @@ function GrammarTab({
 
 function PhraseTab({ onCountChange }: { onCountChange?: (n: number) => void }) {
   const supabase = createClient();
+  const language = useCurrentLanguage();
   const [items, setItems] = useState<ExpressionWithLesson[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -162,14 +166,15 @@ function PhraseTab({ onCountChange }: { onCountChange?: (n: number) => void }) {
     async function load() {
       const { data } = await supabase
         .from("expressions")
-        .select("*, lessons(lesson_no)");
+        .select("*, lessons(lesson_no)")
+        .eq("language", language);
       const sorted = sortByLessonNo((data ?? []) as ExpressionWithLesson[]);
       setItems(sorted);
       onCountChange?.(sorted.length);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [language]);
 
   const columns = useMemo(
     (): ColumnDef<ExpressionWithLesson>[] => [
@@ -246,19 +251,26 @@ function PhraseTab({ onCountChange }: { onCountChange?: (n: number) => void }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ListPage() {
+  const language = useCurrentLanguage();
   const [grammarCount, setGrammarCount] = useState<number | null>(null);
   const [phraseCount, setPhraseCount] = useState<number | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     Promise.all([
-      supabase.from("grammar").select("id", { count: "exact", head: true }),
-      supabase.from("expressions").select("id", { count: "exact", head: true }),
+      supabase
+        .from("grammar")
+        .select("id", { count: "exact", head: true })
+        .eq("language", language),
+      supabase
+        .from("expressions")
+        .select("id", { count: "exact", head: true })
+        .eq("language", language),
     ]).then(([g, e]) => {
       setGrammarCount(g.count ?? 0);
       setPhraseCount(e.count ?? 0);
     });
-  }, []);
+  }, [language]);
 
   return (
     <div className="space-y-6">

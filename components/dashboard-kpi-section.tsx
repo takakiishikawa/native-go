@@ -40,8 +40,7 @@ export type DashboardKpi = {
   diffUnit?: string;
 };
 
-const NC_INDEX = 3;
-const SPEAKING_SCORE_INDEX = 4;
+const NC_TITLE = "Native Camp";
 
 function EditIconButton({ onClick }: { onClick: () => void }) {
   return (
@@ -103,20 +102,21 @@ export function DashboardKpiSection({
 }) {
   const [ncOpen, setNcOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
+  const hasNcCard = cards.some((c) => c.title === NC_TITLE);
 
   return (
     <>
       <div className="@xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-3">
         {cards.map((card, i) => {
           let actions: React.ReactNode;
-          if (i === NC_INDEX)
+          if (card.title === NC_TITLE)
             actions = <EditIconButton onClick={() => setNcOpen(true)} />;
-          else if (i === SPEAKING_SCORE_INDEX)
-            actions = <EditIconButton onClick={() => setScoreOpen(true)} />;
           return <KpiCardItem key={i} card={card} actions={actions} />;
         })}
       </div>
-      <NativeCampModal open={ncOpen} onClose={() => setNcOpen(false)} />
+      {hasNcCard && (
+        <NativeCampModal open={ncOpen} onClose={() => setNcOpen(false)} />
+      )}
       <SpeakingScoreModal
         open={scoreOpen}
         onClose={() => setScoreOpen(false)}

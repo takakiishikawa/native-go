@@ -1,3 +1,12 @@
+export type Language = "en" | "vi";
+
+export const DEFAULT_LANGUAGE: Language = "en";
+
+export const LANGUAGE_LABELS: Record<Language, string> = {
+  en: "英語",
+  vi: "ベトナム語",
+};
+
 export interface Grammar {
   id: string;
   name: string;
@@ -11,6 +20,7 @@ export interface Grammar {
   created_at: string;
   lesson_id: string | null;
   image_url: string | null;
+  language: Language;
 }
 
 export interface SpeakingLog {
@@ -36,6 +46,7 @@ export interface Expression {
   last_played_at: string | null;
   created_at: string;
   lesson_id: string | null;
+  language: Language;
 }
 
 export interface Lesson {
@@ -44,6 +55,7 @@ export interface Lesson {
   lesson_no: string;
   topic: string;
   status: "未登録" | "練習中" | "習得済み";
+  language: Language;
 }
 
 export interface PracticeLog {
@@ -108,6 +120,7 @@ export interface UserSettings {
   baseline_nativecamp: number;
   baseline_shadowing: number;
   speaking_test_day: number;
+  current_language: Language;
   created_at: string;
   updated_at: string;
 }
