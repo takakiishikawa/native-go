@@ -30,7 +30,7 @@ export function LanguageSwitch({ current }: { current: Language }) {
           aria-label="学習言語を切り替え"
         >
           <Globe className="h-4 w-4 shrink-0" />
-          <span>学習言語: {LANGUAGE_LABELS[current]}</span>
+          <span>{LANGUAGE_LABELS[current]}</span>
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="min-w-40">

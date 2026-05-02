@@ -151,6 +151,7 @@ export default async function HomePage() {
     supabase
       .from("youtube_logs")
       .select("completed_at, youtube_videos(duration)")
+      .eq("language", currentLanguage)
       .gte(
         "completed_at",
         new Date(new Date(prev14Start).setHours(0, 0, 0, 0)).toISOString(),
