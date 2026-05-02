@@ -373,7 +373,7 @@ export default async function HomePage() {
             href="/shadowing"
             icon={<Play className="h-4 w-4" />}
             label="シャドーイング"
-            sub="YouTubeをなぞる"
+            sub="YouTubeを見る"
           />
         </div>
       </div>
