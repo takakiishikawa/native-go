@@ -70,7 +70,7 @@ function KpiCardItem({
   const showFooter = card.ratio != null || card.weekDiff != null;
 
   return (
-    <Card className="@container/card relative shadow-xs bg-gradient-to-t from-primary/5 to-card">
+    <Card className="@container/card relative shadow-xs">
       {actions && <div className="absolute top-2 right-2 z-10">{actions}</div>}
       <CardHeader className="pb-2">
         <CardDescription>{card.title}</CardDescription>

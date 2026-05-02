@@ -1,0 +1,63 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Separator,
+} from "@takaki/go-design-system";
+
+type Crumb = { label: string; href?: string };
+
+function crumbsFor(pathname: string): Crumb[] | null {
+  if (pathname === "/list")
+    return [{ label: "テキスト", href: "/texts" }, { label: "文法・フレーズ" }];
+  if (pathname === "/grammar")
+    return [
+      { label: "テキスト", href: "/texts" },
+      { label: "文法・フレーズ", href: "/list" },
+      { label: "文法" },
+    ];
+  if (pathname === "/expressions")
+    return [
+      { label: "テキスト", href: "/texts" },
+      { label: "文法・フレーズ", href: "/list" },
+      { label: "フレーズ" },
+    ];
+  return null;
+}
+
+export function HeaderBreadcrumb() {
+  const pathname = usePathname();
+  const crumbs = crumbsFor(pathname);
+  if (!crumbs) return null;
+
+  return (
+    <>
+      <Separator orientation="vertical" className="h-4" />
+      <Breadcrumb>
+        <BreadcrumbList>
+          {crumbs.map((c, i) => {
+            const isLast = i === crumbs.length - 1;
+            return (
+              <span key={i} className="contents">
+                <BreadcrumbItem>
+                  {isLast || !c.href ? (
+                    <BreadcrumbPage>{c.label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink href={c.href}>{c.label}</BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+                {!isLast && <BreadcrumbSeparator />}
+              </span>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </>
+  );
+}

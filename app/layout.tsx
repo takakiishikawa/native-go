@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
-import { DesignTokens, AppLayout, Toaster } from "@takaki/go-design-system";
-import { NativeGoSidebar } from "@/components/layout/native-go-sidebar";
+import { DesignTokens, Toaster } from "@takaki/go-design-system";
+import { NativeGoShell } from "@/components/layout/native-go-shell";
 import { createClient } from "@/lib/supabase/server";
 import { DarkModeInit } from "@/components/dark-mode-init";
 import { LoginToast } from "@/components/login-toast";
@@ -54,12 +54,12 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full">
         {user ? (
-          <AppLayout sidebar={<NativeGoSidebar />}>
+          <NativeGoShell>
             <Suspense>
               <LoginToast />
             </Suspense>
             {children}
-          </AppLayout>
+          </NativeGoShell>
         ) : (
           <main>{children}</main>
         )}

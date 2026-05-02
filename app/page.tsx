@@ -118,18 +118,13 @@ export default async function HomePage() {
 
   const [
     logsResult,
-    grammarResult,
-    expressionsResult,
     allRangeLogsResult,
     scoresResult,
     allNcLogsResult,
-    speakingLogsResult,
     allYoutubeLogsResult,
     settingsResult,
   ] = await Promise.all([
     supabase.from("practice_logs").select("practiced_at"),
-    supabase.from("grammar").select("id, play_count, image_url"),
-    supabase.from("expressions").select("play_count"),
     supabase
       .from("practice_logs")
       .select(
@@ -147,7 +142,6 @@ export default async function HomePage() {
       .select("logged_at, count, minutes")
       .gte("logged_at", prev14StartStr)
       .lte("logged_at", todayStr),
-    supabase.from("speaking_logs").select("grammar_id"),
     supabase
       .from("youtube_logs")
       .select("completed_at, youtube_videos(duration)")
@@ -163,8 +157,6 @@ export default async function HomePage() {
   ]);
 
   const allLogs = logsResult.data ?? [];
-  const grammars = grammarResult.data ?? [];
-  const expressions = expressionsResult.data ?? [];
 
   type RangeLog = {
     practiced_at: string;
@@ -205,29 +197,6 @@ export default async function HomePage() {
   }
 
   const streak = calculateStreak(allLogs.map((l) => l.practiced_at));
-
-  const grammarsInProgress = grammars.filter(
-    (g) => g.play_count > 0 && g.play_count < 10,
-  ).length;
-  const grammarDone = grammars.filter((g) => g.play_count >= 10).length;
-  const expressionsInProgress = expressions.filter(
-    (e) => e.play_count > 0 && e.play_count < 10,
-  ).length;
-  const expressionDone = expressions.filter((e) => e.play_count >= 10).length;
-
-  const speakingLogCounts = new Map<string, number>();
-  for (const log of speakingLogsResult.data ?? []) {
-    speakingLogCounts.set(
-      log.grammar_id,
-      (speakingLogCounts.get(log.grammar_id) ?? 0) + 1,
-    );
-  }
-  const speakingInProgress = grammars.filter(
-    (g) => g.image_url && (speakingLogCounts.get(g.id) ?? 0) < 3,
-  ).length;
-  const speakingDone = grammars.filter(
-    (g) => g.image_url && (speakingLogCounts.get(g.id) ?? 0) >= 3,
-  ).length;
 
   const weeklyGrammar = rangeLogs.reduce((s, l) => s + l.grammar_done_count, 0);
   const weeklyExpression = rangeLogs.reduce(
@@ -386,25 +355,25 @@ export default async function HomePage() {
             href="/repeating/grammar"
             icon={<BookOpen className="h-4 w-4" />}
             label="文法リピーティング"
-            sub={`練習中 ${grammarsInProgress} / 完了 ${grammarDone}`}
+            sub="文法を声に出して定着させる"
           />
           <CTACard
             href="/repeating/expression"
             icon={<MessageSquare className="h-4 w-4" />}
             label="フレーズリピーティング"
-            sub={`練習中 ${expressionsInProgress} / 完了 ${expressionDone}`}
+            sub="使えるフレーズを反復で覚える"
           />
           <CTACard
             href="/speaking"
             icon={<Mic className="h-4 w-4" />}
             label="スピーキング"
-            sub={`練習中 ${speakingInProgress} / 完了 ${speakingDone}`}
+            sub="画像をヒントに英語で説明する"
           />
           <CTACard
             href="/shadowing"
             icon={<Play className="h-4 w-4" />}
             label="シャドーイング"
-            sub="YouTube動画で練習"
+            sub="YouTubeに合わせて発音をなぞる"
           />
         </div>
       </div>

@@ -1,28 +1,31 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Button,
   Badge,
-  Input,
   Textarea,
   Tag,
   PageHeader,
-  FormActions,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
+  Combobox,
   DataTable,
+  Label,
   Separator,
+  Spinner,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   toast,
@@ -39,7 +42,8 @@ import type {
   ExtractedGrammar,
   ExtractedExpression,
 } from "@/lib/types";
-import { Loader2, Star, BookOpen, MessageSquare, Plus } from "lucide-react";
+import Link from "next/link";
+import { Star, BookOpen, MessageSquare, Plus } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -156,83 +160,6 @@ function ExpressionPreview({ item }: { item: ExtractedExpression }) {
 
 // ─── AddModal ────────────────────────────────────────────────────────────────
 
-function LessonCombobox({
-  lessons,
-  value,
-  onChange,
-}: {
-  lessons: Lesson[];
-  value: string;
-  onChange: (id: string) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const selected = lessons.find((l) => l.id === value);
-  const filtered = lessons.filter((l) =>
-    `${l.lesson_no} ${l.topic}`.toLowerCase().includes(query.toLowerCase()),
-  );
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div ref={containerRef} className="relative">
-      <Input
-        type="text"
-        placeholder="レッスン番号またはトピックで検索..."
-        value={
-          open
-            ? query
-            : selected
-              ? `${selected.lesson_no} — ${selected.topic}`
-              : ""
-        }
-        onFocus={() => {
-          setQuery("");
-          setOpen(true);
-        }}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-        }}
-      />
-      {open && filtered.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover border border-border max-h-52 overflow-y-auto">
-          {filtered.map((lesson) => (
-            <button
-              key={lesson.id}
-              type="button"
-              className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
-              onMouseDown={() => {
-                onChange(lesson.id);
-                setOpen(false);
-                setQuery("");
-              }}
-            >
-              <span className="font-mono text-muted-foreground mr-2">
-                {lesson.lesson_no}
-              </span>
-              {lesson.topic}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 const LOADING_STEPS = [
   "テキストを解析中...",
   "文法テーマを特定中...",
@@ -337,6 +264,11 @@ function AddModal({
     }
   }
 
+  const lessonOptions = unregisteredLessons.map((l) => ({
+    value: l.id,
+    label: `${l.lesson_no} — ${l.topic}`,
+  }));
+
   return (
     <Dialog
       open
@@ -344,16 +276,18 @@ function AddModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="max-w-2xl flex flex-col max-h-[85vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl flex flex-col max-h-[85vh] gap-0 p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>テキスト追加</DialogTitle>
+          <DialogDescription>
+            Native Campの教材テキストを貼り付けて、AIに文法・フレーズを抽出させます。
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-5 overflow-y-auto flex-1 pr-1">
-          {/* ── 抽出完了後: レッスン情報 + 結果のみ ── */}
+
+        <div className="flex-1 overflow-y-auto px-6 py-5">
           {result ? (
-            <>
-              {/* 対象レッスン（read-only） */}
-              <div className="rounded-lg border bg-muted/40 px-4 py-3 flex items-center gap-3">
+            <div className="space-y-5">
+              <div className="rounded-md border bg-muted/40 px-4 py-3 flex items-center gap-3">
                 <span className="font-mono text-sm text-muted-foreground w-14 shrink-0">
                   {selectedLesson?.lesson_no}
                 </span>
@@ -362,26 +296,16 @@ function AddModal({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  文法 {result.grammar.length}件・フレーズ{" "}
-                  {result.expressions.length}件 抽出
-                </p>
-                <Button size="sm" onClick={handleSave} disabled={saving}>
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                      保存中...
-                    </>
-                  ) : (
-                    "すべて保存"
-                  )}
-                </Button>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                文法 {result.grammar.length}件・フレーズ{" "}
+                {result.expressions.length}件を抽出しました。
+              </p>
 
               {result.grammar.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold">文法</p>
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                    文法
+                  </Label>
                   {result.grammar.map((g, i) => (
                     <GrammarPreview key={i} item={g} />
                   ))}
@@ -394,18 +318,19 @@ function AddModal({
 
               {result.expressions.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold">フレーズ</p>
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                    フレーズ
+                  </Label>
                   {result.expressions.map((e, i) => (
                     <ExpressionPreview key={i} item={e} />
                   ))}
                 </div>
               )}
-            </>
+            </div>
           ) : loading ? (
-            /* ── 抽出中: プログレス表示 ── */
-            <div className="py-6 space-y-5">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center gap-5 py-8">
+              <Spinner size="lg" />
+              <div className="text-center space-y-1">
                 <p className="text-sm font-medium">
                   {LOADING_STEPS[loadingStep]}
                 </p>
@@ -413,7 +338,7 @@ function AddModal({
                   通常15〜30秒かかります
                 </p>
               </div>
-              <div className="space-y-1.5">
+              <div className="w-full max-w-sm space-y-2">
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-full transition-all duration-[3000ms] ease-out"
@@ -422,11 +347,13 @@ function AddModal({
                     }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground px-0.5">
-                  {LOADING_STEPS.map((step, i) => (
+                <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums px-0.5">
+                  {LOADING_STEPS.map((_, i) => (
                     <span
                       key={i}
-                      className={`transition-colors ${i <= loadingStep ? "text-primary font-medium" : ""}`}
+                      className={
+                        i <= loadingStep ? "text-primary font-medium" : ""
+                      }
                     >
                       {i + 1}
                     </span>
@@ -435,42 +362,70 @@ function AddModal({
               </div>
             </div>
           ) : (
-            /* ── 入力フォーム ── */
-            <>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">レッスン選択</label>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="lesson-select">レッスン</Label>
                 {unregisteredLessons.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-2">
                     未登録のレッスンがありません
                   </p>
                 ) : (
-                  <LessonCombobox
-                    lessons={unregisteredLessons}
+                  <Combobox
+                    options={lessonOptions}
                     value={selectedLessonId}
-                    onChange={setSelectedLessonId}
+                    onValueChange={setSelectedLessonId}
+                    placeholder="レッスンを選択..."
+                    searchPlaceholder="レッスン番号またはトピックで検索..."
+                    emptyText="該当するレッスンがありません"
                   />
                 )}
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">教材テキスト</label>
+                <Label htmlFor="material-text">教材テキスト</Label>
                 <Textarea
+                  id="material-text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Native Campの教材テキストをここに貼り付け..."
-                  className="min-h-36 font-mono text-xs"
+                  className="min-h-40 font-mono text-xs"
                 />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!loading && (
+          <DialogFooter className="px-6 py-4 border-t bg-muted/30">
+            {result ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setResult(null)}
+                  disabled={saving}
+                >
+                  入力に戻る
+                </Button>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving && <Spinner size="sm" className="mr-2" />}
+                  {saving ? "保存中..." : "すべて保存"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={onClose}>
+                  キャンセル
+                </Button>
                 <Button
                   onClick={handleExtract}
                   disabled={!selectedLessonId || !text.trim()}
-                  className="w-full"
                 >
                   AIで教材を解析する
                 </Button>
-              </div>
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -648,10 +603,18 @@ export default function TextsPage() {
       <PageHeader
         title="テキスト"
         actions={
-          <Button onClick={() => setShowAddModal(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            テキスト追加
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/list">
+                <BookOpen className="mr-1.5 h-4 w-4" />
+                文法・フレーズ
+              </Link>
+            </Button>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              テキスト追加
+            </Button>
+          </div>
         }
       />
 

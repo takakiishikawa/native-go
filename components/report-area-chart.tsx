@@ -35,7 +35,7 @@ export function ReportAreaChart({
   return (
     <Card className="border border-border border border-[var(--color-border-default)]">
       <CardHeader className="pb-1 pt-4 px-5">
-        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-[0.05em]">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
       </CardHeader>
