@@ -20,6 +20,7 @@ interface RechartsLineChartProps {
   lineKeys: string[];
   baseline?: number;
   yDomain?: [number | string, number | string];
+  unit?: string;
 }
 
 export function RechartsLineChart({
@@ -30,13 +31,14 @@ export function RechartsLineChart({
   lineKeys,
   baseline,
   yDomain,
+  unit,
 }: RechartsLineChartProps) {
   return (
     <div className="h-[160px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
-          margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+          margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
           <XAxis
@@ -50,6 +52,9 @@ export function RechartsLineChart({
             tick={{ fontSize: 10, fill: "var(--color-text-secondary)" }}
             tickLine={false}
             axisLine={{ stroke: "var(--color-border)" }}
+            allowDecimals={false}
+            width={48}
+            unit={unit}
           />
           <Tooltip
             contentStyle={{

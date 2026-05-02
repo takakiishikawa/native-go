@@ -54,34 +54,6 @@ export function DashboardChart({
         <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-[0.05em]">
           {title}
         </CardTitle>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1.5">
-          {yKeys.map((key) => {
-            const total = data.reduce(
-              (sum, d) => sum + ((d[key] as number) ?? 0),
-              0,
-            );
-            const color =
-              (config[key]?.color as string | undefined) ??
-              "var(--color-primary)";
-            return (
-              <span
-                key={key}
-                className="flex items-center gap-1.5 text-sm font-medium"
-                style={{ color }}
-              >
-                <span
-                  className="inline-block w-2 h-2 rounded-full shrink-0"
-                  style={{ background: color }}
-                />
-                {config[key]?.label}{" "}
-                <span className="tabular-nums">
-                  {total}
-                  {unit}
-                </span>
-              </span>
-            );
-          })}
-        </div>
       </CardHeader>
       <CardContent className="px-5 pb-4 pt-2">
         {!hasData ? (
@@ -97,6 +69,7 @@ export function DashboardChart({
             lineKeys={lineKeys}
             baseline={baseline}
             yDomain={yDomain}
+            unit={unit}
           />
         )}
       </CardContent>

@@ -44,7 +44,7 @@ export function ReportAreaChart({
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
+              margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
             >
               <defs>
                 {yKeys.map((key) => {
@@ -83,7 +83,7 @@ export function ReportAreaChart({
                 tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
                 tickLine={false}
                 axisLine={{ stroke: "var(--color-border)" }}
-                width={40}
+                width={56}
                 allowDecimals={false}
                 unit={unit}
               />

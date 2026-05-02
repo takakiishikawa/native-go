@@ -1,12 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import {
-  PageHeader,
-  type KpiCard,
-  type ChartConfig,
-} from "@takaki/go-design-system";
+import { PageHeader, type ChartConfig } from "@takaki/go-design-system";
 import { DashboardChart } from "@/components/dashboard-chart";
-import { DashboardKpiSection } from "@/components/dashboard-kpi-section";
+import {
+  DashboardKpiSection,
+  type DashboardKpi,
+} from "@/components/dashboard-kpi-section";
 import { DashboardAutoCheck } from "@/components/dashboard-auto-check";
 import { SpeakingTestReminder } from "@/components/speaking-test-reminder";
 import { StreakPopup } from "@/components/streak-popup";
@@ -69,27 +68,11 @@ function fmtDate(d: Date): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function trendFromDiff(diff: number | null, unit: string): KpiCard["trend"] {
-  if (diff === null) return undefined;
-  return {
-    value: `前7日比 ${diff >= 0 ? "+" : ""}${diff}${unit}`,
-    direction: diff > 0 ? "up" : diff < 0 ? "down" : "neutral",
-  };
-}
-
-function weeklyDesc(
+function ratioOf(
   value: number,
   baseline: number | undefined,
-): string | undefined {
-  if (!baseline || baseline <= 0) return undefined;
-  return `${Math.round((value / baseline) * 100)}%`;
-}
-
-function weeklyProgress(
-  value: number,
-  baseline: number | undefined,
-): number | undefined {
-  if (!baseline || baseline <= 0) return undefined;
+): number | null {
+  if (!baseline || baseline <= 0) return null;
   return Math.round((value / baseline) * 100);
 }
 
@@ -318,44 +301,37 @@ export default async function HomePage() {
   const settings = settingsResult.data ?? null;
   const hasNativeCampToday = (ncByDate.get(todayStr) ?? 0) > 0;
 
-  // KPI cards for SectionCards
-  const kpiCards: KpiCard[] = [
+  const kpiCards: DashboardKpi[] = [
     {
       title: "リピーティング",
       value: `${weeklyRepeating}回`,
-      description: weeklyDesc(weeklyRepeating, settings?.baseline_repeating),
-      progress: weeklyProgress(weeklyRepeating, settings?.baseline_repeating),
-      trend: trendFromDiff(repeatingDiff, "回"),
+      ratio: ratioOf(weeklyRepeating, settings?.baseline_repeating),
+      weekDiff: repeatingDiff,
+      diffUnit: "回",
     },
     {
       title: "スピーキング",
       value: `${weeklySpeaking}回`,
-      description: weeklyDesc(weeklySpeaking, settings?.baseline_speaking),
-      progress: weeklyProgress(weeklySpeaking, settings?.baseline_speaking),
-      trend: trendFromDiff(speakingDiff, "回"),
+      ratio: ratioOf(weeklySpeaking, settings?.baseline_speaking),
+      weekDiff: speakingDiff,
+      diffUnit: "回",
     },
     {
       title: "Native Camp",
       value: `${weeklyNativeCampCount * 25}分`,
-      description: weeklyDesc(
+      ratio: ratioOf(
         weeklyNativeCampCount * 25,
         settings?.baseline_nativecamp,
       ),
-      progress: weeklyProgress(
-        weeklyNativeCampCount * 25,
-        settings?.baseline_nativecamp,
-      ),
-      trend: trendFromDiff(
-        ncCountDiff !== null ? ncCountDiff * 25 : null,
-        "分",
-      ),
+      weekDiff: ncCountDiff !== null ? ncCountDiff * 25 : null,
+      diffUnit: "分",
     },
     {
       title: "シャドーイング",
       value: `${weeklyShadowing}分`,
-      description: weeklyDesc(weeklyShadowing, settings?.baseline_shadowing),
-      progress: weeklyProgress(weeklyShadowing, settings?.baseline_shadowing),
-      trend: trendFromDiff(shadowingDiff, "分"),
+      ratio: ratioOf(weeklyShadowing, settings?.baseline_shadowing),
+      weekDiff: shadowingDiff,
+      diffUnit: "分",
     },
   ];
 
