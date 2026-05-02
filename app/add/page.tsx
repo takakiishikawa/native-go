@@ -193,7 +193,7 @@ export default function AddPage() {
     <div className="space-y-6 max-w-3xl">
       <PageHeader
         title="教材追加"
-        description="Native Campの教材テキストを貼り付けてください。保存後、スピーキング練習用の画像が自動生成されます（1〜2分程度）。"
+        description="Native Campのテキストから文法・フレーズを自動抽出"
       />
 
       <div className="space-y-3">

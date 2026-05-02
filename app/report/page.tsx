@@ -43,7 +43,7 @@ export default async function ReportPage() {
 
   return (
     <div className="space-y-8 max-w-4xl">
-      <PageHeader title="レポート" description="学習データの集計・推移" />
+      <PageHeader title="レポート" />
 
       <ReportCharts logs={logs} ncLogs={ncLogs} youtubeLogs={youtubeLogs} />
     </div>

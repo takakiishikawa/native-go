@@ -22,7 +22,6 @@ import {
   ChevronRight,
   Star,
   CheckCircle2,
-  Loader2,
   ArrowRight,
 } from "lucide-react";
 import { ConversationLines } from "@/components/conversation-lines";
@@ -40,7 +39,7 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
-type TodayStatus = { grammar: boolean; expression: boolean; speaking: boolean };
+type TodayStatus = { grammar: boolean; expression: boolean };
 
 function CompletionNavButton({
   label,
@@ -84,12 +83,9 @@ export default function ExpressionRepeatingPage() {
   const [rate, setRate] = useState(1.0);
   const [loading, setLoading] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
-  const [aiComment, setAiComment] = useState("");
-  const [commentLoading, setCommentLoading] = useState(false);
   const [todayStatus, setTodayStatus] = useState<TodayStatus>({
     grammar: false,
     expression: true,
-    speaking: false,
   });
   const cancelRef = useRef(false);
   const userCancelledRef = useRef(false);
@@ -124,34 +120,16 @@ export default function ExpressionRepeatingPage() {
     const today = new Date().toISOString().split("T")[0];
     supabase
       .from("practice_logs")
-      .select("grammar_done_count, expression_done_count, speaking_count")
+      .select("grammar_done_count")
       .eq("practiced_at", today)
       .maybeSingle()
       .then(({ data }) => {
         setTodayStatus({
           grammar: (data?.grammar_done_count ?? 0) > 0,
           expression: true, // just completed
-          speaking: (data?.speaking_count ?? 0) > 0,
         });
       });
   }, [showComplete]);
-
-  const fetchComment = useCallback(async () => {
-    setCommentLoading(true);
-    try {
-      const res = await fetch("/api/repeating-comment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "expression" }),
-      });
-      const data = await res.json();
-      if (data.comment) setAiComment(data.comment);
-    } catch {
-      // silently fail
-    } finally {
-      setCommentLoading(false);
-    }
-  }, []);
 
   const stopSpeech = useCallback(() => {
     cancelRef.current = true;
@@ -255,10 +233,9 @@ export default function ExpressionRepeatingPage() {
       setCurrentLine(-1);
       if (!userCancelledRef.current) {
         setShowComplete(true);
-        fetchComment();
       }
     }
-  }, [items, index, speakLine, fetchComment]);
+  }, [items, index, speakLine]);
 
   if (loading) {
     return (
@@ -293,7 +270,7 @@ export default function ExpressionRepeatingPage() {
                 size="sm"
                 onClick={() => {
                   stopSpeech();
-                  router.push("/practice");
+                  router.push("/");
                 }}
               >
                 途中終了
@@ -401,15 +378,6 @@ export default function ExpressionRepeatingPage() {
             <p className="text-muted-foreground">
               フレーズリピーティング 1周完了
             </p>
-            {commentLoading ? (
-              <div className="flex justify-center py-2">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : aiComment ? (
-              <p className="text-sm text-foreground leading-relaxed text-left">
-                {aiComment}
-              </p>
-            ) : null}
 
             <div className="space-y-2 pt-2">
               <CompletionNavButton
@@ -424,11 +392,6 @@ export default function ExpressionRepeatingPage() {
                   setShowComplete(false);
                   router.push("/repeating/expression");
                 }}
-              />
-              <CompletionNavButton
-                label="スピーキング"
-                done={todayStatus.speaking}
-                onClick={() => router.push("/speaking")}
               />
               <Button
                 variant="ghost"

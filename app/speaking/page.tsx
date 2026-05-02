@@ -52,8 +52,7 @@ export default async function SpeakingPage() {
     <div className="space-y-6 max-w-4xl">
       <PageHeader
         title="スピーキング"
-        description="画像を見ながら英語で説明する練習"
-        actions={undefined}
+        description="画像を見て英語で描写する練習"
       />
 
       {pending.length > 0 && (

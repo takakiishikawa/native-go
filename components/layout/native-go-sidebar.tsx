@@ -41,8 +41,8 @@ const ProfileDialog = dynamic(
 );
 
 const navItems = [
-  { href: "/", label: "ホーム", icon: Home },
-  { href: "/practice", label: "リピーティング", icon: Repeat2 },
+  { href: "/", label: "ダッシュボード", icon: Home },
+  { href: "/repeating/grammar", label: "リピーティング", icon: Repeat2 },
   { href: "/speaking", label: "スピーキング", icon: Mic },
   { href: "/shadowing", label: "シャドーイング", icon: Volume2 },
   { href: "/texts", label: "テキスト", icon: FileText },
@@ -52,8 +52,7 @@ const navItems = [
 
 function isActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
-  if (href === "/practice")
-    return pathname === "/practice" || pathname.startsWith("/repeating");
+  if (href === "/repeating/grammar") return pathname.startsWith("/repeating");
   if (href === "/speaking")
     return pathname === "/speaking" || pathname.startsWith("/speaking/");
   if (href === "/list")

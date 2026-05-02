@@ -226,8 +226,6 @@ export default function ShadowingPage() {
     : [];
   const todoCnt = allVideos.filter((v) => v.lapCount === 0).length;
   const doneCnt = allVideos.filter((v) => v.lapCount > 0).length;
-  const pct =
-    allVideos.length > 0 ? Math.round((doneCnt / allVideos.length) * 100) : 0;
 
   const filteredVideos = allVideos.filter((v) =>
     filter === "todo" ? v.lapCount === 0 : v.lapCount > 0,
@@ -239,7 +237,6 @@ export default function ShadowingPage() {
     <div className="space-y-6 max-w-5xl">
       <PageHeader
         title="シャドーイング"
-        description="YouTubeでシャドーイング練習を管理する"
         actions={
           <div className="flex items-center gap-2">
             {archivedChannels.length > 0 && (
@@ -313,21 +310,6 @@ export default function ShadowingPage() {
                 <div className="flex items-center gap-2 rounded-lg bg-muted px-4 py-2.5 text-xs text-muted-foreground">
                   <Archive className="h-3.5 w-3.5 shrink-0" />
                   このチャンネルはアーカイブ済みです
-                </div>
-              )}
-
-              {/* Progress */}
-              {allVideos.length > 0 && (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-muted rounded-full h-1.5">
-                    <div
-                      className="bg-primary h-1.5 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                    {doneCnt} / {allVideos.length} 見た
-                  </span>
                 </div>
               )}
 

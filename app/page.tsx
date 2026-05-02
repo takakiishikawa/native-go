@@ -287,15 +287,6 @@ export default async function HomePage() {
     ? weeklyNativeCampCount - prevNativeCampCount
     : null;
 
-  const sortedScores = [...scores].sort((a, b) =>
-    b.tested_at.localeCompare(a.tested_at),
-  );
-  const latestScore = sortedScores.length > 0 ? sortedScores[0].score : null;
-  const scoreDiff =
-    sortedScores.length >= 2
-      ? sortedScores[0].score - sortedScores[1].score
-      : null;
-
   function parseDurToMin(dur: string | null | undefined): number {
     if (!dur) return 0;
     const parts = dur.split(":").map(Number);
@@ -366,18 +357,6 @@ export default async function HomePage() {
       progress: weeklyProgress(weeklyShadowing, settings?.baseline_shadowing),
       trend: trendFromDiff(shadowingDiff, "分"),
     },
-    {
-      title: "NC AI Speaking Test",
-      value: latestScore !== null ? `${latestScore}点` : "未記録",
-      trend:
-        scoreDiff !== null
-          ? {
-              value: `前回比 ${scoreDiff >= 0 ? "+" : ""}${scoreDiff}点`,
-              direction:
-                scoreDiff > 0 ? "up" : scoreDiff < 0 ? "down" : "neutral",
-            }
-          : undefined,
-    },
   ];
 
   // Chart data (7 days)
@@ -423,9 +402,9 @@ export default async function HomePage() {
         <PageHeader title="ダッシュボード" />
       </div>
 
-      {/* 練習を始める */}
+      {/* 今日の練習 */}
       <div>
-        <h2 className="section-label">練習を始める</h2>
+        <h2 className="section-label">今日の練習</h2>
         <div className="grid grid-cols-2 gap-2">
           <CTACard
             href="/repeating/grammar"
@@ -449,14 +428,14 @@ export default async function HomePage() {
             href="/shadowing"
             icon={<Play className="h-4 w-4" />}
             label="シャドーイング"
-            sub="YouTubeで練習する"
+            sub="YouTube動画で練習"
           />
         </div>
       </div>
 
-      {/* 学習ログ */}
+      {/* 今週のサマリー */}
       <div className="space-y-4">
-        <h2 className="section-label">学習ログ</h2>
+        <h2 className="section-label">今週のサマリー</h2>
         <DashboardKpiSection cards={kpiCards} initialScores={scores} />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <DashboardChart

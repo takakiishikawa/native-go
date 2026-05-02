@@ -135,7 +135,7 @@ export default function LessonsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="レッスン管理" description="受講状況の管理" />
+      <PageHeader title="レッスン" />
 
       <Tabs defaultValue="1">
         <TabsList>

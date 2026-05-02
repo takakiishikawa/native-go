@@ -623,14 +623,6 @@ export default function TextsPage() {
 
   const byLevel = (level: number) => lessons.filter((l) => l.level === level);
 
-  const levelStatusSummary = (level: number) => {
-    const lvl = byLevel(level);
-    const done = lvl.filter((l) => l.status === "習得済み").length;
-    const inProgress = lvl.filter((l) => l.status === "練習中").length;
-    const unregistered = lvl.filter((l) => l.status === "未登録").length;
-    return { total: lvl.length, done, inProgress, unregistered };
-  };
-
   const unregisteredLessons = lessons.filter((l) => l.status === "未登録");
 
   if (loading) {
@@ -645,7 +637,6 @@ export default function TextsPage() {
     <div className="space-y-6">
       <PageHeader
         title="テキスト"
-        description="レッスンごとの文法・フレーズ登録状況"
         actions={
           <Button onClick={() => setShowAddModal(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
@@ -676,63 +667,19 @@ export default function TextsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {[1, 2, 3].map((lvl) => {
-          const s = levelStatusSummary(lvl);
-          return (
-            <TabsContent
-              key={lvl}
-              value={String(lvl)}
-              className="space-y-3 mt-4"
-            >
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-28 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{
-                        width: `${s.total > 0 ? Math.round((s.done / s.total) * 100) : 0}%`,
-                      }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-foreground">
-                    {s.total}件
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  {s.done > 0 && (
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: "var(--color-success)" }}
-                      />
-                      習得済み {s.done}
-                    </span>
-                  )}
-                  {s.inProgress > 0 && (
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: "var(--color-warning)" }}
-                      />
-                      練習中 {s.inProgress}
-                    </span>
-                  )}
-                  {s.unregistered > 0 && (
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
-                      未登録 {s.unregistered}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <LessonList
-                lessons={byLevel(lvl)}
-                grammarMap={grammarMap}
-                expressionMap={expressionMap}
-              />
-            </TabsContent>
-          );
-        })}
+        {[1, 2, 3].map((lvl) => (
+          <TabsContent
+            key={lvl}
+            value={String(lvl)}
+            className="space-y-3 mt-4"
+          >
+            <LessonList
+              lessons={byLevel(lvl)}
+              grammarMap={grammarMap}
+              expressionMap={expressionMap}
+            />
+          </TabsContent>
+        ))}
       </Tabs>
 
       {showAddModal && (
