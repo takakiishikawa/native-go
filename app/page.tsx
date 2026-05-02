@@ -355,19 +355,19 @@ export default async function HomePage() {
             href="/repeating/grammar"
             icon={<BookOpen className="h-4 w-4" />}
             label="文法リピーティング"
-            sub="音読して覚える"
+            sub="音読で覚える"
           />
           <CTACard
             href="/repeating/expression"
             icon={<MessageSquare className="h-4 w-4" />}
             label="フレーズリピーティング"
-            sub="音読して覚える"
+            sub="音読で覚える"
           />
           <CTACard
             href="/speaking"
             icon={<Mic className="h-4 w-4" />}
             label="スピーキング"
-            sub="画像を見て話す"
+            sub="4コマ物語を話す"
           />
           <CTACard
             href="/shadowing"
