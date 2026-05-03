@@ -164,7 +164,7 @@ type LogData = {
   total_score: number;
   comment: string;
   speech_text: string;
-  grammar: { image_url: string | null } | null;
+  scene: { image_url: string | null } | null;
 };
 
 function ResultContent() {
@@ -172,7 +172,7 @@ function ResultContent() {
   const params = useParams();
   const router = useRouter();
   const logId = searchParams.get("log");
-  const grammarId = params.id as string;
+  const sceneId = params.id as string;
   const [data, setData] = useState<LogData | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextLoading, setNextLoading] = useState(false);
@@ -187,7 +187,7 @@ function ResultContent() {
     supabase
       .from("speaking_logs")
       .select(
-        "scores, total_score, comment, speech_text, grammar:grammar_id(image_url)",
+        "scores, total_score, comment, speech_text, scene:scene_id(image_url)",
       )
       .eq("id", logId)
       .single()
@@ -201,9 +201,9 @@ function ResultContent() {
           total_score: log.total_score,
           comment: log.comment,
           speech_text: (log.speech_text as string) ?? "",
-          grammar: Array.isArray(log.grammar)
-            ? log.grammar[0]
-            : (log.grammar as LogData["grammar"]),
+          scene: Array.isArray(log.scene)
+            ? log.scene[0]
+            : (log.scene as LogData["scene"]),
         });
         setLoading(false);
       });
@@ -213,9 +213,9 @@ function ResultContent() {
     setNextLoading(true);
 
     const { data: curr } = await supabase
-      .from("grammar")
+      .from("speaking_scenes")
       .select("created_at")
-      .eq("id", grammarId)
+      .eq("id", sceneId)
       .single();
 
     let next: { id: string } | null = null;
@@ -227,7 +227,7 @@ function ResultContent() {
 
       const [{ data: candidates }, { data: logs }] = await Promise.all([
         supabase
-          .from("grammar")
+          .from("speaking_scenes")
           .select("id, created_at")
           .not("image_url", "is", null)
           .lt("created_at", curr.created_at)
@@ -235,16 +235,17 @@ function ResultContent() {
         user
           ? supabase
               .from("speaking_logs")
-              .select("grammar_id")
+              .select("scene_id")
               .eq("user_id", user.id)
-          : Promise.resolve({ data: [] as { grammar_id: string }[] }),
+          : Promise.resolve({ data: [] as { scene_id: string }[] }),
       ]);
 
       const sessionCounts = new Map<string, number>();
       for (const log of logs ?? []) {
+        if (!log.scene_id) continue;
         sessionCounts.set(
-          log.grammar_id,
-          (sessionCounts.get(log.grammar_id) ?? 0) + 1,
+          log.scene_id,
+          (sessionCounts.get(log.scene_id) ?? 0) + 1,
         );
       }
 
@@ -288,10 +289,10 @@ function ResultContent() {
         {/* Left column */}
         <div className="space-y-5">
           {/* Thumbnail */}
-          {data.grammar?.image_url && (
+          {data.scene?.image_url && (
             <div className="rounded-lg overflow-hidden bg-muted w-full aspect-[4/3]">
               <img
-                src={data.grammar.image_url}
+                src={data.scene.image_url}
                 alt=""
                 className="w-full h-full object-contain"
               />

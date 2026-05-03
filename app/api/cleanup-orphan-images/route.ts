@@ -1,5 +1,5 @@
 /**
- * grammar.image_url から参照されていない storage.objects (孤児) を削除する。
+ * speaking_scenes.image_url から参照されていない storage.objects (孤児) を削除する。
  *
  * 使い方:
  *   - GET  /api/cleanup-orphan-images           → 孤児リストを返す (dry-run)
@@ -66,16 +66,16 @@ async function listOrphans(): Promise<{ name: string; sizeKB: number }[]> {
     }
   }
 
-  // grammar.image_url の参照元 set を構築
-  const { data: grammars, error: gErr } = await admin
-    .from("grammar")
+  // speaking_scenes.image_url の参照元 set を構築
+  const { data: scenes, error: sErr } = await admin
+    .from("speaking_scenes")
     .select("image_url")
     .not("image_url", "is", null);
-  if (gErr) throw new Error(`grammar 取得失敗: ${gErr.message}`);
+  if (sErr) throw new Error(`speaking_scenes 取得失敗: ${sErr.message}`);
 
   const referencedPaths = new Set<string>();
-  for (const g of grammars ?? []) {
-    const url: string | null = g.image_url;
+  for (const s of scenes ?? []) {
+    const url: string | null = s.image_url;
     if (!url) continue;
     // URL の `/object/public/speaking-images/` 以降が path
     const m = url.match(/\/object\/public\/speaking-images\/(.+)$/);

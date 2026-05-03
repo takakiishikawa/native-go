@@ -24,16 +24,22 @@ export interface Grammar {
   last_played_at: string | null;
   created_at: string;
   lesson_id: string | null;
-  image_url: string | null;
   language: Language;
   word_notes: WordNote[] | null;
   category: string | null;
 }
 
+export interface SpeakingScene {
+  id: string;
+  image_url: string | null;
+  theme: string | null;
+  created_at: string;
+}
+
 export interface SpeakingLog {
   id: string;
   user_id: string;
-  grammar_id: string;
+  scene_id: string;
   speech_text: string;
   scores: number[];
   total_score: number;

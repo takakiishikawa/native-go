@@ -14,14 +14,14 @@ export async function POST(request: NextRequest) {
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { grammarId, speechText } = await request.json();
+  const { sceneId, speechText } = await request.json();
 
-  const { data: grammar } = await supabase
-    .from("grammar")
+  const { data: scene } = await supabase
+    .from("speaking_scenes")
     .select("image_url")
-    .eq("id", grammarId)
+    .eq("id", sceneId)
     .single();
-  const imageUrl = grammar?.image_url;
+  const imageUrl = scene?.image_url;
   if (!imageUrl)
     return NextResponse.json({ error: "Image not found" }, { status: 404 });
 
@@ -138,7 +138,7 @@ JSON文字列内の改行は \\n（バックスラッシュ+n）で表記し、�
     .from("speaking_logs")
     .insert({
       user_id: user.id,
-      grammar_id: grammarId,
+      scene_id: sceneId,
       speech_text: speechText ?? "",
       scores: safeScores,
       total_score: safeTotal,

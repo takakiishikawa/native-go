@@ -24,30 +24,34 @@ export default async function SpeakingPracticePage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/speaking");
 
-  const [{ data: grammar }, { data: logs }, { count }] = await Promise.all([
-    supabase.from("grammar").select("id, image_url").eq("id", id).single(),
+  const [{ data: scene }, { data: logs }, { count }] = await Promise.all([
+    supabase
+      .from("speaking_scenes")
+      .select("id, image_url")
+      .eq("id", id)
+      .single(),
     supabase
       .from("speaking_logs")
       .select("scores, total_score, comment, created_at")
-      .eq("grammar_id", id)
+      .eq("scene_id", id)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(2),
     supabase
       .from("speaking_logs")
       .select("id", { count: "exact", head: true })
-      .eq("grammar_id", id)
+      .eq("scene_id", id)
       .eq("user_id", user.id),
   ]);
 
-  if (!grammar || !grammar.image_url) redirect("/speaking");
+  if (!scene || !scene.image_url) redirect("/speaking");
 
   const pastLogs: PastLog[] = logs ?? [];
 
   return (
     <PracticeClient
-      grammarId={grammar.id}
-      imageUrl={grammar.image_url}
+      sceneId={scene.id}
+      imageUrl={scene.image_url}
       completedCount={count ?? pastLogs.length}
       pastLogs={pastLogs}
     />

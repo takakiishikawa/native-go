@@ -99,12 +99,12 @@ function PastFeedbackCard({ log, index }: { log: PastLog; index: number }) {
 }
 
 export function PracticeClient({
-  grammarId,
+  sceneId,
   imageUrl,
   completedCount,
   pastLogs,
 }: {
-  grammarId: string;
+  sceneId: string;
   imageUrl: string;
   completedCount: number;
   pastLogs: PastLog[];
@@ -153,11 +153,11 @@ export function PracticeClient({
         const res = await fetch("/api/speaking-eval", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ grammarId, speechText }),
+          body: JSON.stringify({ sceneId, speechText }),
         });
         const data = await res.json();
         if (data.logId) {
-          router.push(`/speaking/${grammarId}/result?log=${data.logId}`);
+          router.push(`/speaking/${sceneId}/result?log=${data.logId}`);
         } else {
           setErrorDetail(data.error ?? `HTTP ${res.status}`);
           setState("error");
@@ -167,7 +167,7 @@ export function PracticeClient({
         setState("error");
       }
     },
-    [grammarId, router],
+    [sceneId, router],
   );
 
   function stopRecording() {

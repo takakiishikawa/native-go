@@ -1,14 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Card, Badge } from "@takaki/go-design-system";
+import { Card } from "@takaki/go-design-system";
 import { SpeakingTabs } from "./speaking-tabs";
 
 const SESSIONS_REQUIRED = 3;
 
-type GrammarItem = {
+type SceneItem = {
   id: string;
   image_url: string | null;
-  lessons: { lesson_no: string } | { lesson_no: string }[] | null;
 };
 
 function SessionDots({ count }: { count: number }) {
@@ -28,23 +27,22 @@ function SessionDots({ count }: { count: number }) {
   );
 }
 
-function GrammarCard({
-  g,
+function SceneCard({
+  s,
   sessions,
   priority = false,
 }: {
-  g: GrammarItem;
+  s: SceneItem;
   sessions: number;
   priority?: boolean;
 }) {
-  const lesson = Array.isArray(g.lessons) ? g.lessons[0] : g.lessons;
   return (
-    <Link href={`/speaking/${g.id}`}>
+    <Link href={`/speaking/${s.id}`}>
       <Card className="cursor-pointer hover:border border-border transition-all overflow-hidden group p-0 border-[var(--color-border-default)] border border-border">
         <div className="aspect-[4/3] overflow-hidden relative bg-muted">
-          {g.image_url && (
+          {s.image_url && (
             <Image
-              src={g.image_url}
+              src={s.image_url}
               alt=""
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -55,17 +53,8 @@ function GrammarCard({
             />
           )}
         </div>
-        <div className="p-3 space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            {lesson ? (
-              <Badge variant="outline">
-                No.{(lesson as { lesson_no: string }).lesson_no}
-              </Badge>
-            ) : (
-              <span />
-            )}
-            <SessionDots count={sessions} />
-          </div>
+        <div className="p-3 flex items-center justify-end">
+          <SessionDots count={sessions} />
         </div>
       </Card>
     </Link>
@@ -76,14 +65,14 @@ export function SpeakingGrid({
   items,
   sessionCounts,
 }: {
-  items: GrammarItem[];
+  items: SceneItem[];
   sessionCounts: Record<string, number>;
 }) {
   const todoItems = items.filter(
-    (g) => (sessionCounts[g.id] ?? 0) < SESSIONS_REQUIRED,
+    (s) => (sessionCounts[s.id] ?? 0) < SESSIONS_REQUIRED,
   );
   const practicedItems = items.filter(
-    (g) => (sessionCounts[g.id] ?? 0) >= SESSIONS_REQUIRED,
+    (s) => (sessionCounts[s.id] ?? 0) >= SESSIONS_REQUIRED,
   );
 
   const todoTab =
@@ -93,11 +82,11 @@ export function SpeakingGrid({
       </div>
     ) : (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {todoItems.map((g, i) => (
-          <GrammarCard
-            key={g.id}
-            g={g}
-            sessions={sessionCounts[g.id] ?? 0}
+        {todoItems.map((s, i) => (
+          <SceneCard
+            key={s.id}
+            s={s}
+            sessions={sessionCounts[s.id] ?? 0}
             priority={i === 0}
           />
         ))}
@@ -107,12 +96,12 @@ export function SpeakingGrid({
   const practicedTab =
     practicedItems.length === 0 ? (
       <div className="text-center py-12 text-muted-foreground text-sm">
-        まだ3回完了した問題がありません
+        まだ3回完了したシーンがありません
       </div>
     ) : (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {practicedItems.map((g) => (
-          <GrammarCard key={g.id} g={g} sessions={sessionCounts[g.id] ?? 0} />
+        {practicedItems.map((s) => (
+          <SceneCard key={s.id} s={s} sessions={sessionCounts[s.id] ?? 0} />
         ))}
       </div>
     );
