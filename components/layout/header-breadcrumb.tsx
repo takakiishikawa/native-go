@@ -16,18 +16,6 @@ type Crumb = { label: string; href?: string };
 function crumbsFor(pathname: string): Crumb[] | null {
   if (pathname === "/list")
     return [{ label: "テキスト", href: "/texts" }, { label: "文法・フレーズ" }];
-  if (pathname === "/grammar")
-    return [
-      { label: "テキスト", href: "/texts" },
-      { label: "文法・フレーズ", href: "/list" },
-      { label: "文法" },
-    ];
-  if (pathname === "/expressions")
-    return [
-      { label: "テキスト", href: "/texts" },
-      { label: "文法・フレーズ", href: "/list" },
-      { label: "フレーズ" },
-    ];
   return null;
 }
 

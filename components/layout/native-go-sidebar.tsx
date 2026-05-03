@@ -75,16 +75,9 @@ function isActive(href: string, pathname: string) {
       pathname === "/texts" ||
       pathname === "/lessons" ||
       pathname === "/add" ||
-      pathname === "/list" ||
-      pathname === "/grammar" ||
-      pathname === "/expressions"
+      pathname === "/list"
     );
-  if (href === "/list")
-    return (
-      pathname === "/list" ||
-      pathname === "/grammar" ||
-      pathname === "/expressions"
-    );
+  if (href === "/list") return pathname === "/list";
   return pathname.startsWith(href);
 }
 

@@ -145,7 +145,6 @@ export async function saveGrammar(
     .insert(rows)
     .select("id, name");
   if (error) throw error;
-  revalidatePath("/grammar");
   revalidatePath("/list");
   revalidatePath("/texts");
   return data ?? [];
@@ -183,7 +182,6 @@ export async function saveExpressions(
 
   const { error } = await supabase.from("expressions").insert(rows);
   if (error) throw error;
-  revalidatePath("/expressions");
   revalidatePath("/list");
   revalidatePath("/texts");
 }
@@ -260,7 +258,6 @@ export async function deleteGrammar(id: string) {
   const { error } = await supabase.from("grammar").delete().eq("id", id);
   if (error) throw error;
   await syncLessonStatus(grammar?.lesson_id ?? null);
-  revalidatePath("/grammar");
   revalidatePath("/list");
   revalidatePath("/texts");
 }
@@ -276,7 +273,6 @@ export async function deleteExpression(id: string) {
   const { error } = await supabase.from("expressions").delete().eq("id", id);
   if (error) throw error;
   await syncLessonStatus(expression?.lesson_id ?? null);
-  revalidatePath("/expressions");
   revalidatePath("/list");
   revalidatePath("/texts");
 }
