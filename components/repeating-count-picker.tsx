@@ -65,7 +65,7 @@ export function RepeatingCountPicker({
     >
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>今日は何件やりますか？</DialogTitle>
+          <DialogTitle>今日のペースを選ぼう</DialogTitle>
           <DialogDescription>
             {label}リピーティング・練習中 {total} 件
           </DialogDescription>
