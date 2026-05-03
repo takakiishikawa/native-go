@@ -17,7 +17,7 @@ export function WordNotesInline({
           className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[11px] leading-tight"
         >
           <span className="font-medium text-foreground">{n.word}</span>
-          <span className="text-muted-foreground">{n.note}</span>
+          <span className="text-foreground">{n.note}</span>
         </span>
       ))}
     </div>

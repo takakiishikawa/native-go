@@ -138,7 +138,7 @@ export function ViAddModal({
         type="button"
         onClick={() => setKind(active ? null : value)}
         className={cn(
-          "flex-1 rounded-md border px-4 py-2.5 text-sm font-medium transition-colors",
+          "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
           active
             ? "border-primary bg-primary text-primary-foreground"
             : "border-border bg-muted/30 text-foreground hover:bg-muted",

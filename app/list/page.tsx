@@ -121,7 +121,17 @@ function GrammarTab({
 
   const columns = useMemo(
     (): ColumnDef<GrammarWithLesson>[] => {
-      const cols: ColumnDef<GrammarWithLesson>[] = [];
+      const cols: ColumnDef<GrammarWithLesson>[] = [
+        {
+          id: "row_id",
+          header: "ID",
+          cell: ({ row }) => (
+            <span className="font-mono text-xs text-foreground tabular-nums">
+              {row.index + 1}
+            </span>
+          ),
+        },
+      ];
       if (!isVi) {
         cols.push({
           id: "lesson_no",
@@ -276,7 +286,17 @@ function PhraseTab({
 
   const columns = useMemo(
     (): ColumnDef<ExpressionWithLesson>[] => {
-      const cols: ColumnDef<ExpressionWithLesson>[] = [];
+      const cols: ColumnDef<ExpressionWithLesson>[] = [
+        {
+          id: "row_id",
+          header: "ID",
+          cell: ({ row }) => (
+            <span className="font-mono text-xs text-foreground tabular-nums">
+              {row.index + 1}
+            </span>
+          ),
+        },
+      ];
       if (!isVi) {
         cols.push({
           id: "lesson_no",
@@ -323,7 +343,7 @@ function PhraseTab({
             id: "nuance",
             header: "ニュアンス",
             cell: ({ row }) => (
-              <span className="text-xs text-muted-foreground line-clamp-2 max-w-xs block">
+              <span className="text-xs text-foreground line-clamp-2 max-w-xs block">
                 {row.original.nuance ?? "—"}
               </span>
             ),
