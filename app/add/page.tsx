@@ -166,14 +166,14 @@ export default function AddPage() {
     <div className="space-y-6 max-w-3xl">
       <PageHeader
         title="教材追加"
-        description="Native Campのテキストから文法・フレーズを自動抽出"
+        description="英会話レッスンのテキストから文法・フレーズを自動抽出"
       />
 
       <div className="space-y-3">
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Native Campの教材テキストをここに貼り付け..."
+          placeholder="英会話レッスンの教材テキストをここに貼り付け..."
           className="min-h-48 font-mono text-sm"
         />
         <Button

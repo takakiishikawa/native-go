@@ -40,7 +40,7 @@ export type DashboardKpi = {
   diffUnit?: string;
 };
 
-const NC_TITLE = "Native Camp";
+const NC_TITLE = "英会話レッスン";
 
 function EditIconButton({ onClick }: { onClick: () => void }) {
   return (

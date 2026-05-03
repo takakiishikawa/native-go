@@ -11,19 +11,19 @@ export default function ConceptRoute() {
           <RefreshCcw className="h-3.5 w-3.5 text-white" />
         </div>
       }
-      tagline="Native Camp の学びを定着させるツール"
-      coreMessage="Native Camp のレッスンで学んだ英語を、使える状態として定着させる。インプットで終わらせず、繰り返しと実践で「出せる英語」を身につける。"
-      coreValue="Native Camp で得た英語表現を、リピーティング・スピーキングを通じて定着させる"
+      tagline="英会話レッスン の学びを定着させるツール"
+      coreMessage="英会話レッスン のレッスンで学んだ英語を、使える状態として定着させる。インプットで終わらせず、繰り返しと実践で「出せる英語」を身につける。"
+      coreValue="英会話レッスン で得た英語表現を、リピーティング・スピーキングを通じて定着させる"
       scope={{
         solve: [
-          "Native Camp と連動した復習・定着・組み立て練習",
+          "英会話レッスン と連動した復習・定着・組み立て練習",
           "文法・フレーズの反復リピーティング",
           "AIを活用したスピーキング練習と採点",
           "学習進捗の可視化とレポート",
         ],
         notSolve: [
           "語彙インプット・リスニング強化",
-          "英会話実践（Native Camp が担う）",
+          "英会話実践（英会話レッスン が担う）",
           "テスト対策・資格学習",
           "汎用教材・他英会話サービス対応",
         ],
@@ -33,7 +33,7 @@ export default function ConceptRoute() {
           {
             title: "インプット",
             description:
-              "Native Camp でレッスンを受け、教材テキストを NativeGo に貼り付ける",
+              "英会話レッスン でレッスンを受け、教材テキストを NativeGo に貼り付ける",
           },
           {
             title: "AI解析",
@@ -51,16 +51,16 @@ export default function ConceptRoute() {
           },
           {
             title: "実践",
-            description: "次の Native Camp で実際に使い、定着を確認する",
+            description: "次の 英会話レッスン で実際に使い、定着を確認する",
           },
         ],
         outcome:
-          "Native Camp の AI Speaking Test スコア向上と、実際のレッスンでの英語使用量増加",
+          "英会話レッスン の AI Speaking Test スコア向上と、実際のレッスンでの英語使用量増加",
       }}
       resultMetric={{
         title: "NC AI Speaking Test スコア",
         description:
-          "Native Camp の AI Speaking Test で計測されるスコア。毎月定期受検し、長期的な推移を記録する。",
+          "英会話レッスン の AI Speaking Test で計測されるスコア。毎月定期受検し、長期的な推移を記録する。",
       }}
       behaviorMetrics={[
         {
@@ -69,8 +69,8 @@ export default function ConceptRoute() {
         },
         { title: "スピーキング回数", description: "週間スピーキング練習回数" },
         {
-          title: "Native Camp 受講回数",
-          description: "週間 Native Camp レッスン受講回数",
+          title: "英会話レッスン 受講回数",
+          description: "週間 英会話レッスン レッスン受講回数",
         },
         {
           title: "シャドーイング時間",

@@ -27,7 +27,7 @@ function LoginContent() {
           style={{ color: "var(--color-primary)" }}
         />
       }
-      tagline="Native Camp 学習管理アプリ"
+      tagline="英会話レッスン 学習管理アプリ"
       onGoogleSignIn={handleGoogleSignIn}
     />
   );

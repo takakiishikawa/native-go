@@ -238,7 +238,7 @@ export function ReportCharts({
             config={ncConfig}
             xKey="label"
             yKeys={["minutes"]}
-            title="Native Camp"
+            title="英会話レッスン"
             unit="分"
           />
         )}

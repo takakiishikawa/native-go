@@ -124,7 +124,7 @@ export default function SettingsRoute() {
           control={<NumberInput fieldKey="baseline_speaking" unit="回/週" />}
         />
         <SettingsItem
-          label="Native Camp"
+          label="英会話レッスン"
           control={<NumberInput fieldKey="baseline_nativecamp" unit="分/週" />}
         />
         <SettingsItem

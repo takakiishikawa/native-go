@@ -25,7 +25,7 @@ const notoSans = Noto_Sans_JP({
 
 export const metadata: Metadata = {
   title: "NativeGo",
-  description: "Native Camp英語学習管理アプリ",
+  description: "英会話レッスン学習管理アプリ",
 };
 
 export default async function RootLayout({

@@ -39,7 +39,7 @@ export function MetricModals({
           className="gap-1.5 text-muted-foreground"
         >
           <Pencil className="h-3.5 w-3.5" />
-          Native Camp
+          英会話レッスン
         </Button>
         <Button
           variant="ghost"

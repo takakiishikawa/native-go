@@ -60,7 +60,7 @@ export function NativeCampModal({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Native Camp 記録</DialogTitle>
+          <DialogTitle>英会話レッスン 記録</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

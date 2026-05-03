@@ -308,7 +308,7 @@ export default async function HomePage() {
     ...(isEn
       ? [
           {
-            title: "Native Camp",
+            title: "英会話レッスン",
             value: `${weeklyNativeCampCount * 25}分`,
             ratio: ratioOf(
               weeklyNativeCampCount * 25,
@@ -442,7 +442,7 @@ export default async function HomePage() {
           />
           {isEn && (
             <DashboardChart
-              title="Native Camp（7日間）"
+              title="英会話レッスン（7日間）"
               data={ncChartData}
               config={ncConfig}
               xKey="label"

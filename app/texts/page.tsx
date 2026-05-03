@@ -271,7 +271,7 @@ function AddModal({
           <DialogTitle>テキスト追加</DialogTitle>
           <DialogDescription>
             {isEn
-              ? "Native Campの教材テキストを貼り付けて、AIに文法・フレーズを抽出させます。"
+              ? "教材テキストを貼り付けて、AIに文法・フレーズを抽出させます。"
               : "ベトナム語の文法・フレーズ・例文をコピペすると、AIがCEFR A1相当の項目に仕分けて登録します。"}
           </DialogDescription>
         </DialogHeader>
@@ -394,7 +394,7 @@ function AddModal({
                   onChange={(e) => setText(e.target.value)}
                   placeholder={
                     isEn
-                      ? "Native Campの教材テキストをここに貼り付け..."
+                      ? "教材テキストをここに貼り付け..."
                       : "ベトナム語の単語・フレーズ・例文をここに貼り付け..."
                   }
                   className="min-h-40 font-mono text-xs"
@@ -525,7 +525,7 @@ function AddLessonsModal({
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>レッスン追加</DialogTitle>
           <DialogDescription>
-            Native Campのレッスン一覧を貼り付けると、AIがNo.とトピックを抽出します。
+            レッスン一覧を貼り付けると、AIがNo.とトピックを抽出します。
           </DialogDescription>
         </DialogHeader>
 
