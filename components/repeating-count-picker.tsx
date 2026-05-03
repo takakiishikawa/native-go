@@ -11,8 +11,7 @@ import {
 } from "@takaki/go-design-system";
 import { Zap, Flame, Mountain } from "lucide-react";
 
-const QUICK = 10;
-const FOCUS = 30;
+const PRESETS = [30, 50, 100] as const;
 
 type Option = {
   count: number;
@@ -34,27 +33,20 @@ export function RepeatingCountPicker({
   const router = useRouter();
   const label = kind === "grammar" ? "文法" : "フレーズ";
 
-  const options: Option[] = [
-    {
-      count: Math.min(QUICK, total),
-      label: `${Math.min(QUICK, total)}件`,
-      desc: "サクッと",
-      icon: <Zap className="h-4 w-4" />,
-    },
-    {
-      count: Math.min(FOCUS, total),
-      label: `${Math.min(FOCUS, total)}件`,
-      desc: "集中して",
-      icon: <Flame className="h-4 w-4" />,
-      primary: true,
-    },
-    {
-      count: total,
-      label: `全件 (${total})`,
-      desc: "1周まわす",
-      icon: <Mountain className="h-4 w-4" />,
-    },
+  const descs = ["サクッと", "集中して", "がっつり"] as const;
+  const icons = [
+    <Zap key="z" className="h-4 w-4" />,
+    <Flame key="f" className="h-4 w-4" />,
+    <Mountain key="m" className="h-4 w-4" />,
   ];
+
+  const options: Option[] = PRESETS.map((n, i) => ({
+    count: Math.min(n, total),
+    label: `${Math.min(n, total)}件`,
+    desc: descs[i],
+    icon: icons[i],
+    primary: i === 1,
+  }));
 
   // Dedupe (e.g. when total < 10, all three options would say the same number)
   const seen = new Set<number>();
