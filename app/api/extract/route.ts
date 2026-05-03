@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 
+export const maxDuration = 120;
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -161,7 +163,8 @@ export async function POST(request: NextRequest) {
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 4096,
+    // VI は word_notes 配列＋nuance で出力が膨らむため EN の2倍に確保
+    max_tokens: lang === "vi" ? 8192 : 4096,
     system: lang === "vi" ? SYSTEM_PROMPT_VI : SYSTEM_PROMPT_EN,
     messages: [{ role: "user", content: userMessage }],
   });
@@ -169,6 +172,17 @@ export async function POST(request: NextRequest) {
   const content = message.content[0];
   if (content.type !== "text") {
     return NextResponse.json({ error: "Unexpected response" }, { status: 500 });
+  }
+
+  if (message.stop_reason === "max_tokens") {
+    console.error("[extract] hit max_tokens, output truncated", {
+      lang,
+      usage: message.usage,
+    });
+    return NextResponse.json(
+      { error: "Output truncated; try fewer items at once" },
+      { status: 500 },
+    );
   }
 
   const rawText = content.text
@@ -179,7 +193,14 @@ export async function POST(request: NextRequest) {
   let result;
   try {
     result = JSON.parse(rawText);
-  } catch {
+  } catch (err) {
+    console.error("[extract] JSON parse failed", {
+      lang,
+      err: err instanceof Error ? err.message : String(err),
+      preview: rawText.slice(0, 400),
+      stopReason: message.stop_reason,
+      usage: message.usage,
+    });
     return NextResponse.json(
       { error: "Failed to parse response" },
       { status: 500 },

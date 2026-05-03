@@ -11,13 +11,18 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  toast,
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Grammar, Expression } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, Trash2 } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
 import { WordNotesInline } from "@/components/word-notes";
+import {
+  deleteGrammar,
+  deleteExpression,
+} from "@/app/actions/practice";
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
 type ExpressionWithLesson = Expression & {
@@ -72,9 +77,11 @@ function PlayCount({ count, max = 10 }: { count: number; max?: number }) {
 
 function GrammarTab({
   reloadKey,
+  bumpReload,
   onCountChange,
 }: {
   reloadKey: number;
+  bumpReload: () => void;
   onCountChange?: (n: number) => void;
 }) {
   const supabase = createClient();
@@ -82,6 +89,7 @@ function GrammarTab({
   const isVi = language === "vi";
   const [items, setItems] = useState<GrammarWithLesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -96,6 +104,20 @@ function GrammarTab({
     }
     load();
   }, [language, reloadKey]);
+
+  async function handleDelete(row: GrammarWithLesson) {
+    if (!confirm(`「${row.name}」を削除しますか？`)) return;
+    setDeletingId(row.id);
+    try {
+      await deleteGrammar(row.id);
+      toast.success("削除しました");
+      bumpReload();
+    } catch {
+      toast.error("削除に失敗しました");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const columns = useMemo(
     (): ColumnDef<GrammarWithLesson>[] => {
@@ -153,10 +175,26 @@ function GrammarTab({
           header: "練習",
           cell: ({ row }) => <PlayCount count={row.original.play_count} />,
         },
+        {
+          id: "actions",
+          header: "",
+          cell: ({ row }) => (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => handleDelete(row.original)}
+              disabled={deletingId === row.original.id}
+              aria-label="削除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          ),
+        },
       );
       return cols;
     },
-    [isVi],
+    [isVi, deletingId],
   );
 
   if (loading) {
@@ -183,9 +221,11 @@ function GrammarTab({
 
 function PhraseTab({
   reloadKey,
+  bumpReload,
   onCountChange,
 }: {
   reloadKey: number;
+  bumpReload: () => void;
   onCountChange?: (n: number) => void;
 }) {
   const supabase = createClient();
@@ -193,6 +233,7 @@ function PhraseTab({
   const isVi = language === "vi";
   const [items, setItems] = useState<ExpressionWithLesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -207,6 +248,20 @@ function PhraseTab({
     }
     load();
   }, [language, reloadKey]);
+
+  async function handleDelete(row: ExpressionWithLesson) {
+    if (!confirm(`「${row.expression}」を削除しますか？`)) return;
+    setDeletingId(row.id);
+    try {
+      await deleteExpression(row.id);
+      toast.success("削除しました");
+      bumpReload();
+    } catch {
+      toast.error("削除に失敗しました");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const columns = useMemo(
     (): ColumnDef<ExpressionWithLesson>[] => {
@@ -284,10 +339,26 @@ function PhraseTab({
           header: "練習",
           cell: ({ row }) => <PlayCount count={row.original.play_count} />,
         },
+        {
+          id: "actions",
+          header: "",
+          cell: ({ row }) => (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => handleDelete(row.original)}
+              disabled={deletingId === row.original.id}
+              aria-label="削除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          ),
+        },
       );
       return cols;
     },
-    [isVi],
+    [isVi, deletingId],
   );
 
   if (loading) {
@@ -319,6 +390,7 @@ export default function ListPage() {
   const [phraseCount, setPhraseCount] = useState<number | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
+  const bumpReload = useCallback(() => setReloadKey((k) => k + 1), []);
 
   const reloadCounts = useCallback(() => {
     const supabase = createClient();
@@ -375,17 +447,25 @@ export default function ListPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="grammar" className="mt-4">
-          <GrammarTab reloadKey={reloadKey} onCountChange={setGrammarCount} />
+          <GrammarTab
+            reloadKey={reloadKey}
+            bumpReload={bumpReload}
+            onCountChange={setGrammarCount}
+          />
         </TabsContent>
         <TabsContent value="phrase" className="mt-4">
-          <PhraseTab reloadKey={reloadKey} onCountChange={setPhraseCount} />
+          <PhraseTab
+            reloadKey={reloadKey}
+            bumpReload={bumpReload}
+            onCountChange={setPhraseCount}
+          />
         </TabsContent>
       </Tabs>
 
       {showAddModal && (
         <ViAddModal
           onClose={() => setShowAddModal(false)}
-          onSaved={() => setReloadKey((k) => k + 1)}
+          onSaved={bumpReload}
         />
       )}
     </div>

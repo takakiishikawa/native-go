@@ -247,6 +247,38 @@ export async function deleteSpeakingScore(id: string) {
   revalidatePath("/");
 }
 
+export async function deleteGrammar(id: string) {
+  const supabase = await createClient();
+  const { data: grammar } = await supabase
+    .from("grammar")
+    .select("lesson_id")
+    .eq("id", id)
+    .single();
+
+  const { error } = await supabase.from("grammar").delete().eq("id", id);
+  if (error) throw error;
+  await syncLessonStatus(grammar?.lesson_id ?? null);
+  revalidatePath("/grammar");
+  revalidatePath("/list");
+  revalidatePath("/texts");
+}
+
+export async function deleteExpression(id: string) {
+  const supabase = await createClient();
+  const { data: expression } = await supabase
+    .from("expressions")
+    .select("lesson_id")
+    .eq("id", id)
+    .single();
+
+  const { error } = await supabase.from("expressions").delete().eq("id", id);
+  if (error) throw error;
+  await syncLessonStatus(expression?.lesson_id ?? null);
+  revalidatePath("/expressions");
+  revalidatePath("/list");
+  revalidatePath("/texts");
+}
+
 export async function updateLessonStatus(
   id: string,
   status: "未登録" | "練習中" | "習得済み",
