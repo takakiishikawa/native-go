@@ -217,9 +217,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { text, language } = (await request.json()) as {
+  const { text, language, kind } = (await request.json()) as {
     text?: string;
     language?: "en" | "vi";
+    kind?: "grammar" | "phrase";
   };
   if (!text?.trim()) {
     return NextResponse.json({ error: "Text is required" }, { status: 400 });
@@ -248,7 +249,17 @@ export async function POST(request: NextRequest) {
       grammar: (gExisting ?? []).map((r) => r.name),
       expressions: (eExisting ?? []).map((r) => r.expression),
     });
-    userMessage = `EXISTING_ITEMS (drop near-duplicates):\n${existingHint}\n\nThe user pasted the following bullet list of grammar / phrases they want to learn. Classify each item into grammar or expressions and produce word_notes (and nuance for expressions) per the system rules:\n\n${text}`;
+
+    let kindDirective = "Classify each item into grammar or expressions";
+    if (kind === "grammar") {
+      kindDirective =
+        "The user has indicated that EVERY item below is a GRAMMAR pattern. Put them all under \"grammar\" and leave \"expressions\" as an empty array. Do not reclassify any item as an expression.";
+    } else if (kind === "phrase") {
+      kindDirective =
+        "The user has indicated that EVERY item below is a fixed PHRASE / EXPRESSION. Put them all under \"expressions\" and leave \"grammar\" as an empty array. Do not reclassify any item as grammar.";
+    }
+
+    userMessage = `EXISTING_ITEMS (drop near-duplicates):\n${existingHint}\n\nThe user pasted the following bullet list of items they want to learn. ${kindDirective} Produce word_notes (and nuance for expressions) per the system rules:\n\n${text}`;
   } else {
     userMessage = `Extract grammar points and expressions from this Native Camp lesson material:\n\n${text}`;
   }
