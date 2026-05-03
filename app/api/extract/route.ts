@@ -13,7 +13,7 @@ const anthropic = new Anthropic({
 const WORD_NOTES_SCHEMA = {
   type: "array" as const,
   description:
-    "Per-word Japanese gloss for words appearing in the main pattern/expression (NOT example dialogue).",
+    "Per-word Japanese gloss covering BOTH the main pattern/expression AND words used in the example dialogue (deduplicated).",
   items: {
     type: "object" as const,
     properties: {
@@ -187,13 +187,16 @@ Return a JSON object with exactly this structure:
 }
 
 word_notes rules (重要):
-- ONLY include words that actually appear in the grammar "name" or expression "expression" itself.
-  Do NOT include words that only appear in the example conversation lines / usage_scene / detail.
+- Include words from BOTH sources, deduplicated:
+  (a) the grammar "name" / expression "expression" itself, AND
+  (b) the example dialogue lines you generate ("examples" for grammar, "conversation" for expressions).
+- Do NOT include words that only appear in usage_scene, detail, nuance, or category.
 - Multi-word fixed units (e.g. "cảm ơn", "phải không", "không phải là") stay as one entry.
+- Each word appears at most ONCE. If a word shows up in both the pattern and the dialogue, list it only once (under its first occurrence).
 - "note" is a SHORT Japanese gloss (1 phrase, ~20 chars).
-- Typical count: grammar 2-5 entries, expression 2-5 entries.
-- Order: same as the words appear in the source pattern / phrase (left to right).
-- Skip pure placeholders ("S", "V", "O", "名詞", "動詞", "形容詞") and numbers / obvious cognates.
+- Order: pattern words first (left to right), then NEW words from the dialogue in line order (A → B → A).
+- Typical count: 4-10 entries total. Lean toward INCLUDE for an A1 beginner — if Takaki might not know the word, add it.
+- Skip pure placeholders ("S", "V", "O", "名詞", "動詞", "形容詞"), numbers, obvious cognates, and personal names.
 
 nuance rules (expressions only):
 - 1-2 sentences in Japanese describing how this phrase comes across to the listener (politeness level, age/relationship register, warmth, formality, common alternatives).

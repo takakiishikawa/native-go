@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
-import { PageHeader } from "@takaki/go-design-system";
 import { GrammarClient } from "./grammar-client";
 
 export default async function GrammarPage() {
@@ -16,18 +15,7 @@ export default async function GrammarPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="文法一覧"
-        actions={
-          <span className="text-2xl font-semibold">
-            {items.length}
-            <span className="text-base font-normal text-muted-foreground ml-1">
-              件
-            </span>
-          </span>
-        }
-      />
-      <GrammarClient items={items} />
+      <GrammarClient items={items} language={language} />
     </div>
   );
 }

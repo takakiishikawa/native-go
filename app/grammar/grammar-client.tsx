@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   DataTable,
@@ -9,10 +9,18 @@ import {
   DialogHeader,
   DialogTitle,
   Button,
+  PageHeader,
+  toast,
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Grammar } from "@/lib/types";
-import { Star } from "lucide-react";
+import type { Grammar, Language } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import { Star, Sparkles, Loader2 } from "lucide-react";
+import { WordNotesPanel } from "@/components/word-notes";
+import {
+  regenerateWordNotesBatch,
+  getWordNotesBacklog,
+} from "@/app/actions/word-notes";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -27,8 +35,70 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
-export function GrammarClient({ items }: { items: Grammar[] }) {
+export function GrammarClient({
+  items: initialItems,
+  language,
+}: {
+  items: Grammar[];
+  language: Language;
+}) {
+  const supabase = createClient();
+  const [items, setItems] = useState<Grammar[]>(initialItems);
   const [selected, setSelected] = useState<Grammar | null>(null);
+  const [backlog, setBacklog] = useState<number | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
+
+  useEffect(() => {
+    if (language !== "vi") {
+      setBacklog(null);
+      return;
+    }
+    getWordNotesBacklog("grammar").then(setBacklog);
+  }, [language]);
+
+  const reload = async () => {
+    const { data } = await supabase
+      .from("grammar")
+      .select("*")
+      .eq("language", language)
+      .order("created_at", { ascending: false });
+    setItems(data ?? []);
+  };
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const result = await regenerateWordNotesBatch("grammar");
+      if ("error" in result) {
+        toast.error(`再生成に失敗: ${result.error}`);
+        return;
+      }
+      const { processed, failed, remaining } = result;
+      if (processed === 0 && failed === 0) {
+        toast.success("再生成が必要な文法はありません");
+      } else {
+        toast.success(
+          `${processed} 件再生成${failed > 0 ? ` / ${failed} 件失敗` : ""} (残り ${remaining} 件)`,
+        );
+      }
+      setBacklog(remaining);
+      await reload();
+      if (selected) {
+        const { data } = await supabase
+          .from("grammar")
+          .select("*")
+          .eq("id", selected.id)
+          .maybeSingle();
+        if (data) setSelected(data);
+      }
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const columns = useMemo(
     (): ColumnDef<Grammar>[] => [
@@ -88,6 +158,37 @@ export function GrammarClient({ items }: { items: Grammar[] }) {
 
   return (
     <>
+      <PageHeader
+        title="文法一覧"
+        actions={
+          <div className="flex items-center gap-3">
+            {language === "vi" && backlog !== null && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={regenerating || backlog === 0}
+              >
+                {regenerating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                単語解説を再生成
+                <span className="ml-2 text-xs text-muted-foreground">
+                  残り {backlog} 件
+                </span>
+              </Button>
+            )}
+            <span className="text-2xl font-semibold">
+              {items.length}
+              <span className="text-base font-normal text-muted-foreground ml-1">
+                件
+              </span>
+            </span>
+          </div>
+        }
+      />
       <DataTable
         columns={columns}
         data={items}
@@ -152,6 +253,9 @@ export function GrammarClient({ items }: { items: Grammar[] }) {
                   {selected.usage_scene}
                 </p>
               </div>
+              {language === "vi" && (
+                <WordNotesPanel notes={selected.word_notes} />
+              )}
               <div className="flex items-center gap-4 pt-2 border-t">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">頻度</span>

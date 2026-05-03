@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Badge,
@@ -11,11 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
   Button,
+  toast,
 } from "@takaki/go-design-system";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Expression } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
-import { Star } from "lucide-react";
+import { Star, Sparkles, Loader2 } from "lucide-react";
+import { WordNotesPanel } from "@/components/word-notes";
+import {
+  regenerateWordNotesBatch,
+  getWordNotesBacklog,
+} from "@/app/actions/word-notes";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -36,19 +42,61 @@ export default function ExpressionsPage() {
   const [items, setItems] = useState<Expression[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Expression | null>(null);
+  const [backlog, setBacklog] = useState<number | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+
+  const reload = useCallback(async () => {
+    const { data } = await supabase
+      .from("expressions")
+      .select("*")
+      .eq("language", language)
+      .order("created_at", { ascending: false });
+    setItems(data ?? []);
+  }, [language]);
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from("expressions")
-        .select("*")
-        .eq("language", language)
-        .order("created_at", { ascending: false });
-      setItems(data ?? []);
+      await reload();
       setLoading(false);
+      if (language === "vi") {
+        setBacklog(await getWordNotesBacklog("expression"));
+      } else {
+        setBacklog(null);
+      }
     }
     load();
-  }, [language]);
+  }, [language, reload]);
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const result = await regenerateWordNotesBatch("expression");
+      if ("error" in result) {
+        toast.error(`再生成に失敗: ${result.error}`);
+        return;
+      }
+      const { processed, failed, remaining } = result;
+      if (processed === 0 && failed === 0) {
+        toast.success("再生成が必要なフレーズはありません");
+      } else {
+        toast.success(
+          `${processed} 件再生成${failed > 0 ? ` / ${failed} 件失敗` : ""} (残り ${remaining} 件)`,
+        );
+      }
+      setBacklog(remaining);
+      await reload();
+      if (selected) {
+        const { data } = await supabase
+          .from("expressions")
+          .select("*")
+          .eq("id", selected.id)
+          .maybeSingle();
+        if (data) setSelected(data);
+      }
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const columns = useMemo(
     (): ColumnDef<Expression>[] => [
@@ -126,12 +174,32 @@ export default function ExpressionsPage() {
       <PageHeader
         title="フレーズ一覧"
         actions={
-          <span className="text-2xl font-semibold">
-            {items.length}
-            <span className="text-base font-normal text-muted-foreground ml-1">
-              件
+          <div className="flex items-center gap-3">
+            {language === "vi" && backlog !== null && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={regenerating || backlog === 0}
+              >
+                {regenerating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                単語解説を再生成
+                <span className="ml-2 text-xs text-muted-foreground">
+                  残り {backlog} 件
+                </span>
+              </Button>
+            )}
+            <span className="text-2xl font-semibold">
+              {items.length}
+              <span className="text-base font-normal text-muted-foreground ml-1">
+                件
+              </span>
             </span>
-          </span>
+          </div>
         }
       />
 
@@ -199,6 +267,9 @@ export default function ExpressionsPage() {
                     })}
                 </div>
               </div>
+              {language === "vi" && (
+                <WordNotesPanel notes={selected.word_notes} />
+              )}
               <div className="flex items-center gap-4 pt-2 border-t">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">頻度</span>
