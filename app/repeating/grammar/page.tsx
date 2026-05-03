@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { ConversationLines } from "@/components/conversation-lines";
 import { WordNotesPanel } from "@/components/word-notes";
+import { RepeatingCountPicker } from "@/components/repeating-count-picker";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -79,7 +80,9 @@ export default function GrammarRepeatingPage() {
   const router = useRouter();
   const supabase = createClient();
   const language = useCurrentLanguage();
+  const [allItems, setAllItems] = useState<Grammar[]>([]);
   const [items, setItems] = useState<Grammar[]>([]);
+  const [sessionStarted, setSessionStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [currentLine, setCurrentLine] = useState(-1);
@@ -100,23 +103,40 @@ export default function GrammarRepeatingPage() {
     rateRef.current = rate;
   }, [rate]);
 
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("grammar")
+      .select("*")
+      .eq("language", language)
+      .lt("play_count", 10)
+      .order("created_at", { ascending: true });
+    setAllItems(data ?? []);
+    setLoading(false);
+  }, [language, supabase]);
+
   useEffect(() => {
-    async function load() {
-      const { data } = await supabase
-        .from("grammar")
-        .select("*")
-        .eq("language", language)
-        .lt("play_count", 10)
-        .order("created_at", { ascending: true });
-      setItems(data ?? []);
-      setLoading(false);
-    }
-    load();
+    loadItems();
     return () => {
       cancelRef.current = true;
       audioRef.current?.pause();
     };
-  }, [language]);
+  }, [loadItems]);
+
+  function startSession(count: number) {
+    setItems(allItems.slice(0, count));
+    setIndex(0);
+    setSessionStarted(true);
+  }
+
+  function restartSession() {
+    setShowComplete(false);
+    setSessionStarted(false);
+    setIndex(0);
+    setItems([]);
+    resumeLineRef.current = 0;
+    loadItems();
+  }
 
   // Fetch today's completion status when the modal appears
   useEffect(() => {
@@ -248,12 +268,22 @@ export default function GrammarRepeatingPage() {
     );
   }
 
-  if (items.length === 0 && !showComplete) {
+  if (allItems.length === 0 && !showComplete) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4 text-muted-foreground">
         <p className="text-lg">練習中の文法はありません</p>
         <p className="text-sm">すべて完了しました！</p>
       </div>
+    );
+  }
+
+  if (!sessionStarted) {
+    return (
+      <RepeatingCountPicker
+        total={allItems.length}
+        kind="grammar"
+        onSelect={startSession}
+      />
     );
   }
 
@@ -382,10 +412,7 @@ export default function GrammarRepeatingPage() {
               <CompletionNavButton
                 label="文法リピーティング"
                 done={todayStatus.grammar}
-                onClick={() => {
-                  setShowComplete(false);
-                  router.push("/repeating/grammar");
-                }}
+                onClick={restartSession}
               />
               <CompletionNavButton
                 label="フレーズリピーティング"
