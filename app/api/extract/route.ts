@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
+import { pickAnglesEN } from "@/lib/life-angles";
 
 export const maxDuration = 120;
 
@@ -98,7 +99,19 @@ const EXTRACT_INPUT_SCHEMA = {
 
 const SYSTEM_PROMPT_EN = `You are an English learning assistant. Extract grammar points and expressions from Native Camp lesson materials.
 
-User context: Takaki, 32-year-old Japanese male, lives alone in Ho Chi Minh City District 1-3 (Vietnam, 2-3 years), Product Manager at Sun Asterisk managing B2B recruitment platform and B2C education LMS, team of ~20 (engineers/QA/designers/BrSE). Daily life: strength training (bulking phase, 70kg→80kg goal, bench/pull-ups/squat/RDL), meditation, watching Korean dramas on Netflix, interested in cats (wants British Shorthair), visits cat cafes (CATFE/KIN NEKO), cafe hopping in District 1-3, rides motorbike, interested in philosophy/CBT/AI/product thinking. INTJ personality.
+User context: Takaki, 32-year-old Japanese male, lives alone in Ho Chi Minh City District 1-3 (Vietnam, 2-3 years), Product Manager at Sun Asterisk managing B2B recruitment platform and B2C education LMS, team of ~20 (engineers/QA/designers/BrSE). INTJ personality.
+
+His life has many sides — examples should rotate across these, not stay in one corner:
+- Body & routine: strength training (bulking 70kg→80kg, bench/pull-ups/squat/RDL), meditation, occasional massages for self-care, walks/strolls (often thinks while walking).
+- Home & making things: home cooking and meal-prep with friends, very into ものづくり (making things by hand), sews his own clothes, believes "being able to make things yourself makes life richer" — applies to cooking, clothes, software.
+- Animals & cafes: cats (wants a British Shorthair, visits CATFE/KIN NEKO), recently came to like dogs too, cafe hopping around District 1-3.
+- Reading & media: Korean dramas on Netflix, started reading novels and essays (Haruki Murakami).
+- Social & dating: values relationships with people more than before, goes on dates with women, regularly attends product/tech meetups in Ho Chi Minh.
+- Money & values: realized the importance of saving / frugality, but also became interested in spending money intentionally (experiences), thinks asset-building is quite important.
+- Work & career: PdM role has shifted toward more upstream/strategic work, enjoys building AI side projects as an individual developer, feels AI is changing how products get built, considers working in another country in the future.
+- Living abroad & culture: lives abroad in Vietnam — notices cultural differences (food, work styles, social norms) vs Japan, appreciates Vietnamese street food / coffee / eating with coworkers, navigates the Vietnamese language as a foreigner, occasional culture shock and unexpected kindness from locals, lower cost of living enables a different lifestyle, thinks about identity and what "home" means after years abroad, compares Tokyo vs Ho Chi Minh life (pace/density/weather/people).
+- Place & vehicle: Ho Chi Minh District 1-3, rides motorbike.
+- Mind: philosophy / CBT / AI / product thinking.
 
 Return a JSON object with exactly this structure:
 {
@@ -129,8 +142,9 @@ Rules:
 - frequency is 1-5 stars based on how commonly useful this is for Takaki
 - Both "examples" (grammar) and "conversation" (expressions) MUST be A/B/A 3-turn format, maximum 4 lines
 - All lines MUST start with exactly "A: " or "B: " prefixes
-- Personalize to Takaki's life: cafe/cats/gym/Ho Chi Minh life/Korean drama/meditation/food/friends (70%) and PM work (30%)
-- Use Ho Chi Minh locations naturally (District 3, Nguyen Trai, Thao Dien, etc.)
+- Personalize to Takaki's life by ROTATING across the angles above. Do NOT default to cafe / cats / gym every time — actively pull from cooking, sewing, ものづくり, walks, dogs, dating, reading novels, AI side projects, upstream PdM work, asset-building, HCMC meetups, living-abroad / Japan-vs-Vietnam culture, etc. Different items in the same response MUST use different angles.
+- If the user message contains a PRIORITY_ANGLES block, treat those listed angles as the dominant context for THIS run. Distribute them across items so that no two items reuse the same angle. Other angles may appear as supporting detail only.
+- Use Ho Chi Minh locations naturally (District 3, Nguyen Trai, Thao Dien, etc.) when geographically relevant — but don't force a location into every line.
 - Natural conversational tone (not too formal, not too casual)
 - detail can be null if summary is sufficient
 - Return ONLY valid JSON, no markdown, no explanation`;
@@ -264,7 +278,9 @@ export async function POST(request: NextRequest) {
 
     userMessage = `EXISTING_ITEMS (drop near-duplicates):\n${existingHint}\n\nThe user pasted the following bullet list of items they want to learn. ${kindDirective} Produce word_notes (and nuance for expressions) per the system rules:\n\n${text}`;
   } else {
-    userMessage = `Extract grammar points and expressions from this Native Camp lesson material:\n\n${text}`;
+    const angles = pickAnglesEN(3);
+    const angleBlock = angles.map((a) => `- ${a}`).join("\n");
+    userMessage = `PRIORITY_ANGLES (use these as the dominant context for the conversation examples in THIS run; assign a different angle to each item — do not reuse the same angle across items):\n${angleBlock}\n\nExtract grammar points and expressions from this Native Camp lesson material:\n\n${text}`;
   }
 
   const message = await anthropic.messages.create({
