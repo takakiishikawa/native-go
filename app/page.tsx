@@ -7,7 +7,6 @@ import {
   DashboardKpiSection,
   type DashboardKpi,
 } from "@/components/dashboard-kpi-section";
-import { DashboardAutoCheck } from "@/components/dashboard-auto-check";
 import { SpeakingTestReminder } from "@/components/speaking-test-reminder";
 import { StreakPopup } from "@/components/streak-popup";
 import { ChevronRight, BookOpen, MessageSquare, Mic, Play } from "lucide-react";
@@ -87,9 +86,6 @@ const repeatingConfig: ChartConfig = {
 const speakingConfig: ChartConfig = {
   count: { label: "練習回数", color: "var(--color-primary)" },
 };
-const ncConfig: ChartConfig = {
-  minutes: { label: "学習時間", color: "var(--color-primary)" },
-};
 const shadowingConfig: ChartConfig = {
   minutes: { label: "視聴時間", color: "var(--color-primary)" },
 };
@@ -122,7 +118,6 @@ export default async function HomePage() {
     logsResult,
     allRangeLogsResult,
     scoresResult,
-    allNcLogsResult,
     allYoutubeLogsResult,
     settingsResult,
   ] = await Promise.all([
@@ -143,11 +138,6 @@ export default async function HomePage() {
       .from("speaking_scores")
       .select("id, user_id, score, tested_at, created_at")
       .order("tested_at"),
-    supabase
-      .from("native_camp_logs")
-      .select("logged_at, count, minutes")
-      .gte("logged_at", prev14StartStr)
-      .lte("logged_at", todayStr),
     supabase
       .from("youtube_logs")
       .select("completed_at, youtube_videos(duration)")
@@ -196,14 +186,6 @@ export default async function HomePage() {
 
   const scores = (scoresResult.data ?? []) as SpeakingScore[];
 
-  const allNcLogs = allNcLogsResult.data ?? [];
-  const ncByDate = new Map<string, number>();
-  const prevNcByDate = new Map<string, number>();
-  for (const nc of allNcLogs) {
-    const target = nc.logged_at >= rangeStartStr ? ncByDate : prevNcByDate;
-    target.set(nc.logged_at, (target.get(nc.logged_at) ?? 0) + (nc.count ?? 0));
-  }
-
   const streak = calculateStreak(allLogs.map((l) => l.practiced_at));
 
   const weeklyGrammar = rangeLogs.reduce((s, l) => s + l.grammar_done_count, 0);
@@ -213,10 +195,6 @@ export default async function HomePage() {
   );
   const weeklyRepeating = weeklyGrammar + weeklyExpression;
   const weeklySpeaking = rangeLogs.reduce((s, l) => s + l.speaking_count, 0);
-  const weeklyNativeCampCount = [...ncByDate.values()].reduce(
-    (s, c) => s + c,
-    0,
-  );
 
   const prevWeeklyGrammar = prevRangeLogs.reduce(
     (s, l) => s + l.grammar_done_count,
@@ -231,21 +209,12 @@ export default async function HomePage() {
     (s, l) => s + l.speaking_count,
     0,
   );
-  const prevNativeCampCount = [...prevNcByDate.values()].reduce(
-    (s, c) => s + c,
-    0,
-  );
 
-  const hasPrevData =
-    allRangeLogs.some((l) => l.practiced_at < rangeStartStr) ||
-    allNcLogs.some((nc) => nc.logged_at < rangeStartStr);
+  const hasPrevData = allRangeLogs.some((l) => l.practiced_at < rangeStartStr);
   const repeatingDiff = hasPrevData
     ? weeklyRepeating - prevWeeklyRepeating
     : null;
   const speakingDiff = hasPrevData ? weeklySpeaking - prevWeeklySpeaking : null;
-  const ncCountDiff = hasPrevData
-    ? weeklyNativeCampCount - prevNativeCampCount
-    : null;
 
   function parseDurToMin(dur: string | null | undefined): number {
     if (!dur) return 0;
@@ -276,7 +245,6 @@ export default async function HomePage() {
     : null;
 
   const settings = settingsResult.data ?? null;
-  const hasNativeCampToday = (ncByDate.get(todayStr) ?? 0) > 0;
 
   const isEn = currentLanguage === "en";
   const kpiCards: DashboardKpi[] = [
@@ -305,20 +273,6 @@ export default async function HomePage() {
       weekDiff: shadowingDiff,
       diffUnit: "分",
     },
-    ...(isEn
-      ? [
-          {
-            title: "英会話レッスン",
-            value: `${weeklyNativeCampCount * 25}分`,
-            ratio: ratioOf(
-              weeklyNativeCampCount * 25,
-              settings?.baseline_nativecamp,
-            ),
-            weekDiff: ncCountDiff !== null ? ncCountDiff * 25 : null,
-            diffUnit: "分",
-          },
-        ]
-      : []),
   ];
 
   // Chart data (7 days)
@@ -334,10 +288,6 @@ export default async function HomePage() {
     const l = logMap.get(str);
     return { label, count: l?.speaking_count ?? 0 };
   });
-  const ncChartData = days.map(({ str, label }) => ({
-    label,
-    minutes: (ncByDate.get(str) ?? 0) * 25,
-  }));
   const scoreChartData = [...scores]
     .sort((a, b) => a.tested_at.localeCompare(b.tested_at))
     .map((s) => {
@@ -442,21 +392,6 @@ export default async function HomePage() {
           />
           {isEn && (
             <DashboardChart
-              title="英会話レッスン（7日間）"
-              data={ncChartData}
-              config={ncConfig}
-              xKey="label"
-              yKeys={["minutes"]}
-              unit="分"
-              baseline={
-                settings
-                  ? Math.round(settings.baseline_nativecamp / 7)
-                  : undefined
-              }
-            />
-          )}
-          {isEn && (
-            <DashboardChart
               title="NC AI Speaking Test スコア"
               data={scoreChartData}
               config={scoreConfig}
@@ -469,10 +404,6 @@ export default async function HomePage() {
           )}
         </div>
       </div>
-
-      {isEn && (
-        <DashboardAutoCheck hasNativeCampToday={hasNativeCampToday} />
-      )}
     </div>
   );
 }

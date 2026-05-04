@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
-  Button,
   Card,
   CardDescription,
   CardFooter,
@@ -11,16 +10,8 @@ import {
   CardTitle,
   Tag,
 } from "@takaki/go-design-system";
-import { Pencil } from "lucide-react";
 import type { SpeakingScore } from "@/lib/types";
 
-const NativeCampModal = dynamic(
-  () =>
-    import("@/components/native-camp-modal").then((m) => ({
-      default: m.NativeCampModal,
-    })),
-  { ssr: false },
-);
 const SpeakingScoreModal = dynamic(
   () =>
     import("@/components/speaking-score-modal").then((m) => ({
@@ -40,28 +31,7 @@ export type DashboardKpi = {
   diffUnit?: string;
 };
 
-const NC_TITLE = "英会話レッスン";
-
-function EditIconButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button
-      onClick={onClick}
-      className="p-1 rounded-md text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
-      aria-label="編集"
-      variant="ghost"
-    >
-      <Pencil className="h-3.5 w-3.5" />
-    </Button>
-  );
-}
-
-function KpiCardItem({
-  card,
-  actions,
-}: {
-  card: DashboardKpi;
-  actions?: React.ReactNode;
-}) {
+function KpiCardItem({ card }: { card: DashboardKpi }) {
   const ratioTagColor =
     card.ratio != null && card.ratio >= 100 ? "success" : "default";
   const diffTagColor =
@@ -70,7 +40,6 @@ function KpiCardItem({
 
   return (
     <Card className="@container/card relative shadow-xs">
-      {actions && <div className="absolute top-2 right-2 z-10">{actions}</div>}
       <CardHeader className="pb-2">
         <CardDescription>{card.title}</CardDescription>
         <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
@@ -100,23 +69,15 @@ export function DashboardKpiSection({
   cards: DashboardKpi[];
   initialScores: SpeakingScore[];
 }) {
-  const [ncOpen, setNcOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
-  const hasNcCard = cards.some((c) => c.title === NC_TITLE);
 
   return (
     <>
       <div className="@xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-3">
-        {cards.map((card, i) => {
-          let actions: React.ReactNode;
-          if (card.title === NC_TITLE)
-            actions = <EditIconButton onClick={() => setNcOpen(true)} />;
-          return <KpiCardItem key={i} card={card} actions={actions} />;
-        })}
+        {cards.map((card, i) => (
+          <KpiCardItem key={i} card={card} />
+        ))}
       </div>
-      {hasNcCard && (
-        <NativeCampModal open={ncOpen} onClose={() => setNcOpen(false)} />
-      )}
       <SpeakingScoreModal
         open={scoreOpen}
         onClose={() => setScoreOpen(false)}
