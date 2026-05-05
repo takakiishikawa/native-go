@@ -66,18 +66,15 @@ function PlayCountStatusSummary({
   items: { play_count: number }[];
 }) {
   let done = 0;
-  let started = 0;
-  let unregistered = 0;
+  let inProgress = 0;
   for (const it of items) {
     if (it.play_count >= 10) done++;
-    else if (it.play_count > 0) started++;
-    else unregistered++;
+    else inProgress++;
   }
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Tag color="success">習得済み {done}</Tag>
-      <Tag color="warning">練習中 {started}</Tag>
-      <Tag color="default">未登録 {unregistered}</Tag>
+      <Tag color="warning">練習中 {inProgress}</Tag>
     </div>
   );
 }
