@@ -110,6 +110,7 @@ export default function ExpressionRepeatingPage() {
       .from("expressions")
       .select("*")
       .eq("language", language)
+      .lt("play_count", 10)
       .order("created_at", { ascending: true });
     setAllItems(data ?? []);
     setLoading(false);
