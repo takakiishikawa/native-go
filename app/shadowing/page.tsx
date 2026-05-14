@@ -32,6 +32,8 @@ import type { YoutubeChannel, YoutubeVideo } from "@/lib/types";
 type VideoWithLap = YoutubeVideo & { lapCount: number };
 type Filter = "todo" | "done";
 
+const STANDALONE_CHANNEL_URL = "nativego:standalone-videos";
+
 export default function ShadowingPage() {
   const supabase = createClient();
   const language = useCurrentLanguage();
@@ -46,11 +48,15 @@ export default function ShadowingPage() {
   const [filter, setFilter] = useState<Filter>("todo");
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddVideoModal, setShowAddVideoModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [channelUrl, setChannelUrl] = useState("");
   const [sinceYear, setSinceYear] = useState("");
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [fetchingVideo, setFetchingVideo] = useState(false);
+  const [videoFetchError, setVideoFetchError] = useState("");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -189,6 +195,35 @@ export default function ShadowingPage() {
     }
   };
 
+  const handleFetchVideo = async () => {
+    if (!videoUrl.trim()) return;
+    setFetchingVideo(true);
+    setVideoFetchError("");
+
+    try {
+      const res = await fetch("/api/youtube-video-fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoUrl: videoUrl.trim(), language }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setVideoFetchError(data.error ?? "取得に失敗しました");
+        return;
+      }
+
+      toast.success(`「${data.title}」を追加しました`);
+      setShowAddVideoModal(false);
+      setVideoUrl("");
+      await loadData();
+    } catch {
+      setVideoFetchError("ネットワークエラーが発生しました");
+    } finally {
+      setFetchingVideo(false);
+    }
+  };
+
   const handleFetchChannel = async () => {
     if (!channelUrl.trim()) return;
     setFetching(true);
@@ -261,6 +296,14 @@ export default function ShadowingPage() {
                 アーカイブ済み
               </Button>
             )}
+            <Button
+              onClick={() => setShowAddVideoModal(true)}
+              size="sm"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              動画を追加
+            </Button>
             <Button onClick={() => setShowAddModal(true)} size="sm">
               <Plus className="h-4 w-4 mr-1.5" />
               チャンネルを追加
@@ -283,34 +326,42 @@ export default function ShadowingPage() {
           {/* Active channel tabs */}
           {activeChannels.length > 0 && (
             <div className="flex gap-2 flex-wrap items-center">
-              {activeChannels.map((ch) => (
-                <div key={ch.id} className="group relative flex items-center">
-                  <Button
-                    onClick={() => setSelectedChannelId(ch.id)}
-                    variant={
-                      selectedChannelId === ch.id ? "default" : "secondary"
-                    }
-                    size="sm"
-                    className={cn("pl-4 pr-8 rounded-full")}
-                  >
-                    {ch.channel_name}
-                  </Button>
-                  <Button
-                    onClick={() => handleArchiveChannel(ch.id, true)}
-                    title="アーカイブ"
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "absolute right-2 p-0.5 rounded transition-opacity",
-                      selectedChannelId === ch.id
-                        ? "opacity-60 hover:opacity-100 text-primary-foreground"
-                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground",
+              {activeChannels.map((ch) => {
+                const isStandalone = ch.channel_url === STANDALONE_CHANNEL_URL;
+                return (
+                  <div key={ch.id} className="group relative flex items-center">
+                    <Button
+                      onClick={() => setSelectedChannelId(ch.id)}
+                      variant={
+                        selectedChannelId === ch.id ? "default" : "secondary"
+                      }
+                      size="sm"
+                      className={cn(
+                        isStandalone ? "px-4" : "pl-4 pr-8",
+                        "rounded-full",
+                      )}
+                    >
+                      {ch.channel_name}
+                    </Button>
+                    {!isStandalone && (
+                      <Button
+                        onClick={() => handleArchiveChannel(ch.id, true)}
+                        title="アーカイブ"
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "absolute right-2 p-0.5 rounded transition-opacity",
+                          selectedChannelId === ch.id
+                            ? "opacity-60 hover:opacity-100 text-primary-foreground"
+                            : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground",
+                        )}
+                      >
+                        <Archive className="h-3 w-3" />
+                      </Button>
                     )}
-                  >
-                    <Archive className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -402,6 +453,54 @@ export default function ShadowingPage() {
               閉じる
             </Button>
           </FormActions>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add single video modal */}
+      <Dialog
+        open={showAddVideoModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowAddVideoModal(false);
+            setVideoUrl("");
+            setVideoFetchError("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>動画を追加</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">動画URL</label>
+              <Input
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleFetchVideo();
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                例: https://www.youtube.com/watch?v=xxxxxxxxxxx /
+                https://youtu.be/xxxxxxxxxxx
+                <br />
+                チャンネル丸ごとではなく、特定の1本だけ登録できます。「個別動画」タブに表示されます。
+              </p>
+            </div>
+            {videoFetchError && (
+              <p className="text-sm text-destructive">{videoFetchError}</p>
+            )}
+            <FormActions>
+              <Button
+                onClick={handleFetchVideo}
+                disabled={fetchingVideo || !videoUrl.trim()}
+              >
+                {fetchingVideo ? "取得中..." : "動画を追加する"}
+              </Button>
+            </FormActions>
+          </div>
         </DialogContent>
       </Dialog>
 
