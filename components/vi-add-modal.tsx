@@ -31,8 +31,6 @@ import type {
 import { WordNotesInline } from "@/components/word-notes";
 import { CategoryTag } from "@/components/category-tag";
 
-type Kind = "word";
-
 type WithPriority<T> = T & { is_priority: boolean };
 
 const LOADING_STEPS = [
@@ -84,7 +82,6 @@ export function ViAddModal({
   onSaved: () => void;
 }) {
   const [text, setText] = useState("");
-  const [kind, setKind] = useState<Kind | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -120,7 +117,6 @@ export function ViAddModal({
         body: JSON.stringify({
           text: text.trim(),
           language: "vi",
-          ...(kind ? { kind } : {}),
         }),
       });
       if (!res.ok) throw new Error();
@@ -196,24 +192,6 @@ export function ViAddModal({
     setExpressions([]);
     setWords([]);
     setSourceTitle("");
-  }
-
-  function KindToggle({ value, label }: { value: Kind; label: string }) {
-    const active = kind === value;
-    return (
-      <button
-        type="button"
-        onClick={() => setKind(active ? null : value)}
-        className={cn(
-          "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
-          active
-            ? "border-primary bg-primary text-primary-foreground"
-            : "border-border bg-muted/30 text-foreground hover:bg-muted",
-        )}
-      >
-        {label}
-      </button>
-    );
   }
 
   function togglePriority(
@@ -549,19 +527,10 @@ export function ViAddModal({
           ) : (
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
-                  種類 (任意)
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  指定すると入力すべてをその種類として扱います。未選択ならAIが文法/フレーズ/単語を自動仕分け。
-                </p>
-                <div className="flex gap-2">
-                  <KindToggle value="word" label="単語" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="vi-add-text">レッスンテキスト</Label>
+                <p className="text-xs text-muted-foreground">
+                  AIが文法・フレーズ・単語の3カテゴリに自動仕分けします。
+                </p>
                 <Textarea
                   id="vi-add-text"
                   value={text}
