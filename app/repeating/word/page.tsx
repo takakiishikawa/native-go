@@ -320,6 +320,11 @@ export default function WordRepeatingPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
+            {current?.usage_scene && (
+              <p className="text-base text-muted-foreground">
+                場面: {current.usage_scene}
+              </p>
+            )}
             {current?.example && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-3">
@@ -333,11 +338,6 @@ export default function WordRepeatingPage() {
                   {current.example}
                 </p>
               </div>
-            )}
-            {current?.usage_scene && (
-              <p className="text-base text-muted-foreground">
-                場面: {current.usage_scene}
-              </p>
             )}
             {current?.word_notes && (
               <WordNotesPanel notes={current.word_notes} />

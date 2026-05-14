@@ -333,14 +333,16 @@ export default function GrammarRepeatingPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
+            {current?.usage_scene && (
+              <p className="text-base text-muted-foreground">
+                場面: {current.usage_scene}
+              </p>
+            )}
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-3">
                 会話
               </p>
               <ConversationLines lines={examples} currentLine={currentLine} />
-              <p className="text-base text-muted-foreground mt-4">
-                場面: {current?.usage_scene}
-              </p>
             </div>
             {language === "vi" && current?.word_notes && (
               <WordNotesPanel notes={current.word_notes} />

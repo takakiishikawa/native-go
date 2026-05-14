@@ -26,7 +26,7 @@ export function WordNotesInline({
 
 export function WordNotesPanel({
   notes,
-  title = "単語解説",
+  title = "単語",
 }: {
   notes?: WordNote[] | null;
   title?: string;

@@ -342,14 +342,16 @@ export default function ExpressionRepeatingPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
+            {current?.usage_scene && (
+              <p className="text-base text-muted-foreground">
+                場面: {current.usage_scene}
+              </p>
+            )}
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-3">
                 会話
               </p>
               <ConversationLines lines={lines} currentLine={currentLine} />
-              <p className="text-base text-muted-foreground mt-4">
-                場面: {current?.usage_scene}
-              </p>
             </div>
             {language === "vi" && current?.nuance && (
               <div className="rounded-md border border-border/60 bg-muted/30 px-4 py-3">
