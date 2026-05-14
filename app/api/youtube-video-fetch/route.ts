@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const maxDuration = 30;
 
 const STANDALONE_CHANNEL_URL = "nativego:standalone-videos";
-const STANDALONE_CHANNEL_NAME = "個別動画";
+const STANDALONE_CHANNEL_NAME = "お気に入り";
 
 function parseDurationSec(iso: string): number {
   const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);

@@ -239,6 +239,7 @@ export async function saveWords(
     word_notes?: WordNote[] | null;
     is_priority?: boolean;
     source_title?: string | null;
+    category?: string | null;
   }[],
   lessonId?: string,
 ): Promise<{ inserted: number; skipped: number }> {
@@ -272,6 +273,7 @@ export async function saveWords(
     word_notes: w.word_notes ?? null,
     is_priority: w.is_priority ?? false,
     source_title: w.source_title ?? null,
+    category: w.category ?? null,
   }));
 
   const { error } = await supabase.from("words").insert(rows);

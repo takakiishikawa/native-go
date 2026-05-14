@@ -496,17 +496,14 @@ export function ViAddModal({
                       <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                         <tr>
                           <th className="w-10 px-2 py-2 text-left">強化</th>
-                          <th className="text-left px-3 py-2 font-medium w-[140px]">
+                          <th className="text-left px-3 py-2 font-medium w-[120px]">
+                            カテゴリ
+                          </th>
+                          <th className="text-left px-3 py-2 font-medium w-[160px]">
                             単語
                           </th>
-                          <th className="text-left px-3 py-2 font-medium w-[180px]">
-                            意味
-                          </th>
                           <th className="text-left px-3 py-2 font-medium">
-                            例文
-                          </th>
-                          <th className="text-left px-3 py-2 font-medium w-[200px]">
-                            関連語
+                            意味
                           </th>
                           <th className="w-10" />
                         </tr>
@@ -523,15 +520,12 @@ export function ViAddModal({
                                 onToggle={() => togglePriority("words", i)}
                               />
                             </td>
+                            <td className="px-3 py-2">
+                              <CategoryTag category={w.category} />
+                            </td>
                             <td className="px-3 py-2 font-medium">{w.word}</td>
                             <td className="px-3 py-2 text-muted-foreground">
                               {w.meaning}
-                            </td>
-                            <td className="px-3 py-2 text-xs text-muted-foreground">
-                              {w.example ?? "—"}
-                            </td>
-                            <td className="px-3 py-2">
-                              <WordNotesInline notes={w.word_notes} />
                             </td>
                             <td className="px-3 py-2">
                               <Button

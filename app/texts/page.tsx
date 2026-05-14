@@ -1022,7 +1022,7 @@ export default function TextsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="テキスト"
+        title="ライブラリ"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>

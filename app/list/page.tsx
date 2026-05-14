@@ -235,13 +235,11 @@ function GrammarTab({
           ),
         });
       }
-      if (isVi) {
-        cols.push({
-          id: "category",
-          header: "種別",
-          cell: ({ row }) => <CategoryTag category={row.original.category} />,
-        });
-      }
+      cols.push({
+        id: "category",
+        header: "カテゴリ",
+        cell: ({ row }) => <CategoryTag category={row.original.category} />,
+      });
       cols.push(
         {
           accessorKey: "name",
@@ -432,7 +430,7 @@ function PhraseTab({
       cols.push(
         {
           accessorKey: "category",
-          header: "種別",
+          header: "カテゴリ",
           cell: ({ row }) => <CategoryTag category={row.original.category} />,
         },
         {
@@ -455,26 +453,15 @@ function PhraseTab({
         },
       );
       if (isVi) {
-        cols.push(
-          {
-            id: "nuance",
-            header: "ニュアンス",
-            cell: ({ row }) => (
-              <span className="text-xs text-foreground line-clamp-2 max-w-xs block">
-                {row.original.nuance ?? "—"}
-              </span>
-            ),
-          },
-          {
-            id: "source_title",
-            header: "ソース",
-            cell: ({ row }) => (
-              <span className="text-xs text-muted-foreground line-clamp-1 max-w-[160px] block">
-                {row.original.source_title ?? "—"}
-              </span>
-            ),
-          },
-        );
+        cols.push({
+          id: "source_title",
+          header: "ソース",
+          cell: ({ row }) => (
+            <span className="text-xs text-muted-foreground line-clamp-1 max-w-[160px] block">
+              {row.original.source_title ?? "—"}
+            </span>
+          ),
+        });
       }
       cols.push(
         {
@@ -621,6 +608,11 @@ function WordTab({
         ),
       },
       {
+        accessorKey: "category",
+        header: "カテゴリ",
+        cell: ({ row }) => <CategoryTag category={row.original.category} />,
+      },
+      {
         accessorKey: "word",
         header: "単語",
         cell: ({ row }) => (
@@ -635,15 +627,6 @@ function WordTab({
         cell: ({ row }) => (
           <span className="text-sm text-foreground line-clamp-1 max-w-xs block">
             {row.original.meaning}
-          </span>
-        ),
-      },
-      {
-        id: "example",
-        header: "例文",
-        cell: ({ row }) => (
-          <span className="text-xs text-muted-foreground line-clamp-1 max-w-xs block">
-            {row.original.example ?? "—"}
           </span>
         ),
       },

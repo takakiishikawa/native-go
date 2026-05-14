@@ -105,6 +105,11 @@ const EXTRACT_INPUT_SCHEMA = {
       items: {
         type: "object" as const,
         properties: {
+          category: {
+            type: "string" as const,
+            description:
+              "Japanese category label (例: 肉, 魚介, 野菜・果物, 食品, 通貨・単位, 形容詞, 呼称, 動詞, 名詞 etc.). VI only.",
+          },
           word: { type: "string" as const },
           meaning: { type: "string" as const },
           example: {
@@ -236,6 +241,7 @@ Return a JSON object with exactly this structure:
   ],
   "words": [
     {
+      "category": "形容詞",
       "word": "tươi",
       "meaning": "新鮮な",
       "example": "Cá này tươi không?",

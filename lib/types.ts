@@ -83,6 +83,7 @@ export interface Word {
   language: Language;
   is_priority: boolean;
   source_title: string | null;
+  category: string | null;
 }
 
 export interface Lesson {
@@ -191,6 +192,7 @@ export interface ExtractedWord {
   usage_scene?: string | null;
   word_notes?: WordNote[];
   frequency: number;
+  category?: string | null;
 }
 
 export interface ExtractResult {

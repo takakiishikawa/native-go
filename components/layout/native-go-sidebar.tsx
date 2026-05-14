@@ -55,7 +55,7 @@ const navItems: NavItem[] = [
   { href: "/repeating", label: "リピーティング", icon: Repeat2 },
   { href: "/speaking", label: "スピーキング", icon: Mic, languages: ["en"] },
   { href: "/shadowing", label: "シャドーイング", icon: Volume2 },
-  { href: "/texts", label: "テキスト", icon: FileText, languages: ["en"] },
+  { href: "/texts", label: "ライブラリ", icon: FileText, languages: ["en"] },
   {
     href: "/list",
     label: "ライブラリ",

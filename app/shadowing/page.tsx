@@ -265,8 +265,19 @@ export default function ShadowingPage() {
     }
   };
 
-  const activeChannels = channels.filter((c) => !c.archived);
+  // 「お気に入り」（個別動画）チャンネルは左端に固定。それ以外は created_at 順
+  const activeChannels = channels
+    .filter((c) => !c.archived)
+    .sort((a, b) => {
+      const aSA = a.channel_url === STANDALONE_CHANNEL_URL ? -1 : 1;
+      const bSA = b.channel_url === STANDALONE_CHANNEL_URL ? -1 : 1;
+      return aSA - bSA;
+    });
   const archivedChannels = channels.filter((c) => c.archived);
+
+  const selectedChannel = channels.find((c) => c.id === selectedChannelId);
+  const isStandaloneSelected =
+    selectedChannel?.channel_url === STANDALONE_CHANNEL_URL;
 
   const allVideos = selectedChannelId
     ? (videosByChannel[selectedChannelId] ?? [])
@@ -274,11 +285,12 @@ export default function ShadowingPage() {
   const todoCnt = allVideos.filter((v) => v.lapCount === 0).length;
   const doneCnt = allVideos.filter((v) => v.lapCount > 0).length;
 
-  const filteredVideos = allVideos.filter((v) =>
-    filter === "todo" ? v.lapCount === 0 : v.lapCount > 0,
-  );
-
-  const selectedChannel = channels.find((c) => c.id === selectedChannelId);
+  // お気に入りチャンネルでは これから/見た の振り分けをせず全動画を表示
+  const filteredVideos = isStandaloneSelected
+    ? allVideos
+    : allVideos.filter((v) =>
+        filter === "todo" ? v.lapCount === 0 : v.lapCount > 0,
+      );
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -376,33 +388,37 @@ export default function ShadowingPage() {
                 </div>
               )}
 
-              {/* Filter tabs */}
-              <Tabs
-                value={filter}
-                onValueChange={(v) => setFilter(v as Filter)}
-              >
-                <TabsList>
-                  <TabsTrigger value="todo">
-                    これから
-                    <Badge variant="secondary" className="ml-2 rounded-full">
-                      {todoCnt}
-                    </Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="done">
-                    見た
-                    <Badge variant="secondary" className="ml-2 rounded-full">
-                      {doneCnt}
-                    </Badge>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+              {/* Filter tabs（お気に入りはリピート前提なのでタブ非表示） */}
+              {!isStandaloneSelected && (
+                <Tabs
+                  value={filter}
+                  onValueChange={(v) => setFilter(v as Filter)}
+                >
+                  <TabsList>
+                    <TabsTrigger value="todo">
+                      これから
+                      <Badge variant="secondary" className="ml-2 rounded-full">
+                        {todoCnt}
+                      </Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="done">
+                      見た
+                      <Badge variant="secondary" className="ml-2 rounded-full">
+                        {doneCnt}
+                      </Badge>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
 
               {/* Video grid */}
               {filteredVideos.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground text-sm">
-                  {filter === "todo"
-                    ? "全部見ました！"
-                    : "まだ見た動画がありません"}
+                  {isStandaloneSelected
+                    ? "お気に入りはまだありません"
+                    : filter === "todo"
+                      ? "全部見ました！"
+                      : "まだ見た動画がありません"}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -412,6 +428,7 @@ export default function ShadowingPage() {
                       video={video}
                       onMarkDone={handleMarkDone}
                       onDelete={handleDeleteVideo}
+                      replayable={isStandaloneSelected}
                     />
                   ))}
                 </div>
@@ -486,7 +503,7 @@ export default function ShadowingPage() {
                 例: https://www.youtube.com/watch?v=xxxxxxxxxxx /
                 https://youtu.be/xxxxxxxxxxx
                 <br />
-                チャンネル丸ごとではなく、特定の1本だけ登録できます。「個別動画」タブに表示されます。
+                チャンネル丸ごとではなく、特定の1本だけ登録できます。「お気に入り」タブに表示されます。
               </p>
             </div>
             {videoFetchError && (
@@ -570,10 +587,12 @@ function VideoCard({
   video,
   onMarkDone,
   onDelete,
+  replayable = false,
 }: {
   video: VideoWithLap;
   onMarkDone: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  replayable?: boolean;
 }) {
   const [marking, setMarking] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -618,8 +637,8 @@ function VideoCard({
             <ExternalLink className="h-8 w-8 text-muted-foreground/30" />
           </div>
         )}
-        {/* Completed overlay */}
-        {isCompleted ? (
+        {/* Completed overlay（リピート前提のお気に入りでは常にホバーで再生アイコン） */}
+        {isCompleted && !replayable ? (
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{ background: "var(--color-overlay-default)" }}
@@ -649,7 +668,9 @@ function VideoCard({
         <p
           className={cn(
             "text-sm font-medium line-clamp-2 leading-snug transition-colors",
-            isCompleted ? "text-muted-foreground" : "group-hover:text-primary",
+            isCompleted && !replayable
+              ? "text-muted-foreground"
+              : "group-hover:text-primary",
           )}
         >
           {video.title}
@@ -658,7 +679,7 @@ function VideoCard({
           <p
             className={cn(
               "text-xs mt-1",
-              isCompleted
+              isCompleted && !replayable
                 ? "text-muted-foreground/60"
                 : "text-muted-foreground",
             )}
@@ -670,7 +691,20 @@ function VideoCard({
 
       {/* Action button - bottom right */}
       <div className="absolute bottom-2.5 right-2.5">
-        {isCompleted ? (
+        {replayable ? (
+          <Button
+            size="sm"
+            onClick={handleComplete}
+            disabled={marking}
+            className="cursor-pointer"
+          >
+            {marking
+              ? "記録中..."
+              : video.lapCount > 0
+                ? `見た (${video.lapCount})`
+                : "見た"}
+          </Button>
+        ) : isCompleted ? (
           <Button
             variant="outline"
             size="sm"
