@@ -43,7 +43,11 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
-type TodayStatus = { grammar: boolean; expression: boolean };
+type TodayStatus = {
+  grammar: boolean;
+  expression: boolean;
+  word: boolean;
+};
 
 function CompletionNavButton({
   label,
@@ -93,6 +97,7 @@ export default function GrammarRepeatingPage() {
   const [todayStatus, setTodayStatus] = useState<TodayStatus>({
     grammar: true,
     expression: false,
+    word: false,
   });
   const cancelRef = useRef(false);
   const userCancelledRef = useRef(false);
@@ -111,6 +116,7 @@ export default function GrammarRepeatingPage() {
       .select("*")
       .eq("language", language)
       .lt("play_count", 10)
+      .order("is_priority", { ascending: false })
       .order("created_at", { ascending: true });
     setAllItems(data ?? []);
     setLoading(false);
@@ -145,7 +151,7 @@ export default function GrammarRepeatingPage() {
     const today = new Date().toISOString().split("T")[0];
     supabase
       .from("practice_logs")
-      .select("expression_done_count")
+      .select("expression_done_count, word_done_count")
       .eq("practiced_at", today)
       .eq("language", language)
       .maybeSingle()
@@ -153,6 +159,7 @@ export default function GrammarRepeatingPage() {
         setTodayStatus({
           grammar: true, // just completed
           expression: (data?.expression_done_count ?? 0) > 0,
+          word: (data?.word_done_count ?? 0) > 0,
         });
       });
   }, [showComplete, language]);
@@ -415,6 +422,13 @@ export default function GrammarRepeatingPage() {
           done={todayStatus.expression}
           onClick={() => router.push("/repeating/expression")}
         />
+        {language === "vi" && (
+          <CompletionNavButton
+            label="単語リピーティング"
+            done={todayStatus.word}
+            onClick={() => router.push("/repeating/word")}
+          />
+        )}
         <Button
           variant="ghost"
           onClick={() => router.push("/")}

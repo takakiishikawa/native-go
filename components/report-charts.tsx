@@ -27,6 +27,7 @@ type PracticeLog = {
   practiced_at: string;
   grammar_done_count: number;
   expression_done_count: number;
+  word_done_count: number;
   speaking_count: number;
 };
 
@@ -71,14 +72,22 @@ function buildMonthlyData(
 } {
   const rMap = new Map<
     string,
-    { grammar: number; expression: number; speaking: number }
+    {
+      grammar: number;
+      expression: number;
+      word: number;
+      speaking: number;
+    }
   >();
   for (const l of logs) {
     const ym = l.practiced_at.slice(0, 7);
-    const e = rMap.get(ym) ?? { grammar: 0, expression: 0, speaking: 0 };
+    const e =
+      rMap.get(ym) ??
+      { grammar: 0, expression: 0, word: 0, speaking: 0 };
     rMap.set(ym, {
       grammar: e.grammar + l.grammar_done_count,
       expression: e.expression + l.expression_done_count,
+      word: e.word + l.word_done_count,
       speaking: e.speaking + l.speaking_count,
     });
   }
@@ -93,6 +102,7 @@ function buildMonthlyData(
       label: fmtMonth(ym),
       grammar: rMap.get(ym)?.grammar ?? 0,
       expression: rMap.get(ym)?.expression ?? 0,
+      word: rMap.get(ym)?.word ?? 0,
     })),
     speaking: allMonths.map((ym) => ({
       label: fmtMonth(ym),
@@ -125,6 +135,7 @@ function buildAllTimeData(
       label: fmtDate(l.practiced_at),
       grammar: l.grammar_done_count,
       expression: l.expression_done_count,
+      word: l.word_done_count,
     })),
     speaking: sorted.map((l) => ({
       label: fmtDate(l.practiced_at),
@@ -167,6 +178,7 @@ function buildShadowingData(
 const repeatingConfig: ChartConfig = {
   grammar: { label: "文法", color: "var(--color-primary)" },
   expression: { label: "フレーズ", color: "var(--color-primary-chart-2)" },
+  word: { label: "単語", color: "var(--color-primary-chart-3)" },
 };
 const speakingConfig: ChartConfig = {
   speaking: { label: "スピーキング", color: "var(--color-primary)" },
@@ -212,7 +224,7 @@ export function ReportCharts({
           data={data.repeating as Record<string, unknown>[]}
           config={repeatingConfig}
           xKey="label"
-          yKeys={["grammar", "expression"]}
+          yKeys={["grammar", "expression", "word"]}
           title="リピーティング"
           unit="回"
         />

@@ -13,9 +13,9 @@ import {
   Slider,
   PageHeader,
 } from "@takaki/go-design-system";
-import { incrementExpressionPlayCount } from "@/app/actions/practice";
+import { incrementWordPlayCount } from "@/app/actions/practice";
 import { useCurrentLanguage } from "@/lib/language-context";
-import type { Expression } from "@/lib/types";
+import type { Word } from "@/lib/types";
 import {
   Play,
   Square,
@@ -25,7 +25,6 @@ import {
   CheckCircle2,
   ArrowRight,
 } from "lucide-react";
-import { ConversationLines } from "@/components/conversation-lines";
 import { WordNotesPanel } from "@/components/word-notes";
 import { RepeatingCountPicker } from "@/components/repeating-count-picker";
 import { RepeatingCompleteModal } from "@/components/repeating-complete-modal";
@@ -43,11 +42,7 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
-type TodayStatus = {
-  grammar: boolean;
-  expression: boolean;
-  word: boolean;
-};
+type TodayStatus = { grammar: boolean; expression: boolean; word: boolean };
 
 function CompletionNavButton({
   label,
@@ -81,28 +76,27 @@ function CompletionNavButton({
   );
 }
 
-export default function ExpressionRepeatingPage() {
+export default function WordRepeatingPage() {
   const router = useRouter();
   const supabase = createClient();
   const language = useCurrentLanguage();
-  const [allItems, setAllItems] = useState<Expression[]>([]);
-  const [items, setItems] = useState<Expression[]>([]);
+  const [allItems, setAllItems] = useState<Word[]>([]);
+  const [items, setItems] = useState<Word[]>([]);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [currentLine, setCurrentLine] = useState(-1);
+  const [currentSegment, setCurrentSegment] = useState(-1);
   const [rate, setRate] = useState(1.0);
   const [loading, setLoading] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
   const [todayStatus, setTodayStatus] = useState<TodayStatus>({
     grammar: false,
-    expression: true,
-    word: false,
+    expression: false,
+    word: true,
   });
   const cancelRef = useRef(false);
   const userCancelledRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const resumeLineRef = useRef(0);
   const rateRef = useRef(rate);
 
   useEffect(() => {
@@ -112,7 +106,7 @@ export default function ExpressionRepeatingPage() {
   const loadItems = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("expressions")
+      .from("words")
       .select("*")
       .eq("language", language)
       .lt("play_count", 10)
@@ -141,25 +135,23 @@ export default function ExpressionRepeatingPage() {
     setSessionStarted(false);
     setIndex(0);
     setItems([]);
-    resumeLineRef.current = 0;
     loadItems();
   }
 
-  // Fetch today's completion status when the modal appears
   useEffect(() => {
     if (!showComplete) return;
     const today = new Date().toISOString().split("T")[0];
     supabase
       .from("practice_logs")
-      .select("grammar_done_count, word_done_count")
+      .select("grammar_done_count, expression_done_count")
       .eq("practiced_at", today)
       .eq("language", language)
       .maybeSingle()
       .then(({ data }) => {
         setTodayStatus({
           grammar: (data?.grammar_done_count ?? 0) > 0,
-          expression: true, // just completed
-          word: (data?.word_done_count ?? 0) > 0,
+          expression: (data?.expression_done_count ?? 0) > 0,
+          word: true,
         });
       });
   }, [showComplete, language]);
@@ -172,18 +164,13 @@ export default function ExpressionRepeatingPage() {
       audioRef.current = null;
     }
     setPlaying(false);
-    setCurrentLine(-1);
+    setCurrentSegment(-1);
   }, []);
 
-  const speakLine = useCallback(
-    async (
-      text: string,
-      lineIndex: number,
-      speakRate: number,
-    ): Promise<void> => {
+  const speakSegment = useCallback(
+    async (text: string, segIdx: number, speakRate: number): Promise<void> => {
       if (cancelRef.current) return;
-      resumeLineRef.current = lineIndex;
-      setCurrentLine(lineIndex);
+      setCurrentSegment(segIdx);
       try {
         const response = await fetch("/api/tts", {
           method: "POST",
@@ -207,7 +194,7 @@ export default function ExpressionRepeatingPage() {
         // continue on error
       }
     },
-    [],
+    [language],
   );
 
   const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -222,53 +209,47 @@ export default function ExpressionRepeatingPage() {
     let localIndex = index;
     const initialCount = localItems.length;
     let playCount = 0;
-    let startLine = resumeLineRef.current;
 
-    try {
-      while (
-        localItems.length > 0 &&
-        !cancelRef.current &&
-        playCount < initialCount
-      ) {
-        const item = localItems[localIndex];
-        const lines = (item.conversation ?? "").split("\n").filter(Boolean);
-        const fromLine = startLine;
-        startLine = 0; // subsequent items always start from line 0
+    while (
+      localItems.length > 0 &&
+      !cancelRef.current &&
+      playCount < initialCount
+    ) {
+      const item = localItems[localIndex];
+      const segments = [item.word, item.example].filter(
+        (s): s is string => Boolean(s && s.trim()),
+      );
 
-        for (let i = fromLine; i < lines.length; i++) {
-          if (cancelRef.current) break;
-          const ttsText = lines[i].replace(/^[AB]:\s*/i, "");
-          await speakLine(ttsText, i, rateRef.current);
-          if (i < lines.length - 1 && !cancelRef.current) {
-            await pause(10);
-          }
-        }
-
+      for (let i = 0; i < segments.length; i++) {
         if (cancelRef.current) break;
-
-        resumeLineRef.current = 0;
-        setCurrentLine(-1);
-        playCount++;
-        incrementExpressionPlayCount(item.id); // fire and forget for faster transition
-
-        // Update play_count locally for display only — never remove items mid-session
-        localItems = localItems.map((it, idx) =>
-          idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
-        );
-        localIndex = (localIndex + 1) % localItems.length;
-
-        setItems([...localItems]);
-        setIndex(localIndex);
-        await pause(50);
+        await speakSegment(segments[i], i, rateRef.current);
+        if (i < segments.length - 1 && !cancelRef.current) {
+          await pause(150);
+        }
       }
-    } finally {
-      setPlaying(false);
-      setCurrentLine(-1);
-      if (!userCancelledRef.current) {
-        setShowComplete(true);
-      }
+
+      if (cancelRef.current) break;
+
+      setCurrentSegment(-1);
+      playCount++;
+      incrementWordPlayCount(item.id);
+
+      localItems = localItems.map((it, idx) =>
+        idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
+      );
+      localIndex = (localIndex + 1) % localItems.length;
+
+      setItems([...localItems]);
+      setIndex(localIndex);
+      await pause(50);
     }
-  }, [items, index, speakLine]);
+
+    setPlaying(false);
+    setCurrentSegment(-1);
+    if (!userCancelledRef.current) {
+      setShowComplete(true);
+    }
+  }, [items, index, speakSegment]);
 
   if (loading) {
     return (
@@ -281,7 +262,7 @@ export default function ExpressionRepeatingPage() {
   if (allItems.length === 0 && !showComplete) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4 text-muted-foreground">
-        <p className="text-lg">練習中のフレーズはありません</p>
+        <p className="text-lg">練習中の単語はありません</p>
         <p className="text-sm">すべて完了しました！</p>
       </div>
     );
@@ -297,13 +278,17 @@ export default function ExpressionRepeatingPage() {
   }
 
   const current = items[index];
-  const lines = current?.conversation.split("\n").filter(Boolean) ?? [];
+  const segments = current
+    ? [current.word, current.example].filter(
+        (s): s is string => Boolean(s && s.trim()),
+      )
+    : [];
 
   return (
     <>
       <div className="space-y-6 max-w-2xl">
         <PageHeader
-          title="フレーズリピーティング"
+          title="単語リピーティング"
           description={`${index + 1} / ${items.length} 件`}
           actions={
             <div className="flex items-center gap-3">
@@ -327,14 +312,7 @@ export default function ExpressionRepeatingPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <Badge variant="outline" className="mb-2">
-                  {current?.category}
-                </Badge>
-                <CardTitle className="text-3xl">
-                  {current?.expression}
-                </CardTitle>
-              </div>
+              <CardTitle className="text-3xl">{current?.word}</CardTitle>
               <StarRating value={current?.frequency ?? 0} />
             </div>
             <p className="text-lg text-muted-foreground whitespace-pre-line leading-relaxed">
@@ -342,26 +320,32 @@ export default function ExpressionRepeatingPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-3">
-                会話
-              </p>
-              <ConversationLines lines={lines} currentLine={currentLine} />
-              <p className="text-base text-muted-foreground mt-4">
-                場面: {current?.usage_scene}
-              </p>
-            </div>
-            {language === "vi" && current?.nuance && (
-              <div className="rounded-md border border-border/60 bg-muted/30 px-4 py-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">
-                  ニュアンス
+            {current?.example && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-3">
+                  例文
                 </p>
-                <p className="text-sm leading-relaxed">{current.nuance}</p>
+                <p
+                  className={`text-xl ${
+                    currentSegment === 1 ? "font-semibold text-foreground" : "text-foreground/80"
+                  }`}
+                >
+                  {current.example}
+                </p>
               </div>
             )}
-            {language === "vi" && current?.word_notes && (
+            {current?.usage_scene && (
+              <p className="text-base text-muted-foreground">
+                場面: {current.usage_scene}
+              </p>
+            )}
+            {current?.word_notes && (
               <WordNotesPanel notes={current.word_notes} />
             )}
+            <p className="text-xs text-muted-foreground">
+              再生中: {currentSegment === 0 ? "単語" : currentSegment === 1 ? "例文" : "—"}
+              （{segments.length} セグメント）
+            </p>
           </CardContent>
         </Card>
 
@@ -388,7 +372,6 @@ export default function ExpressionRepeatingPage() {
             size="icon"
             onClick={() => {
               stopSpeech();
-              resumeLineRef.current = 0;
               setIndex((i) => Math.max(0, i - 1));
             }}
             disabled={index === 0 || playing}
@@ -413,7 +396,6 @@ export default function ExpressionRepeatingPage() {
             size="icon"
             onClick={() => {
               stopSpeech();
-              resumeLineRef.current = 0;
               setIndex((i) => Math.min(items.length - 1, i + 1));
             }}
             disabled={index === items.length - 1 || playing}
@@ -426,7 +408,7 @@ export default function ExpressionRepeatingPage() {
       <RepeatingCompleteModal
         open={showComplete}
         title="お疲れ様でした！"
-        subtitle="フレーズリピーティングを 1 周完了しました"
+        subtitle="単語リピーティングを 1 周完了しました"
         itemCount={items.length}
       >
         <CompletionNavButton
@@ -437,15 +419,13 @@ export default function ExpressionRepeatingPage() {
         <CompletionNavButton
           label="フレーズリピーティング"
           done={todayStatus.expression}
+          onClick={() => router.push("/repeating/expression")}
+        />
+        <CompletionNavButton
+          label="単語リピーティング"
+          done={todayStatus.word}
           onClick={restartSession}
         />
-        {language === "vi" && (
-          <CompletionNavButton
-            label="単語リピーティング"
-            done={todayStatus.word}
-            onClick={() => router.push("/repeating/word")}
-          />
-        )}
         <Button
           variant="ghost"
           onClick={() => router.push("/")}

@@ -27,6 +27,8 @@ export interface Grammar {
   language: Language;
   word_notes: WordNote[] | null;
   category: string | null;
+  is_priority: boolean;
+  source_title: string | null;
 }
 
 export interface SpeakingScene {
@@ -62,6 +64,25 @@ export interface Expression {
   language: Language;
   word_notes: WordNote[] | null;
   nuance: string | null;
+  is_priority: boolean;
+  source_title: string | null;
+}
+
+export interface Word {
+  id: string;
+  word: string;
+  meaning: string;
+  example: string | null;
+  usage_scene: string | null;
+  word_notes: WordNote[] | null;
+  frequency: number;
+  play_count: number;
+  last_played_at: string | null;
+  created_at: string;
+  lesson_id: string | null;
+  language: Language;
+  is_priority: boolean;
+  source_title: string | null;
 }
 
 export interface Lesson {
@@ -79,6 +100,7 @@ export interface PracticeLog {
   created_at: string;
   grammar_done_count: number;
   expression_done_count: number;
+  word_done_count: number;
   speaking_count: number;
 }
 
@@ -162,7 +184,18 @@ export interface ExtractedExpression {
   nuance?: string;
 }
 
+export interface ExtractedWord {
+  word: string;
+  meaning: string;
+  example?: string | null;
+  usage_scene?: string | null;
+  word_notes?: WordNote[];
+  frequency: number;
+}
+
 export interface ExtractResult {
   grammar: ExtractedGrammar[];
   expressions: ExtractedExpression[];
+  words?: ExtractedWord[];
+  source_title?: string | null;
 }

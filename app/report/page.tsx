@@ -11,7 +11,7 @@ export default async function ReportPage() {
     supabase
       .from("practice_logs")
       .select(
-        "practiced_at, grammar_done_count, expression_done_count, speaking_count",
+        "practiced_at, grammar_done_count, expression_done_count, word_done_count, speaking_count",
       )
       .eq("language", language)
       .order("practiced_at"),
@@ -35,6 +35,8 @@ export default async function ReportPage() {
     practiced_at: l.practiced_at,
     grammar_done_count: l.grammar_done_count ?? 0,
     expression_done_count: l.expression_done_count ?? 0,
+    word_done_count:
+      (l as { word_done_count?: number }).word_done_count ?? 0,
     speaking_count: (l as { speaking_count?: number }).speaking_count ?? 0,
   }));
 

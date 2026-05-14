@@ -28,6 +28,11 @@ const WORD_NOTES_SCHEMA = {
 const EXTRACT_INPUT_SCHEMA = {
   type: "object" as const,
   properties: {
+    source_title: {
+      type: ["string", "null"] as const,
+      description:
+        "VI only. Title at the top of the pasted material (例: 'TRIAL LESSON - HOMEWORK', 'Lesson 2: Shopping at a Vietnamese Market'). null if not present.",
+    },
     grammar: {
       type: "array" as const,
       items: {
@@ -93,6 +98,30 @@ const EXTRACT_INPUT_SCHEMA = {
         ],
       },
     },
+    words: {
+      type: "array" as const,
+      description:
+        "VI only. Individual vocabulary entries (single words or inseparable compounds).",
+      items: {
+        type: "object" as const,
+        properties: {
+          word: { type: "string" as const },
+          meaning: { type: "string" as const },
+          example: {
+            type: ["string", "null"] as const,
+            description: "Short example sentence (Vietnamese) using the word.",
+          },
+          usage_scene: { type: ["string", "null"] as const },
+          frequency: {
+            type: "integer" as const,
+            minimum: 1,
+            maximum: 5,
+          },
+          word_notes: WORD_NOTES_SCHEMA,
+        },
+        required: ["word", "meaning", "frequency"],
+      },
+    },
   },
   required: ["grammar", "expressions"],
 };
@@ -151,23 +180,30 @@ Rules:
 
 const SYSTEM_PROMPT_VI = `You are a Vietnamese language tutor for an absolute beginner (CEFR A1).
 
-User context: Takaki, 32, Japanese male, lives in Ho Chi Minh City. He is starting Vietnamese from scratch and only wants:
-- greetings + small talk with Vietnamese coworkers and friends ("how are you", "how was work", "let's grab lunch")
-- ability to read shop signs / SNS captions / basic news headlines a little
-- ~15 min/day, easy and simple
+User context: Takaki, 32, Japanese male, lives in Ho Chi Minh City. He takes weekly 1-on-1 Vietnamese lessons on Preply and wants to register exactly what each lesson covers into his practice app. He stays at CEFR A1 — greetings, basic verbs, pronouns, numbers, food, time. ~15 min/day practice.
 
-He already knows the dashboard (Tieng Viet) is filtered out for him. Take CEFR A1 only.
+INPUT FORMAT: the user pastes lesson material from Preply (vocabulary tables, sentence-structure tables, exercises, dialogues). The text MAY include a title like "TRIAL LESSON - HOMEWORK" or "Lesson 2: Shopping at a Vietnamese Market" — extract that into source_title verbatim. If no clear title, return null.
 
-INPUT FORMAT: the user pastes a casual bullet list of grammar patterns and/or fixed phrases they want to learn (one item per line, often prefixed with "-" / "・" / numbers). Items may be Vietnamese, Japanese, or mixed. Each line is ONE thing the user wants — do not invent extra items, but split a line if it clearly contains multiple distinct items.
+Your job: classify every distinct learning item from the input into ONE of three categories:
+- "grammar" — a structural rule, particle, or sentence pattern with a placeholder (e.g. "Subject + là + Noun", "có ... không?", "Chào + [Name/Pronoun]")
+- "expressions" — a fully-formed fixed phrase / greeting / set expression with NO placeholder (e.g. "Cảm ơn", "Bạn khỏe không?", "Rất vui được gặp bạn", "Mắc quá!")
+- "words" — a single word or inseparable compound (e.g. "thịt heo", "tươi", "cảm ơn" used as a standalone vocab entry)
 
-Your job: for every input item, classify it as either:
-- "grammar" — a structural rule, particle, or sentence pattern (e.g. "Subject + là + Noun", "có ... không?")
-- "expressions" — a fixed phrase / set expression / greeting / common reply (e.g. "Cảm ơn", "Bạn khỏe không?")
+CATEGORY BOUNDARIES (重要):
+- A multi-word fixed expression like "Rất vui được gặp bạn" is an EXPRESSION, not a word.
+- A pattern with [placeholder] like "Cho + subject + [quantity] + [item]" is a GRAMMAR, not an expression.
+- A standalone vocab item from a vocabulary table is a WORD even if it's a compound (thịt heo).
+- If something appears both as vocab AND as part of a phrase, register both — they have different learning purposes.
+
+KIND OVERRIDE: if the user supplied a kind directive in the user message, obey it.
 
 EXISTING_ITEMS hints (already in DB) may be provided. If a candidate is essentially the same as one of those, DROP it.
 
+KNOWN_VOCAB hints (already learned + this lesson's vocab) may be provided. When writing example dialogues, use ONLY words from KNOWN_VOCAB plus the target item itself. Do not introduce unfamiliar words just to round out the dialogue. If you cannot make a natural dialogue under that constraint, write a shorter one (2 turns is fine).
+
 Return a JSON object with exactly this structure:
 {
+  "source_title": "TRIAL LESSON - HOMEWORK" (or null),
   "grammar": [
     {
       "category": "category in Japanese (例: 文型, 代名詞, 否定, 疑問, 助詞, 時制, 助動詞, 数詞 etc.)",
@@ -197,32 +233,107 @@ Return a JSON object with exactly this structure:
       ],
       "nuance": "丁寧で柔らかい印象。年上には 'cảm ơn anh/chị' を使うとより自然。"
     }
+  ],
+  "words": [
+    {
+      "word": "tươi",
+      "meaning": "新鮮な",
+      "example": "Cá này tươi không?",
+      "usage_scene": "市場で魚や野菜の鮮度を尋ねるとき",
+      "frequency": 4,
+      "word_notes": [
+        { "word": "cá", "note": "魚" },
+        { "word": "không", "note": "～ですか？（疑問）" }
+      ]
+    }
   ]
 }
 
 word_notes rules (重要):
 - Include words from BOTH sources, deduplicated:
-  (a) the grammar "name" / expression "expression" itself, AND
-  (b) the example dialogue lines you generate ("examples" for grammar, "conversation" for expressions).
+  (a) the grammar "name" / expression "expression" / word "word" itself, AND
+  (b) the example dialogue lines you generate (or the example sentence for a word).
 - Do NOT include words that only appear in usage_scene, detail, nuance, or category.
 - Multi-word fixed units (e.g. "cảm ơn", "phải không", "không phải là") stay as one entry.
 - Each word appears at most ONCE. If a word shows up in both the pattern and the dialogue, list it only once (under its first occurrence).
 - "note" is a SHORT Japanese gloss (1 phrase, ~20 chars).
 - Order: pattern words first (left to right), then NEW words from the dialogue in line order (A → B → A).
-- Typical count: 4-10 entries total. Lean toward INCLUDE for an A1 beginner — if Takaki might not know the word, add it.
+- Typical count: 4-10 entries for grammar/expressions, 2-5 for words.
 - Skip pure placeholders ("S", "V", "O", "名詞", "動詞", "形容詞"), numbers, obvious cognates, and personal names.
 
 nuance rules (expressions only):
 - 1-2 sentences in Japanese describing how this phrase comes across to the listener (politeness level, age/relationship register, warmth, formality, common alternatives).
 - Always include for expressions. Omit (null) only if there is genuinely no register concern.
 
+Conversation / example rules (重要・新):
+- Lines MUST use ONLY words from KNOWN_VOCAB plus the target item being taught. Do NOT introduce new vocabulary in the dialogue.
+- Keep dialogues SHORT: 2 turns is preferred, 3 turns max (A/B or A/B/A). Each line ≤ 8 words.
+- Target the SINGLE learning item — repeat it once in the dialogue, do not pile on multiple new things.
+- For "words" entries, "example" is a single short sentence (not a dialogue), still bounded by KNOWN_VOCAB.
+- No slang, no regional variants unless the target itself is regional.
+
 General rules:
-- A1 ONLY: greetings, basic verbs (be / have / want / go / eat), pronouns (tôi / bạn / anh / chị / em), numbers, food, time. If an input item is above A1, still classify it but mark frequency=1; do not silently drop user-requested items unless they duplicate EXISTING_ITEMS.
-- Both "examples" (grammar) and "conversation" (expressions) MUST be A/B/A 3-turn format, maximum 4 lines, all lines start with "A: " or "B: ".
-- Personalize lightly to Takaki's life (coworkers, bạn (friend), cafe, motorbike, District 1-3) but stay simple.
+- A1 ONLY. If an input item is above A1, still classify it but mark frequency=1; do not silently drop user-requested items unless they duplicate EXISTING_ITEMS.
+- All dialogue lines start with "A: " or "B: ".
+- Personalize lightly to Takaki's life (coworkers, bạn (friend), cafe, motorbike, District 1-3) but stay simple and stay within KNOWN_VOCAB.
 - frequency = 5 for must-know greetings, 3 for common, 1 for rare.
 - detail can be null if summary is sufficient.
 - Return ONLY valid JSON, no markdown, no explanation.`;
+
+const CORE_VI_VOCAB = [
+  "tôi",
+  "bạn",
+  "anh",
+  "chị",
+  "em",
+  "cô",
+  "chú",
+  "là",
+  "không",
+  "có",
+  "vâng",
+  "dạ",
+  "xin chào",
+  "cảm ơn",
+  "xin lỗi",
+  "đi",
+  "ăn",
+  "uống",
+  "muốn",
+  "thích",
+  "biết",
+  "hiểu",
+  "nói",
+  "làm",
+  "ở",
+  "đến",
+  "từ",
+  "này",
+  "kia",
+  "gì",
+  "ai",
+  "đâu",
+  "khi nào",
+  "bao nhiêu",
+  "một",
+  "hai",
+  "ba",
+  "bốn",
+  "năm",
+  "cơm",
+  "phở",
+  "cà phê",
+  "nước",
+  "hôm nay",
+  "ngày mai",
+  "bây giờ",
+  "rất",
+  "nhiều",
+  "ít",
+  "tốt",
+  "việt nam",
+  "nhật bản",
+];
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -237,7 +348,7 @@ export async function POST(request: NextRequest) {
   const { text, language, kind } = (await request.json()) as {
     text?: string;
     language?: "en" | "vi";
-    kind?: "grammar" | "phrase";
+    kind?: "grammar" | "phrase" | "word";
   };
   if (!text?.trim()) {
     return NextResponse.json({ error: "Text is required" }, { status: 400 });
@@ -247,36 +358,70 @@ export async function POST(request: NextRequest) {
 
   let userMessage: string;
   if (lang === "vi") {
-    // VI: pull a hint of existing items so the model can dedupe near-duplicates.
-    const [{ data: gExisting }, { data: eExisting }] = await Promise.all([
+    // VI: pull existing items so the model can dedupe near-duplicates,
+    // and pass known vocabulary so generated dialogues stay simple.
+    const [
+      { data: gExisting },
+      { data: eExisting },
+      { data: wExisting },
+    ] = await Promise.all([
       supabase
         .from("grammar")
         .select("name")
         .eq("language", "vi")
         .order("created_at", { ascending: false })
-        .limit(80),
+        .limit(120),
       supabase
         .from("expressions")
         .select("expression")
         .eq("language", "vi")
         .order("created_at", { ascending: false })
         .limit(120),
+      supabase
+        .from("words")
+        .select("word")
+        .eq("language", "vi")
+        .order("created_at", { ascending: false })
+        .limit(300),
     ]);
     const existingHint = JSON.stringify({
       grammar: (gExisting ?? []).map((r) => r.name),
       expressions: (eExisting ?? []).map((r) => r.expression),
+      words: (wExisting ?? []).map((r) => r.word),
     });
 
-    let kindDirective = "Classify each item into grammar or expressions";
+    const knownVocab = Array.from(
+      new Set([
+        ...CORE_VI_VOCAB,
+        ...((wExisting ?? []) as { word: string }[]).map((w) =>
+          w.word.toLowerCase(),
+        ),
+      ]),
+    );
+
+    let kindDirective =
+      "Classify each item into grammar / expressions / words.";
     if (kind === "grammar") {
       kindDirective =
-        "The user has indicated that EVERY item below is a GRAMMAR pattern. Put them all under \"grammar\" and leave \"expressions\" as an empty array. Do not reclassify any item as an expression.";
+        'The user has indicated that EVERY item below is a GRAMMAR pattern. Put them all under "grammar" and leave "expressions" and "words" as empty arrays. Do not reclassify.';
     } else if (kind === "phrase") {
       kindDirective =
-        "The user has indicated that EVERY item below is a fixed PHRASE / EXPRESSION. Put them all under \"expressions\" and leave \"grammar\" as an empty array. Do not reclassify any item as grammar.";
+        'The user has indicated that EVERY item below is a fixed PHRASE / EXPRESSION. Put them all under "expressions" and leave "grammar" and "words" as empty arrays. Do not reclassify.';
+    } else if (kind === "word") {
+      kindDirective =
+        'The user has indicated that EVERY item below is a single WORD / vocab entry. Put them all under "words" and leave "grammar" and "expressions" as empty arrays. Do not reclassify.';
     }
 
-    userMessage = `EXISTING_ITEMS (drop near-duplicates):\n${existingHint}\n\nThe user pasted the following bullet list of items they want to learn. ${kindDirective} Produce word_notes (and nuance for expressions) per the system rules:\n\n${text}`;
+    userMessage = `EXISTING_ITEMS (drop near-duplicates):
+${existingHint}
+
+KNOWN_VOCAB (use ONLY these words in dialogues / examples; the target item itself is also allowed):
+${JSON.stringify(knownVocab)}
+
+The user pasted lesson material below. Extract source_title if present at the top, then classify items. ${kindDirective} Produce word_notes per the system rules. For expressions also produce nuance.
+
+INPUT:
+${text}`;
   } else {
     const angles = pickAnglesEN(3);
     const angleBlock = angles.map((a) => `- ${a}`).join("\n");
@@ -285,14 +430,14 @@ export async function POST(request: NextRequest) {
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
-    // VI は word_notes 配列＋nuance で出力が膨らむため EN の2倍に確保
-    max_tokens: lang === "vi" ? 8192 : 4096,
+    // VI は word_notes 配列＋nuance ＋ words 配列で出力が膨らむため EN の2倍以上に確保
+    max_tokens: lang === "vi" ? 12000 : 4096,
     system: lang === "vi" ? SYSTEM_PROMPT_VI : SYSTEM_PROMPT_EN,
     tools: [
       {
         name: "save_extracted",
         description:
-          "Save the extracted grammar items and expression items to the user's library.",
+          "Save the extracted grammar items, expression items, and word items to the user's library.",
         input_schema: EXTRACT_INPUT_SCHEMA,
       },
     ],

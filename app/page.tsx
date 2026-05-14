@@ -128,7 +128,7 @@ export default async function HomePage() {
     supabase
       .from("practice_logs")
       .select(
-        "practiced_at, grammar_done_count, expression_done_count, speaking_count",
+        "practiced_at, grammar_done_count, expression_done_count, word_done_count, speaking_count",
       )
       .eq("language", currentLanguage)
       .gte("practiced_at", prev14StartStr)
@@ -159,6 +159,7 @@ export default async function HomePage() {
     practiced_at: string;
     grammar_done_count: number;
     expression_done_count: number;
+    word_done_count: number;
     speaking_count: number;
   };
 
@@ -171,10 +172,15 @@ export default async function HomePage() {
       .gte("practiced_at", prev14StartStr)
       .lte("practiced_at", todayStr)
       .order("practiced_at");
-    allRangeLogs = (fallback ?? []).map((l) => ({ ...l, speaking_count: 0 }));
+    allRangeLogs = (fallback ?? []).map((l) => ({
+      ...l,
+      word_done_count: 0,
+      speaking_count: 0,
+    }));
   } else {
     allRangeLogs = (allRangeLogsResult.data ?? []).map((l) => ({
       ...l,
+      word_done_count: l.word_done_count ?? 0,
       speaking_count: l.speaking_count ?? 0,
     }));
   }
@@ -193,7 +199,8 @@ export default async function HomePage() {
     (s, l) => s + l.expression_done_count,
     0,
   );
-  const weeklyRepeating = weeklyGrammar + weeklyExpression;
+  const weeklyWord = rangeLogs.reduce((s, l) => s + l.word_done_count, 0);
+  const weeklyRepeating = weeklyGrammar + weeklyExpression + weeklyWord;
   const weeklySpeaking = rangeLogs.reduce((s, l) => s + l.speaking_count, 0);
 
   const prevWeeklyGrammar = prevRangeLogs.reduce(
@@ -204,7 +211,12 @@ export default async function HomePage() {
     (s, l) => s + l.expression_done_count,
     0,
   );
-  const prevWeeklyRepeating = prevWeeklyGrammar + prevWeeklyExpression;
+  const prevWeeklyWord = prevRangeLogs.reduce(
+    (s, l) => s + l.word_done_count,
+    0,
+  );
+  const prevWeeklyRepeating =
+    prevWeeklyGrammar + prevWeeklyExpression + prevWeeklyWord;
   const prevWeeklySpeaking = prevRangeLogs.reduce(
     (s, l) => s + l.speaking_count,
     0,
@@ -282,7 +294,14 @@ export default async function HomePage() {
     const l = logMap.get(str);
     const grammar = l?.grammar_done_count ?? 0;
     const expression = l?.expression_done_count ?? 0;
-    return { label, grammar, expression, total: grammar + expression };
+    const word = l?.word_done_count ?? 0;
+    return {
+      label,
+      grammar,
+      expression,
+      word,
+      total: grammar + expression + word,
+    };
   });
   const speakingChartData = days.map(({ str, label }) => {
     const l = logMap.get(str);
