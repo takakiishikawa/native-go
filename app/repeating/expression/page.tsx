@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   Button,
@@ -85,6 +85,8 @@ export default function ExpressionRepeatingPage() {
   const router = useRouter();
   const supabase = createClient();
   const language = useCurrentLanguage();
+  const searchParams = useSearchParams();
+  const requestedCount = parseInt(searchParams.get("count") ?? "0", 10);
   const [allItems, setAllItems] = useState<Expression[]>([]);
   const [items, setItems] = useState<Expression[]>([]);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -129,6 +131,15 @@ export default function ExpressionRepeatingPage() {
       audioRef.current?.pause();
     };
   }, [loadItems]);
+
+  useEffect(() => {
+    if (sessionStarted) return;
+    if (loading) return;
+    if (allItems.length === 0) return;
+    if (requestedCount <= 0) return;
+    startSession(Math.min(requestedCount, allItems.length));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allItems, loading, sessionStarted, requestedCount]);
 
   function startSession(count: number) {
     setItems(allItems.slice(0, count));

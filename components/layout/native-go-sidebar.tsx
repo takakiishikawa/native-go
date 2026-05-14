@@ -52,13 +52,13 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "ダッシュボード", icon: Home },
-  { href: "/repeating/grammar", label: "リピーティング", icon: Repeat2 },
+  { href: "/repeating", label: "リピーティング", icon: Repeat2 },
   { href: "/speaking", label: "スピーキング", icon: Mic, languages: ["en"] },
   { href: "/shadowing", label: "シャドーイング", icon: Volume2 },
   { href: "/texts", label: "テキスト", icon: FileText, languages: ["en"] },
   {
     href: "/list",
-    label: "文法・フレーズ",
+    label: "ライブラリ",
     icon: BookOpen,
     languages: ["vi"],
   },
@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
 
 function isActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
-  if (href === "/repeating/grammar") return pathname.startsWith("/repeating");
+  if (href === "/repeating") return pathname.startsWith("/repeating");
   if (href === "/speaking")
     return pathname === "/speaking" || pathname.startsWith("/speaking/");
   if (href === "/texts")

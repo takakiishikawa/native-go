@@ -20,7 +20,6 @@ import type { Grammar, Expression, Word } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
 import { Plus, Star, Trash2 } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
-import { WordNotesInline } from "@/components/word-notes";
 import { CategoryTag } from "@/components/category-tag";
 import {
   deleteGrammar,
@@ -224,17 +223,6 @@ function GrammarTab({
             </span>
           ),
         },
-        {
-          id: "is_priority",
-          header: "強化",
-          cell: ({ row }) => (
-            <PriorityToggle
-              active={row.original.is_priority}
-              onClick={() => handleTogglePriority(row.original)}
-              disabled={busyId === row.original.id}
-            />
-          ),
-        },
       ];
       if (!isVi) {
         cols.push({
@@ -276,15 +264,6 @@ function GrammarTab({
       );
       if (isVi) {
         cols.push({
-          id: "word_notes",
-          header: "単語",
-          cell: ({ row }) => (
-            <div className="max-w-md">
-              <WordNotesInline notes={row.original.word_notes} />
-            </div>
-          ),
-        });
-        cols.push({
           id: "source_title",
           header: "ソース",
           cell: ({ row }) => (
@@ -304,6 +283,17 @@ function GrammarTab({
           accessorKey: "play_count",
           header: "練習",
           cell: ({ row }) => <PlayCount count={row.original.play_count} />,
+        },
+        {
+          id: "is_priority",
+          header: "強化",
+          cell: ({ row }) => (
+            <PriorityToggle
+              active={row.original.is_priority}
+              onClick={() => handleTogglePriority(row.original)}
+              disabled={busyId === row.original.id}
+            />
+          ),
         },
         {
           id: "actions",
@@ -341,7 +331,8 @@ function GrammarTab({
       <DataTable
         columns={columns}
         data={items}
-        pageSize={20}
+        pageSize={100}
+        pageSizeOptions={[100]}
         emptyMessage="文法が登録されていません"
       />
     </div>
@@ -426,17 +417,6 @@ function PhraseTab({
             </span>
           ),
         },
-        {
-          id: "is_priority",
-          header: "強化",
-          cell: ({ row }) => (
-            <PriorityToggle
-              active={row.original.is_priority}
-              onClick={() => handleTogglePriority(row.original)}
-              disabled={busyId === row.original.id}
-            />
-          ),
-        },
       ];
       if (!isVi) {
         cols.push({
@@ -486,15 +466,6 @@ function PhraseTab({
             ),
           },
           {
-            id: "word_notes",
-            header: "単語",
-            cell: ({ row }) => (
-              <div className="max-w-md">
-                <WordNotesInline notes={row.original.word_notes} />
-              </div>
-            ),
-          },
-          {
             id: "source_title",
             header: "ソース",
             cell: ({ row }) => (
@@ -515,6 +486,17 @@ function PhraseTab({
           accessorKey: "play_count",
           header: "練習",
           cell: ({ row }) => <PlayCount count={row.original.play_count} />,
+        },
+        {
+          id: "is_priority",
+          header: "強化",
+          cell: ({ row }) => (
+            <PriorityToggle
+              active={row.original.is_priority}
+              onClick={() => handleTogglePriority(row.original)}
+              disabled={busyId === row.original.id}
+            />
+          ),
         },
         {
           id: "actions",
@@ -552,7 +534,8 @@ function PhraseTab({
       <DataTable
         columns={columns}
         data={items}
-        pageSize={20}
+        pageSize={100}
+        pageSizeOptions={[100]}
         emptyMessage="フレーズが登録されていません"
       />
     </div>
@@ -638,17 +621,6 @@ function WordTab({
         ),
       },
       {
-        id: "is_priority",
-        header: "強化",
-        cell: ({ row }) => (
-          <PriorityToggle
-            active={row.original.is_priority}
-            onClick={() => handleTogglePriority(row.original)}
-            disabled={busyId === row.original.id}
-          />
-        ),
-      },
-      {
         accessorKey: "word",
         header: "単語",
         cell: ({ row }) => (
@@ -676,15 +648,6 @@ function WordTab({
         ),
       },
       {
-        id: "word_notes",
-        header: "関連語",
-        cell: ({ row }) => (
-          <div className="max-w-md">
-            <WordNotesInline notes={row.original.word_notes} />
-          </div>
-        ),
-      },
-      {
         id: "source_title",
         header: "ソース",
         cell: ({ row }) => (
@@ -702,6 +665,17 @@ function WordTab({
         accessorKey: "play_count",
         header: "練習",
         cell: ({ row }) => <PlayCount count={row.original.play_count} />,
+      },
+      {
+        id: "is_priority",
+        header: "強化",
+        cell: ({ row }) => (
+          <PriorityToggle
+            active={row.original.is_priority}
+            onClick={() => handleTogglePriority(row.original)}
+            disabled={busyId === row.original.id}
+          />
+        ),
       },
       {
         id: "actions",
@@ -737,7 +711,8 @@ function WordTab({
       <DataTable
         columns={columns}
         data={items}
-        pageSize={20}
+        pageSize={100}
+        pageSizeOptions={[100]}
         emptyMessage="単語が登録されていません"
       />
     </div>
@@ -785,7 +760,7 @@ export default function ListPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={isVi ? "文法・フレーズ・単語" : "文法・フレーズ"}
+        title="ライブラリ"
         actions={
           isVi ? (
             <Button onClick={() => setShowAddModal(true)}>

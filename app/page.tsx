@@ -9,7 +9,7 @@ import {
 } from "@/components/dashboard-kpi-section";
 import { SpeakingTestReminder } from "@/components/speaking-test-reminder";
 import { StreakPopup } from "@/components/streak-popup";
-import { ChevronRight, BookOpen, MessageSquare, Mic, Play } from "lucide-react";
+import { ChevronRight, Repeat2, Mic, Play } from "lucide-react";
 import type { SpeakingScore } from "@/lib/types";
 
 // ─── CTACard (inline, CTA向けカード) ────────────────────────────────────────
@@ -338,16 +338,10 @@ export default async function HomePage() {
         <h2 className="section-label">今日の練習</h2>
         <div className="grid grid-cols-2 gap-2">
           <CTACard
-            href="/repeating/grammar"
-            icon={<BookOpen className="h-4 w-4" />}
-            label="文法リピーティング"
-            sub="音読で覚える"
-          />
-          <CTACard
-            href="/repeating/expression"
-            icon={<MessageSquare className="h-4 w-4" />}
-            label="フレーズリピーティング"
-            sub="音読で覚える"
+            href="/repeating"
+            icon={<Repeat2 className="h-4 w-4" />}
+            label="リピーティング"
+            sub={isEn ? "文法・フレーズ" : "文法・フレーズ・単語"}
           />
           {isEn && (
             <CTACard

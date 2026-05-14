@@ -6,6 +6,13 @@
 /* class-based dark mode: responds to .dark on <html> */
 @variant dark (&:where(.dark, .dark *));
 
+/* DataTable: 表示件数セレクタを全アプリで非表示にする
+   （pageSize は各 DataTable に直接渡す） */
+label[for="page-size"],
+#page-size {
+  display: none !important;
+}
+
 /* NativeGo 固有セマンティックカラー（チャート等） */
 :root {
   --color-grammar: #5b6af0;
