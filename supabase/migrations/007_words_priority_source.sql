@@ -48,6 +48,10 @@ DROP POLICY IF EXISTS "words_delete_auth" ON nativego.words;
 CREATE POLICY "words_delete_auth" ON nativego.words
   FOR DELETE TO authenticated USING (true);
 
+-- nativego スキーマには ALTER DEFAULT PRIVILEGES が無いため、新規テーブルには
+-- 明示的に GRANT を当てる必要がある（既存 grammar/expressions は過去に手動 GRANT 済み）
+GRANT SELECT, INSERT, UPDATE, DELETE ON nativego.words TO authenticated;
+
 -- =========================================================
 -- 2) 強化フラグ + ソースタイトルを既存テーブルにも追加
 --    既存データは is_priority=false / source_title=null

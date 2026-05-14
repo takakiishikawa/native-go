@@ -147,42 +147,80 @@ export function ViAddModal({
     setSaving(true);
     const trimmedTitle = sourceTitle.trim();
     const titleArg = trimmedTitle ? trimmedTitle : null;
-    try {
-      if (grammar.length > 0) {
+
+    // 部分成功でも何が保存されたか分かるよう、カテゴリごとに try/catch する
+    const saved: string[] = [];
+    const failed: string[] = [];
+    let savedGrammarCount = 0;
+    let savedExpressionsCount = 0;
+    let savedWordsResult = { inserted: 0, skipped: 0 };
+
+    if (grammar.length > 0) {
+      try {
         await saveGrammar(
           grammar.map((g) => ({ ...g, source_title: titleArg })),
         );
+        savedGrammarCount = grammar.length;
+        saved.push(`文法 ${grammar.length}件`);
+      } catch (err) {
+        console.error("[vi-add] saveGrammar failed:", err);
+        failed.push("文法");
       }
-      if (expressions.length > 0) {
+    }
+
+    if (expressions.length > 0) {
+      try {
         await saveExpressions(
           expressions.map((e) => ({ ...e, source_title: titleArg })),
         );
+        savedExpressionsCount = expressions.length;
+        saved.push(`フレーズ ${expressions.length}件`);
+      } catch (err) {
+        console.error("[vi-add] saveExpressions failed:", err);
+        failed.push("フレーズ");
       }
-      let wordsResult = { inserted: words.length, skipped: 0 };
-      if (words.length > 0) {
-        wordsResult = await saveWords(
+    }
+
+    if (words.length > 0) {
+      try {
+        savedWordsResult = await saveWords(
           words.map((w) => ({ ...w, source_title: titleArg })),
         );
-      }
-      const parts: string[] = [];
-      if (grammar.length > 0) parts.push(`文法 ${grammar.length}件`);
-      if (expressions.length > 0) parts.push(`フレーズ ${expressions.length}件`);
-      if (words.length > 0) {
-        if (wordsResult.skipped > 0) {
-          parts.push(
-            `単語 ${wordsResult.inserted}件（重複${wordsResult.skipped}件除外）`,
+        if (savedWordsResult.skipped > 0) {
+          saved.push(
+            `単語 ${savedWordsResult.inserted}件（重複${savedWordsResult.skipped}件除外）`,
           );
         } else {
-          parts.push(`単語 ${wordsResult.inserted}件`);
+          saved.push(`単語 ${savedWordsResult.inserted}件`);
         }
+      } catch (err) {
+        console.error("[vi-add] saveWords failed:", err);
+        failed.push("単語");
       }
-      toast.success(`${parts.join("・")}を追加しました`);
+    }
+
+    setSaving(false);
+
+    // 保存できた分のローカル状態を更新して、未保存ぶんだけモーダルに残す
+    if (savedGrammarCount > 0) setGrammar([]);
+    if (savedExpressionsCount > 0) setExpressions([]);
+    if (savedWordsResult.inserted > 0 || savedWordsResult.skipped > 0) {
+      setWords([]);
+    }
+
+    if (failed.length === 0) {
+      toast.success(`${saved.join("・")}を追加しました`);
       onSaved();
       onClose();
-    } catch {
-      toast.error("保存に失敗しました");
-    } finally {
-      setSaving(false);
+    } else if (saved.length > 0) {
+      toast.error(
+        `${saved.join("・")}は追加できましたが、${failed.join("・")}の保存に失敗しました（コンソールにエラー詳細）`,
+      );
+      onSaved();
+    } else {
+      toast.error(
+        `${failed.join("・")}の保存に失敗しました（コンソールにエラー詳細）`,
+      );
     }
   }
 
