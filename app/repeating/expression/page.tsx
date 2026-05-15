@@ -29,6 +29,8 @@ import { ConversationLines } from "@/components/conversation-lines";
 import { WordNotesPanel } from "@/components/word-notes";
 import { RepeatingCountPicker } from "@/components/repeating-count-picker";
 import { RepeatingCompleteModal } from "@/components/repeating-complete-modal";
+import { RepeatingLeaveConfirm } from "@/components/repeating-leave-confirm";
+import { useRepeatingSessionGuard } from "@/lib/hooks/use-repeating-session-guard";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -106,6 +108,7 @@ export default function ExpressionRepeatingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const resumeLineRef = useRef(0);
   const rateRef = useRef(rate);
+  const pendingIncrementsRef = useRef<Promise<unknown>[]>([]);
 
   useEffect(() => {
     rateRef.current = rate;
@@ -261,7 +264,11 @@ export default function ExpressionRepeatingPage() {
         resumeLineRef.current = 0;
         setCurrentLine(-1);
         playCount++;
-        await incrementExpressionPlayCount(item.id);
+        pendingIncrementsRef.current.push(
+          incrementExpressionPlayCount(item.id).catch((e) => {
+            console.error("[expression increment failed]", e);
+          }),
+        );
 
         // Update play_count locally for display only — never remove items mid-session
         localItems = localItems.map((it, idx) =>
@@ -276,11 +283,19 @@ export default function ExpressionRepeatingPage() {
     } finally {
       setPlaying(false);
       setCurrentLine(-1);
+      await Promise.allSettled(pendingIncrementsRef.current);
+      pendingIncrementsRef.current = [];
       if (!userCancelledRef.current) {
         setShowComplete(true);
       }
     }
   }, [items, index, speakLine]);
+
+  const guardActive = sessionStarted && !showComplete;
+  const { pendingHref, confirmLeave, cancelLeave } = useRepeatingSessionGuard({
+    active: guardActive,
+    pendingPromisesRef: pendingIncrementsRef,
+  });
 
   useEffect(() => {
     if (!sessionStarted || showComplete) return;
@@ -346,8 +361,10 @@ export default function ExpressionRepeatingPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={async () => {
                   stopSpeech();
+                  await Promise.allSettled(pendingIncrementsRef.current);
+                  pendingIncrementsRef.current = [];
                   router.push("/");
                 }}
               >
@@ -460,6 +477,12 @@ export default function ExpressionRepeatingPage() {
           </Button>
         </div>
       </div>
+
+      <RepeatingLeaveConfirm
+        open={pendingHref !== null}
+        onConfirm={confirmLeave}
+        onCancel={cancelLeave}
+      />
 
       <RepeatingCompleteModal
         open={showComplete}

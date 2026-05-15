@@ -104,8 +104,15 @@ export default function ShadowingPage() {
     setVideosByChannel(byChannel);
     setSelectedChannelId((prev) => {
       if (prev) return prev;
-      const active = chList.find((c) => !c.archived);
-      return active?.id ?? null;
+      const activeChannels = chList.filter((c) => !c.archived);
+      // VI ではお気に入り（個別動画）タブをデフォルトで開く
+      if (language === "vi") {
+        const standalone = activeChannels.find(
+          (c) => c.channel_url === STANDALONE_CHANNEL_URL,
+        );
+        if (standalone) return standalone.id;
+      }
+      return activeChannels[0]?.id ?? null;
     });
     setLoading(false);
   }, [supabase, language]);

@@ -28,6 +28,8 @@ import {
 import { WordNotesPanel } from "@/components/word-notes";
 import { RepeatingCountPicker } from "@/components/repeating-count-picker";
 import { RepeatingCompleteModal } from "@/components/repeating-complete-modal";
+import { RepeatingLeaveConfirm } from "@/components/repeating-leave-confirm";
+import { useRepeatingSessionGuard } from "@/lib/hooks/use-repeating-session-guard";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -100,6 +102,7 @@ export default function WordRepeatingPage() {
   const userCancelledRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rateRef = useRef(rate);
+  const pendingIncrementsRef = useRef<Promise<unknown>[]>([]);
 
   useEffect(() => {
     rateRef.current = rate;
@@ -245,7 +248,11 @@ export default function WordRepeatingPage() {
 
         setCurrentSegment(-1);
         playCount++;
-        await incrementWordPlayCount(item.id);
+        pendingIncrementsRef.current.push(
+          incrementWordPlayCount(item.id).catch((e) => {
+            console.error("[word increment failed]", e);
+          }),
+        );
 
         localItems = localItems.map((it, idx) =>
           idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
@@ -259,11 +266,19 @@ export default function WordRepeatingPage() {
     } finally {
       setPlaying(false);
       setCurrentSegment(-1);
+      await Promise.allSettled(pendingIncrementsRef.current);
+      pendingIncrementsRef.current = [];
       if (!userCancelledRef.current) {
         setShowComplete(true);
       }
     }
   }, [items, index, speakSegment]);
+
+  const guardActive = sessionStarted && !showComplete;
+  const { pendingHref, confirmLeave, cancelLeave } = useRepeatingSessionGuard({
+    active: guardActive,
+    pendingPromisesRef: pendingIncrementsRef,
+  });
 
   useEffect(() => {
     if (!sessionStarted || showComplete) return;
@@ -333,8 +348,10 @@ export default function WordRepeatingPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={async () => {
                   stopSpeech();
+                  await Promise.allSettled(pendingIncrementsRef.current);
+                  pendingIncrementsRef.current = [];
                   router.push("/");
                 }}
               >
@@ -442,6 +459,12 @@ export default function WordRepeatingPage() {
           </Button>
         </div>
       </div>
+
+      <RepeatingLeaveConfirm
+        open={pendingHref !== null}
+        onConfirm={confirmLeave}
+        onCancel={cancelLeave}
+      />
 
       <RepeatingCompleteModal
         open={showComplete}

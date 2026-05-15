@@ -29,6 +29,8 @@ import { ConversationLines } from "@/components/conversation-lines";
 import { WordNotesPanel } from "@/components/word-notes";
 import { RepeatingCountPicker } from "@/components/repeating-count-picker";
 import { RepeatingCompleteModal } from "@/components/repeating-complete-modal";
+import { RepeatingLeaveConfirm } from "@/components/repeating-leave-confirm";
+import { useRepeatingSessionGuard } from "@/lib/hooks/use-repeating-session-guard";
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -106,6 +108,7 @@ export default function GrammarRepeatingPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const resumeLineRef = useRef(0);
   const rateRef = useRef(rate);
+  const pendingIncrementsRef = useRef<Promise<unknown>[]>([]);
 
   useEffect(() => {
     rateRef.current = rate;
@@ -236,6 +239,8 @@ export default function GrammarRepeatingPage() {
     const initialCount = localItems.length;
     let playCount = 0;
     let startLine = resumeLineRef.current;
+    // 完走したアイテムの DB 反映用 Promise を貯める（fire-and-forget で発火し
+    // 次のアイテムへはすぐ進む。完了/停止/離脱確認時に await して確実に書き込み）
 
     try {
       while (
@@ -262,9 +267,11 @@ export default function GrammarRepeatingPage() {
         resumeLineRef.current = 0;
         setCurrentLine(-1);
         playCount++;
-        // ページ離脱や再デプロイで in-flight リクエストが破棄されても、ここまで来た
-        // アイテムは確実に DB に書き残したいので await する
-        await incrementGrammarPlayCount(item.id);
+        pendingIncrementsRef.current.push(
+          incrementGrammarPlayCount(item.id).catch((e) => {
+            console.error("[grammar increment failed]", e);
+          }),
+        );
 
         // Update play_count locally for display only — never remove items mid-session
         localItems = localItems.map((it, idx) =>
@@ -279,11 +286,22 @@ export default function GrammarRepeatingPage() {
     } finally {
       setPlaying(false);
       setCurrentLine(-1);
+      // セッション終了時に、ここまでに走らせた全ての increment 完了を待つ
+      // （通常時の遷移は速いまま、終了タイミングだけ確実に DB に届ける）
+      await Promise.allSettled(pendingIncrementsRef.current);
+      pendingIncrementsRef.current = [];
       if (!userCancelledRef.current) {
         setShowComplete(true);
       }
     }
   }, [items, index, speakLine]);
+
+  // セッション中（=完走するまで）にページ離脱を試みた時、確認モーダルを挟む
+  const guardActive = sessionStarted && !showComplete;
+  const { pendingHref, confirmLeave, cancelLeave } = useRepeatingSessionGuard({
+    active: guardActive,
+    pendingPromisesRef: pendingIncrementsRef,
+  });
 
   // スペースキーで再生/停止トグル（YouTube ライク）
   useEffect(() => {
@@ -350,8 +368,10 @@ export default function GrammarRepeatingPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={async () => {
                   stopSpeech();
+                  await Promise.allSettled(pendingIncrementsRef.current);
+                  pendingIncrementsRef.current = [];
                   router.push("/");
                 }}
               >
@@ -449,6 +469,12 @@ export default function GrammarRepeatingPage() {
           </Button>
         </div>
       </div>
+
+      <RepeatingLeaveConfirm
+        open={pendingHref !== null}
+        onConfirm={confirmLeave}
+        onCancel={cancelLeave}
+      />
 
       <RepeatingCompleteModal
         open={showComplete}
