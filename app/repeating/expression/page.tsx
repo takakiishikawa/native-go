@@ -261,7 +261,7 @@ export default function ExpressionRepeatingPage() {
         resumeLineRef.current = 0;
         setCurrentLine(-1);
         playCount++;
-        incrementExpressionPlayCount(item.id); // fire and forget for faster transition
+        await incrementExpressionPlayCount(item.id);
 
         // Update play_count locally for display only — never remove items mid-session
         localItems = localItems.map((it, idx) =>

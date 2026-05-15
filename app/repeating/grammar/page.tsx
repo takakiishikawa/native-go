@@ -262,7 +262,9 @@ export default function GrammarRepeatingPage() {
         resumeLineRef.current = 0;
         setCurrentLine(-1);
         playCount++;
-        incrementGrammarPlayCount(item.id); // fire and forget for faster transition
+        // ページ離脱や再デプロイで in-flight リクエストが破棄されても、ここまで来た
+        // アイテムは確実に DB に書き残したいので await する
+        await incrementGrammarPlayCount(item.id);
 
         // Update play_count locally for display only — never remove items mid-session
         localItems = localItems.map((it, idx) =>

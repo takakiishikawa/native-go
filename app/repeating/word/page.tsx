@@ -245,7 +245,7 @@ export default function WordRepeatingPage() {
 
         setCurrentSegment(-1);
         playCount++;
-        incrementWordPlayCount(item.id);
+        await incrementWordPlayCount(item.id);
 
         localItems = localItems.map((it, idx) =>
           idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
