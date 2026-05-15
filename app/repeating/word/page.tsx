@@ -94,6 +94,7 @@ export default function WordRepeatingPage() {
   const [rate, setRate] = useState(1.0);
   const [loading, setLoading] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
+  const [completedCount, setCompletedCount] = useState(0);
   const [todayStatus, setTodayStatus] = useState<TodayStatus>({
     grammar: false,
     expression: false,
@@ -144,6 +145,7 @@ export default function WordRepeatingPage() {
     setItems(allItems.slice(0, count));
     setIndex(0);
     setSessionStarted(true);
+    setCompletedCount(0);
   }
 
   function restartSession() {
@@ -151,6 +153,7 @@ export default function WordRepeatingPage() {
     setSessionStarted(false);
     setIndex(0);
     setItems([]);
+    setCompletedCount(0);
     loadItems();
   }
 
@@ -255,6 +258,7 @@ export default function WordRepeatingPage() {
 
         setCurrentSegment(-1);
         playCount++;
+        setCompletedCount((c) => c + 1);
         pendingIncrementsRef.current.push(
           incrementWordPlayCount(item.id).catch((e) => {
             console.error("[word increment failed]", e);
@@ -281,7 +285,7 @@ export default function WordRepeatingPage() {
     }
   }, [items, index, speakSegment]);
 
-  const guardActive = sessionStarted && !showComplete;
+  const guardActive = sessionStarted && !showComplete && completedCount > 0;
   const { pendingHref, confirmLeave, cancelLeave } = useRepeatingSessionGuard({
     active: guardActive,
     pendingPromisesRef: pendingIncrementsRef,

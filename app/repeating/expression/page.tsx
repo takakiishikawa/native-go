@@ -98,6 +98,7 @@ export default function ExpressionRepeatingPage() {
   const [rate, setRate] = useState(1.0);
   const [loading, setLoading] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
+  const [completedCount, setCompletedCount] = useState(0);
   const [todayStatus, setTodayStatus] = useState<TodayStatus>({
     grammar: false,
     expression: true,
@@ -149,6 +150,7 @@ export default function ExpressionRepeatingPage() {
     setItems(allItems.slice(0, count));
     setIndex(0);
     setSessionStarted(true);
+    setCompletedCount(0);
   }
 
   function restartSession() {
@@ -156,6 +158,7 @@ export default function ExpressionRepeatingPage() {
     setSessionStarted(false);
     setIndex(0);
     setItems([]);
+    setCompletedCount(0);
     resumeLineRef.current = 0;
     loadItems();
   }
@@ -264,6 +267,7 @@ export default function ExpressionRepeatingPage() {
         resumeLineRef.current = 0;
         setCurrentLine(-1);
         playCount++;
+        setCompletedCount((c) => c + 1);
         pendingIncrementsRef.current.push(
           incrementExpressionPlayCount(item.id).catch((e) => {
             console.error("[expression increment failed]", e);
@@ -291,7 +295,7 @@ export default function ExpressionRepeatingPage() {
     }
   }, [items, index, speakLine]);
 
-  const guardActive = sessionStarted && !showComplete;
+  const guardActive = sessionStarted && !showComplete && completedCount > 0;
   const { pendingHref, confirmLeave, cancelLeave } = useRepeatingSessionGuard({
     active: guardActive,
     pendingPromisesRef: pendingIncrementsRef,

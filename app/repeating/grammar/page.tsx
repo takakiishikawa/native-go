@@ -98,6 +98,7 @@ export default function GrammarRepeatingPage() {
   const [rate, setRate] = useState(1.0);
   const [loading, setLoading] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
+  const [completedCount, setCompletedCount] = useState(0);
   const [todayStatus, setTodayStatus] = useState<TodayStatus>({
     grammar: true,
     expression: false,
@@ -150,6 +151,7 @@ export default function GrammarRepeatingPage() {
     setItems(allItems.slice(0, count));
     setIndex(0);
     setSessionStarted(true);
+    setCompletedCount(0);
   }
 
   function restartSession() {
@@ -157,6 +159,7 @@ export default function GrammarRepeatingPage() {
     setSessionStarted(false);
     setIndex(0);
     setItems([]);
+    setCompletedCount(0);
     resumeLineRef.current = 0;
     loadItems();
   }
@@ -267,6 +270,7 @@ export default function GrammarRepeatingPage() {
         resumeLineRef.current = 0;
         setCurrentLine(-1);
         playCount++;
+        setCompletedCount((c) => c + 1);
         pendingIncrementsRef.current.push(
           incrementGrammarPlayCount(item.id).catch((e) => {
             console.error("[grammar increment failed]", e);
@@ -296,8 +300,8 @@ export default function GrammarRepeatingPage() {
     }
   }, [items, index, speakLine]);
 
-  // セッション中（=完走するまで）にページ離脱を試みた時、確認モーダルを挟む
-  const guardActive = sessionStarted && !showComplete;
+  // 1件以上完走済みでセッション中（=未完了完走済みデータがある）にページ離脱を試みた時、確認モーダルを挟む
+  const guardActive = sessionStarted && !showComplete && completedCount > 0;
   const { pendingHref, confirmLeave, cancelLeave } = useRepeatingSessionGuard({
     active: guardActive,
     pendingPromisesRef: pendingIncrementsRef,

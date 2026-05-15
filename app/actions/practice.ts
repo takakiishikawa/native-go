@@ -1,9 +1,278 @@
 "use server";
 
+import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
 import type { Language, WordNote } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const REGEN_SYSTEM_PROMPT = `You are regenerating word_notes (Japanese glosses) for a Vietnamese learning entry.
+
+INPUT shape:
+- Target: the main word / phrase / grammar pattern
+- Dialogue: A/B/A 3-turn dialogue lines (each prefixed with "A: " or "B: ")
+
+TASK: produce a comprehensive word_notes array covering EVERY non-trivial word from BOTH the target itself and ALL dialogue lines.
+
+★最重要ルール★
+- 1行目だけカバーしてある word_notes は不合格。A/B/A 全行に登場する単語を網羅すること。
+- 数詞・量詞（hai mươi / ba / một / ngàn / ký 等）も必ず含める。
+- 程度副詞（quá / lắm 等）と感嘆助詞（nhé / nha / ạ / à 等）も含める。
+- ターゲットそのもの（語/パターン）の構成語も入れる。
+
+その他:
+- Multi-word fixed units (cảm ơn / phải không / không phải là / rất vui được gặp bạn 等) は1エントリにまとめる。
+- 各エントリは { word, note }。note は ~20文字の短い日本語注釈。
+- 重複させない（同じ語は1回だけ）。
+- 順番: ターゲット語の構成要素 → ダイアログ出現順 (A → B → A)。
+- スキップして良いのは: 構造プレースホルダ (S/V/O, 名詞/動詞/形容詞), 個人名（Takaki, Anna 等の固有名）, 自明な英語/日本語借用語のみ。
+- 通常 6〜15 エントリ。少なすぎたら見直すこと。
+
+Return ONLY the word_notes array via the tool. No extra text.`;
+
+const REGEN_TOOL_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    word_notes: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          word: { type: "string" as const },
+          note: { type: "string" as const },
+        },
+        required: ["word", "note"],
+      },
+    },
+  },
+  required: ["word_notes"],
+};
+
+// 単語用: 対話(example) + word_notes を一緒に再生成する
+const WORD_REGEN_SYSTEM_PROMPT = `You are regenerating the example dialogue AND word_notes for a Vietnamese vocabulary entry (CEFR A1 learner).
+
+INPUT shape:
+- Target: the vocabulary word (Vietnamese) + its Japanese meaning
+- KNOWN_VOCAB: words the learner already knows (use these PLUS the target word in the dialogue; do not introduce unfamiliar words)
+
+TASK: produce
+1) "example": a natural A/B/A 3-turn dialogue (2-3 turns, max 4 lines) using the target word at least once. Each line starts with "A: " or "B: ". Each line ≤ 8 words. No slang or regional variants unless the target itself is regional.
+2) "word_notes": Japanese glosses covering EVERY non-trivial word from the dialogue, plus the target word itself.
+
+word_notes rules:
+- 1行目だけカバーは不合格。A/B/A 全行に登場する単語を必ず網羅。
+- 数詞・量詞 (một / hai / ngàn / ký 等), 程度副詞 (quá / lắm 等), 感嘆助詞 (nhé / nha / ạ / à 等) も含める。
+- Multi-word fixed units (cảm ơn 等) は1エントリ。
+- note は ~20文字の短い日本語注釈。
+- 順番: ターゲット → ダイアログ出現順。
+- 重複させない。
+- スキップ可: 構造プレースホルダ, 個人名, 自明な英語/日本語借用語のみ。
+- 通常 6〜12 エントリ。
+
+Return ONLY via the tool.`;
+
+const WORD_REGEN_TOOL_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    example: {
+      type: "string" as const,
+      description:
+        "A/B/A 3-turn dialogue lines joined by '\\n'. Each line starts with 'A: ' or 'B: '.",
+    },
+    word_notes: REGEN_TOOL_SCHEMA.properties.word_notes,
+  },
+  required: ["example", "word_notes"],
+};
+
+// VI 用のコア語彙（extract API と同じセット）
+const CORE_VI_VOCAB_REGEN = [
+  "tôi",
+  "bạn",
+  "anh",
+  "chị",
+  "em",
+  "cô",
+  "chú",
+  "là",
+  "không",
+  "có",
+  "vâng",
+  "dạ",
+  "xin chào",
+  "cảm ơn",
+  "xin lỗi",
+  "đi",
+  "ăn",
+  "uống",
+  "muốn",
+  "thích",
+  "biết",
+  "hiểu",
+  "nói",
+  "làm",
+  "ở",
+  "đến",
+  "từ",
+  "này",
+  "kia",
+  "gì",
+  "ai",
+  "đâu",
+  "khi nào",
+  "bao nhiêu",
+  "một",
+  "hai",
+  "ba",
+  "bốn",
+  "năm",
+  "cơm",
+  "phở",
+  "cà phê",
+  "nước",
+  "hôm nay",
+  "ngày mai",
+  "bây giờ",
+  "rất",
+  "nhiều",
+  "ít",
+  "tốt",
+  "việt nam",
+  "nhật bản",
+];
+
+export async function regenerateWordNotes(
+  itemType: "grammar" | "expression" | "word",
+  id: string,
+): Promise<WordNote[]> {
+  const supabase = await createClient();
+
+  // ── word の場合: 対話 + word_notes を一緒に再生成 ──
+  if (itemType === "word") {
+    const { data: word } = await supabase
+      .from("words")
+      .select("word, meaning, language")
+      .eq("id", id)
+      .single();
+    if (!word) throw new Error("word not found");
+
+    // 既登録の語彙を KNOWN_VOCAB として渡す（対話を学習者の知識内に保つ）
+    const { data: existingWords } = await supabase
+      .from("words")
+      .select("word")
+      .eq("language", word.language);
+    const knownVocab = Array.from(
+      new Set([
+        ...CORE_VI_VOCAB_REGEN,
+        ...((existingWords ?? []) as { word: string }[]).map((w) =>
+          w.word.toLowerCase(),
+        ),
+      ]),
+    );
+
+    const userMessage = `Target word: ${word.word}
+Meaning: ${word.meaning}
+
+KNOWN_VOCAB (use ONLY these in the dialogue plus the target word itself):
+${JSON.stringify(knownVocab)}
+
+Generate the example dialogue and word_notes per the system rules.`;
+
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2000,
+      system: WORD_REGEN_SYSTEM_PROMPT,
+      tools: [
+        {
+          name: "save_word_content",
+          description: "Save the regenerated example dialogue and word_notes.",
+          input_schema: WORD_REGEN_TOOL_SCHEMA,
+        },
+      ],
+      tool_choice: { type: "tool", name: "save_word_content" },
+      messages: [{ role: "user", content: userMessage }],
+    });
+
+    const toolUse = message.content.find((c) => c.type === "tool_use");
+    if (!toolUse || toolUse.type !== "tool_use") {
+      throw new Error("AI response did not include tool_use");
+    }
+    const { example, word_notes } = toolUse.input as {
+      example: string;
+      word_notes: WordNote[];
+    };
+
+    const { error } = await supabase
+      .from("words")
+      .update({ example, word_notes })
+      .eq("id", id);
+    if (error) throw error;
+
+    revalidatePath("/list");
+    return word_notes;
+  }
+
+  // ── grammar / expression の場合: word_notes のみ再生成 ──
+  let targetText = "";
+  let dialogue = "";
+
+  if (itemType === "grammar") {
+    const { data } = await supabase
+      .from("grammar")
+      .select("name, examples")
+      .eq("id", id)
+      .single();
+    if (!data) throw new Error("grammar not found");
+    targetText = data.name as string;
+    dialogue = (data.examples as string) ?? "";
+  } else {
+    const { data } = await supabase
+      .from("expressions")
+      .select("expression, conversation")
+      .eq("id", id)
+      .single();
+    if (!data) throw new Error("expression not found");
+    targetText = data.expression as string;
+    dialogue = (data.conversation as string) ?? "";
+  }
+
+  const userMessage = `Target: ${targetText}
+
+Dialogue lines:
+${dialogue || "(no dialogue available; produce word_notes covering only the target)"}`;
+
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2000,
+    system: REGEN_SYSTEM_PROMPT,
+    tools: [
+      {
+        name: "save_word_notes",
+        description: "Save the regenerated word_notes for the entry.",
+        input_schema: REGEN_TOOL_SCHEMA,
+      },
+    ],
+    tool_choice: { type: "tool", name: "save_word_notes" },
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  const toolUse = message.content.find((c) => c.type === "tool_use");
+  if (!toolUse || toolUse.type !== "tool_use") {
+    throw new Error("AI response did not include tool_use");
+  }
+  const { word_notes } = toolUse.input as { word_notes: WordNote[] };
+
+  const table = itemType === "grammar" ? "grammar" : "expressions";
+  const { error } = await supabase
+    .from(table)
+    .update({ word_notes })
+    .eq("id", id);
+  if (error) throw error;
+
+  revalidatePath("/list");
+  return word_notes;
+}
 
 export async function incrementGrammarPlayCount(id: string) {
   const supabase = await createClient();

@@ -18,7 +18,7 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Grammar, Expression, Word } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
-import { Plus, Star, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, Star, Trash2 } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
 import { CategoryTag } from "@/components/category-tag";
 import {
@@ -28,6 +28,7 @@ import {
   toggleGrammarPriority,
   toggleExpressionPriority,
   toggleWordPriority,
+  regenerateWordNotes,
 } from "@/app/actions/practice";
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
@@ -45,6 +46,28 @@ function StarRating({ value }: { value: number }) {
         />
       ))}
     </span>
+  );
+}
+
+function RegenerateButton({
+  onClick,
+  disabled,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+      onClick={onClick}
+      disabled={disabled}
+      title="単語注釈を AI で再生成"
+      aria-label="単語注釈を再生成"
+    >
+      <RefreshCw className={cn("h-3.5 w-3.5", disabled && "animate-spin")} />
+    </Button>
   );
 }
 
@@ -211,6 +234,23 @@ function GrammarTab({
     }
   }
 
+  async function handleRegenerate(row: GrammarWithLesson) {
+    setBusyId(row.id);
+    try {
+      const newNotes = await regenerateWordNotes("grammar", row.id);
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === row.id ? { ...it, word_notes: newNotes } : it,
+        ),
+      );
+      toast.success("単語注釈を再生成しました");
+    } catch {
+      toast.error("再生成に失敗しました");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const columns = useMemo(
     (): ColumnDef<GrammarWithLesson>[] => {
       const cols: ColumnDef<GrammarWithLesson>[] = [
@@ -297,16 +337,22 @@ function GrammarTab({
           id: "actions",
           header: "",
           cell: ({ row }) => (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-              onClick={() => handleDelete(row.original)}
-              disabled={busyId === row.original.id}
-              aria-label="削除"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center gap-0.5">
+              <RegenerateButton
+                onClick={() => handleRegenerate(row.original)}
+                disabled={busyId === row.original.id}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                onClick={() => handleDelete(row.original)}
+                disabled={busyId === row.original.id}
+                aria-label="削除"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           ),
         },
       );
@@ -403,6 +449,23 @@ function PhraseTab({
     }
   }
 
+  async function handleRegenerate(row: ExpressionWithLesson) {
+    setBusyId(row.id);
+    try {
+      const newNotes = await regenerateWordNotes("expression", row.id);
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === row.id ? { ...it, word_notes: newNotes } : it,
+        ),
+      );
+      toast.success("単語注釈を再生成しました");
+    } catch {
+      toast.error("再生成に失敗しました");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const columns = useMemo(
     (): ColumnDef<ExpressionWithLesson>[] => {
       const cols: ColumnDef<ExpressionWithLesson>[] = [
@@ -489,16 +552,22 @@ function PhraseTab({
           id: "actions",
           header: "",
           cell: ({ row }) => (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-              onClick={() => handleDelete(row.original)}
-              disabled={busyId === row.original.id}
-              aria-label="削除"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center gap-0.5">
+              <RegenerateButton
+                onClick={() => handleRegenerate(row.original)}
+                disabled={busyId === row.original.id}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                onClick={() => handleDelete(row.original)}
+                disabled={busyId === row.original.id}
+                aria-label="削除"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           ),
         },
       );
@@ -596,6 +665,23 @@ function WordTab({
     }
   }
 
+  async function handleRegenerate(row: Word) {
+    setBusyId(row.id);
+    try {
+      const newNotes = await regenerateWordNotes("word", row.id);
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === row.id ? { ...it, word_notes: newNotes } : it,
+        ),
+      );
+      toast.success("単語注釈を再生成しました");
+    } catch {
+      toast.error("再生成に失敗しました");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   const columns = useMemo(
     (): ColumnDef<Word>[] => [
       {
@@ -664,16 +750,22 @@ function WordTab({
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-            onClick={() => handleDelete(row.original)}
-            disabled={busyId === row.original.id}
-            aria-label="削除"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <RegenerateButton
+              onClick={() => handleRegenerate(row.original)}
+              disabled={busyId === row.original.id}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => handleDelete(row.original)}
+              disabled={busyId === row.original.id}
+              aria-label="削除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         ),
       },
     ],
