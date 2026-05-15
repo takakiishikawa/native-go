@@ -31,12 +31,6 @@ type PracticeLog = {
   speaking_count: number;
 };
 
-type NcLog = {
-  logged_at: string;
-  count: number;
-  minutes: number;
-};
-
 type YoutubeLog = {
   completed_at: string;
   youtube_videos: { duration: string | null } | null;
@@ -62,13 +56,9 @@ function fmtDate(str: string): string {
 
 type ChartRow = Record<string, string | number>;
 
-function buildMonthlyData(
-  logs: PracticeLog[],
-  ncLogs: NcLog[],
-): {
+function buildMonthlyData(logs: PracticeLog[]): {
   repeating: ChartRow[];
   speaking: ChartRow[];
-  nativeCamp: ChartRow[];
 } {
   const rMap = new Map<
     string,
@@ -82,8 +72,7 @@ function buildMonthlyData(
   for (const l of logs) {
     const ym = l.practiced_at.slice(0, 7);
     const e =
-      rMap.get(ym) ??
-      { grammar: 0, expression: 0, word: 0, speaking: 0 };
+      rMap.get(ym) ?? { grammar: 0, expression: 0, word: 0, speaking: 0 };
     rMap.set(ym, {
       grammar: e.grammar + l.grammar_done_count,
       expression: e.expression + l.expression_done_count,
@@ -91,12 +80,7 @@ function buildMonthlyData(
       speaking: e.speaking + l.speaking_count,
     });
   }
-  const ncMap = new Map<string, number>();
-  for (const nc of ncLogs) {
-    const ym = nc.logged_at.slice(0, 7);
-    ncMap.set(ym, (ncMap.get(ym) ?? 0) + nc.minutes);
-  }
-  const allMonths = [...new Set([...rMap.keys(), ...ncMap.keys()])].sort();
+  const allMonths = [...rMap.keys()].sort();
   return {
     repeating: allMonths.map((ym) => ({
       label: fmtMonth(ym),
@@ -108,28 +92,16 @@ function buildMonthlyData(
       label: fmtMonth(ym),
       speaking: rMap.get(ym)?.speaking ?? 0,
     })),
-    nativeCamp: allMonths.map((ym) => ({
-      label: fmtMonth(ym),
-      minutes: ncMap.get(ym) ?? 0,
-    })),
   };
 }
 
-function buildAllTimeData(
-  logs: PracticeLog[],
-  ncLogs: NcLog[],
-): {
+function buildAllTimeData(logs: PracticeLog[]): {
   repeating: ChartRow[];
   speaking: ChartRow[];
-  nativeCamp: ChartRow[];
 } {
   const sorted = [...logs].sort((a, b) =>
     a.practiced_at.localeCompare(b.practiced_at),
   );
-  const ncDayMap = new Map<string, number>();
-  for (const nc of ncLogs)
-    ncDayMap.set(nc.logged_at, (ncDayMap.get(nc.logged_at) ?? 0) + nc.minutes);
-  const sortedNcDays = [...ncDayMap.keys()].sort();
   return {
     repeating: sorted.map((l) => ({
       label: fmtDate(l.practiced_at),
@@ -140,10 +112,6 @@ function buildAllTimeData(
     speaking: sorted.map((l) => ({
       label: fmtDate(l.practiced_at),
       speaking: l.speaking_count,
-    })),
-    nativeCamp: sortedNcDays.map((d) => ({
-      label: fmtDate(d),
-      minutes: ncDayMap.get(d)!,
     })),
   };
 }
@@ -183,29 +151,22 @@ const repeatingConfig: ChartConfig = {
 const speakingConfig: ChartConfig = {
   speaking: { label: "スピーキング", color: "var(--color-primary)" },
 };
-const ncConfig: ChartConfig = {
-  minutes: { label: "学習時間", color: "var(--color-primary)" },
-};
 const shadowingConfig: ChartConfig = {
   minutes: { label: "視聴時間", color: "var(--color-primary)" },
 };
 
 export function ReportCharts({
   logs,
-  ncLogs,
   youtubeLogs,
-  showNativeCamp = true,
   showWord = true,
 }: {
   logs: PracticeLog[];
-  ncLogs: NcLog[];
   youtubeLogs: YoutubeLog[];
-  showNativeCamp?: boolean;
   showWord?: boolean;
 }) {
   const [mode, setMode] = useState<"monthly" | "alltime">("monthly");
-  const monthly = useMemo(() => buildMonthlyData(logs, ncLogs), [logs, ncLogs]);
-  const alltime = useMemo(() => buildAllTimeData(logs, ncLogs), [logs, ncLogs]);
+  const monthly = useMemo(() => buildMonthlyData(logs), [logs]);
+  const alltime = useMemo(() => buildAllTimeData(logs), [logs]);
   const data = mode === "monthly" ? monthly : alltime;
   const shadowingData = useMemo(
     () => buildShadowingData(youtubeLogs, mode),
@@ -257,16 +218,6 @@ export function ReportCharts({
           title="シャドーイング"
           unit="分"
         />
-        {showNativeCamp && (
-          <ReportAreaChart
-            data={data.nativeCamp as Record<string, unknown>[]}
-            config={ncConfig}
-            xKey="label"
-            yKeys={["minutes"]}
-            title="英会話レッスン"
-            unit="分"
-          />
-        )}
       </TabsContent>
     </Tabs>
   );

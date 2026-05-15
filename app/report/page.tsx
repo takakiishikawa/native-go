@@ -7,7 +7,7 @@ export default async function ReportPage() {
   const language = await getCurrentLanguage();
   const isEn = language === "en";
 
-  const [logsResult, ncLogsResult, youtubeLogsResult] = await Promise.all([
+  const [logsResult, youtubeLogsResult] = await Promise.all([
     supabase
       .from("practice_logs")
       .select(
@@ -15,15 +15,6 @@ export default async function ReportPage() {
       )
       .eq("language", language)
       .order("practiced_at"),
-    isEn
-      ? supabase
-          .from("native_camp_logs")
-          .select("logged_at, count, minutes")
-          .order("logged_at")
-      : Promise.resolve({
-          data: [] as { logged_at: string; count: number; minutes: number }[],
-          error: null,
-        }),
     supabase
       .from("youtube_logs")
       .select("completed_at, youtube_videos(duration)")
@@ -40,12 +31,6 @@ export default async function ReportPage() {
     speaking_count: (l as { speaking_count?: number }).speaking_count ?? 0,
   }));
 
-  const ncLogs = (ncLogsResult.data ?? []).map((l) => ({
-    logged_at: l.logged_at,
-    count: l.count ?? 0,
-    minutes: l.minutes ?? (l.count ?? 0) * 25,
-  }));
-
   const youtubeLogs = (youtubeLogsResult.data ?? []).map((l) => ({
     completed_at: l.completed_at,
     youtube_videos:
@@ -59,9 +44,7 @@ export default async function ReportPage() {
 
       <ReportCharts
         logs={logs}
-        ncLogs={ncLogs}
         youtubeLogs={youtubeLogs}
-        showNativeCamp={isEn}
         showWord={!isEn}
       />
     </div>
