@@ -114,7 +114,8 @@ const EXTRACT_INPUT_SCHEMA = {
           meaning: { type: "string" as const },
           example: {
             type: ["string", "null"] as const,
-            description: "Short example sentence (Vietnamese) using the word.",
+            description:
+              "A/B/A 3-turn dialogue lines joined by '\\n', max 4 lines, each line starts with 'A: ' or 'B: '. Same format as grammar.examples / expressions.conversation. The target word must appear at least once in the dialogue.",
           },
           usage_scene: { type: ["string", "null"] as const },
           frequency: {
@@ -244,28 +245,41 @@ Return a JSON object with exactly this structure:
       "category": "形容詞",
       "word": "tươi",
       "meaning": "新鮮な",
-      "example": "Cá này tươi không?",
+      "example": "A: Cá này tươi không chị?\nB: Tươi lắm em.\nA: Cho em một ký.",
       "usage_scene": "市場で魚や野菜の鮮度を尋ねるとき",
       "frequency": 4,
       "word_notes": [
+        { "word": "tươi", "note": "新鮮な" },
         { "word": "cá", "note": "魚" },
-        { "word": "không", "note": "～ですか？（疑問）" }
+        { "word": "này", "note": "この・これ" },
+        { "word": "không", "note": "～ですか？（疑問）" },
+        { "word": "chị", "note": "年上の女性への呼称" },
+        { "word": "lắm", "note": "とても（強調）" },
+        { "word": "em", "note": "年下の自称" },
+        { "word": "cho", "note": "～をください" },
+        { "word": "một", "note": "1（数詞）" },
+        { "word": "ký", "note": "キログラム" }
       ]
     }
   ]
 }
 
-word_notes rules (重要):
+word_notes rules (重要・必読):
+- ★最重要★ 例文・対話のすべての行 (A → B → A の3ターン全部) に登場する全単語を網羅すること。
+  ユーザーは練習中に対話の全文を読み上げるので、どこか1単語でも意味不明だと文全体が理解できない。
+  1行目しかカバーされていない word_notes は不合格。必ず 2行目以降の語も拾うこと。
 - Include words from BOTH sources, deduplicated:
   (a) the grammar "name" / expression "expression" / word "word" itself, AND
-  (b) the example dialogue lines you generate (or the example sentence for a word).
+  (b) ALL lines of the example dialogue / example sentence you generate.
 - Do NOT include words that only appear in usage_scene, detail, nuance, or category.
 - Multi-word fixed units (e.g. "cảm ơn", "phải không", "không phải là") stay as one entry.
-- Each word appears at most ONCE. If a word shows up in both the pattern and the dialogue, list it only once (under its first occurrence).
+- Each word appears at most ONCE. If a word shows up in multiple places, list it only once (under its first occurrence).
+- 数詞・量詞（hai mươi / ba / một ký / ngàn 等）も忘れず含める。「数字だから」と省略しない。
+- 程度副詞・感嘆助詞（quá / lắm / rồi / nhé / ạ 等）も含める。
 - "note" is a SHORT Japanese gloss (1 phrase, ~20 chars).
 - Order: pattern words first (left to right), then NEW words from the dialogue in line order (A → B → A).
-- Typical count: 4-10 entries for grammar/expressions, 2-5 for words.
-- Skip pure placeholders ("S", "V", "O", "名詞", "動詞", "形容詞"), numbers, obvious cognates, and personal names.
+- Target count: ターゲット語 + 対話の登場語ぶんを過不足なく。grammar/expression なら通常 6〜15 entries 程度になる。少なすぎる場合は再点検すること。
+- Skip ONLY: pure structural placeholders ("S", "V", "O", "名詞", "動詞", "形容詞"), obvious English/Japanese cognates that the learner cannot misunderstand, and proper names of people. それ以外は基本拾う。
 
 nuance rules (expressions only):
 - 1-2 sentences in Japanese describing how this phrase comes across to the listener (politeness level, age/relationship register, warmth, formality, common alternatives).
@@ -275,7 +289,7 @@ Conversation / example rules (重要・新):
 - Lines MUST use ONLY words from KNOWN_VOCAB plus the target item being taught. Do NOT introduce new vocabulary in the dialogue.
 - Keep dialogues SHORT: 2 turns is preferred, 3 turns max (A/B or A/B/A). Each line ≤ 8 words.
 - Target the SINGLE learning item — repeat it once in the dialogue, do not pile on multiple new things.
-- For "words" entries, "example" is a single short sentence (not a dialogue), still bounded by KNOWN_VOCAB.
+- For "words" entries, "example" is also an A/B/A 3-turn dialogue (same shape as grammar/expressions). The target word must appear in the dialogue. Still bounded by KNOWN_VOCAB.
 - No slang, no regional variants unless the target itself is regional.
 
 General rules:

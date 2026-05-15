@@ -26,6 +26,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { WordNotesPanel } from "@/components/word-notes";
+import { ConversationLines } from "@/components/conversation-lines";
 import { RepeatingCountPicker } from "@/components/repeating-count-picker";
 import { RepeatingCompleteModal } from "@/components/repeating-complete-modal";
 import { RepeatingLeaveConfirm } from "@/components/repeating-leave-confirm";
@@ -232,9 +233,15 @@ export default function WordRepeatingPage() {
         playCount < initialCount
       ) {
         const item = localItems[localIndex];
-        const segments = [item.word, item.example].filter(
-          (s): s is string => Boolean(s && s.trim()),
-        );
+        // example は A/B/A 3ターン対話 (新形式) or 単一文 (旧形式)。
+        // 単語そのものを先頭に置き、続いて対話を1行ずつ再生する。
+        const exampleLines = (item.example ?? "")
+          .split("\n")
+          .filter(Boolean);
+        const segments = [
+          item.word,
+          ...exampleLines.map((l) => l.replace(/^[AB]:\s*/i, "")),
+        ].filter((s): s is string => Boolean(s && s.trim()));
 
         for (let i = 0; i < segments.length; i++) {
           if (cancelRef.current) break;
@@ -331,11 +338,9 @@ export default function WordRepeatingPage() {
   }
 
   const current = items[index];
-  const segments = current
-    ? [current.word, current.example].filter(
-        (s): s is string => Boolean(s && s.trim()),
-      )
-    : [];
+  const exampleLines = (current?.example ?? "").split("\n").filter(Boolean);
+  // 対話行のハイライト位置。currentSegment は再生中の TTS index (0=単語, 1+=対話行)
+  const dialogueLine = currentSegment > 0 ? currentSegment - 1 : -1;
 
   return (
     <>
@@ -380,27 +385,20 @@ export default function WordRepeatingPage() {
                 場面: {current.usage_scene}
               </p>
             )}
-            {current?.example && (
+            {exampleLines.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-3">
-                  例文
+                  会話
                 </p>
-                <p
-                  className={`text-xl ${
-                    currentSegment === 1 ? "font-semibold text-foreground" : "text-foreground/80"
-                  }`}
-                >
-                  {current.example}
-                </p>
+                <ConversationLines
+                  lines={exampleLines}
+                  currentLine={dialogueLine}
+                />
               </div>
             )}
             {current?.word_notes && (
               <WordNotesPanel notes={current.word_notes} />
             )}
-            <p className="text-xs text-muted-foreground">
-              再生中: {currentSegment === 0 ? "単語" : currentSegment === 1 ? "例文" : "—"}
-              （{segments.length} セグメント）
-            </p>
           </CardContent>
         </Card>
 
