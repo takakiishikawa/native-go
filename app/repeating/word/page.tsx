@@ -113,7 +113,8 @@ export default function WordRepeatingPage() {
       .eq("language", language)
       .lt("play_count", 10)
       .order("is_priority", { ascending: false })
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
     setAllItems(data ?? []);
     setLoading(false);
   }, [language, supabase]);
@@ -221,46 +222,72 @@ export default function WordRepeatingPage() {
     const initialCount = localItems.length;
     let playCount = 0;
 
-    while (
-      localItems.length > 0 &&
-      !cancelRef.current &&
-      playCount < initialCount
-    ) {
-      const item = localItems[localIndex];
-      const segments = [item.word, item.example].filter(
-        (s): s is string => Boolean(s && s.trim()),
-      );
+    try {
+      while (
+        localItems.length > 0 &&
+        !cancelRef.current &&
+        playCount < initialCount
+      ) {
+        const item = localItems[localIndex];
+        const segments = [item.word, item.example].filter(
+          (s): s is string => Boolean(s && s.trim()),
+        );
 
-      for (let i = 0; i < segments.length; i++) {
-        if (cancelRef.current) break;
-        await speakSegment(segments[i], i, rateRef.current);
-        if (i < segments.length - 1 && !cancelRef.current) {
-          await pause(150);
+        for (let i = 0; i < segments.length; i++) {
+          if (cancelRef.current) break;
+          await speakSegment(segments[i], i, rateRef.current);
+          if (i < segments.length - 1 && !cancelRef.current) {
+            await pause(150);
+          }
         }
+
+        if (cancelRef.current) break;
+
+        setCurrentSegment(-1);
+        playCount++;
+        incrementWordPlayCount(item.id);
+
+        localItems = localItems.map((it, idx) =>
+          idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
+        );
+        localIndex = (localIndex + 1) % localItems.length;
+
+        setItems([...localItems]);
+        setIndex(localIndex);
+        await pause(50);
       }
-
-      if (cancelRef.current) break;
-
+    } finally {
+      setPlaying(false);
       setCurrentSegment(-1);
-      playCount++;
-      incrementWordPlayCount(item.id);
-
-      localItems = localItems.map((it, idx) =>
-        idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
-      );
-      localIndex = (localIndex + 1) % localItems.length;
-
-      setItems([...localItems]);
-      setIndex(localIndex);
-      await pause(50);
-    }
-
-    setPlaying(false);
-    setCurrentSegment(-1);
-    if (!userCancelledRef.current) {
-      setShowComplete(true);
+      if (!userCancelledRef.current) {
+        setShowComplete(true);
+      }
     }
   }, [items, index, speakSegment]);
+
+  useEffect(() => {
+    if (!sessionStarted || showComplete) return;
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      if (playing) {
+        stopSpeech();
+      } else {
+        handlePlay();
+      }
+    };
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  }, [sessionStarted, showComplete, playing, handlePlay, stopSpeech]);
 
   if (loading) {
     return (

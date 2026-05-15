@@ -119,7 +119,8 @@ export default function GrammarRepeatingPage() {
       .eq("language", language)
       .lt("play_count", 10)
       .order("is_priority", { ascending: false })
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
     setAllItems(data ?? []);
     setLoading(false);
   }, [language, supabase]);
@@ -236,49 +237,76 @@ export default function GrammarRepeatingPage() {
     let playCount = 0;
     let startLine = resumeLineRef.current;
 
-    while (
-      localItems.length > 0 &&
-      !cancelRef.current &&
-      playCount < initialCount
-    ) {
-      const item = localItems[localIndex];
-      const examples = item.examples.split("\n").filter(Boolean);
-      const fromLine = startLine;
-      startLine = 0; // subsequent items always start from line 0
+    try {
+      while (
+        localItems.length > 0 &&
+        !cancelRef.current &&
+        playCount < initialCount
+      ) {
+        const item = localItems[localIndex];
+        const examples = item.examples.split("\n").filter(Boolean);
+        const fromLine = startLine;
+        startLine = 0; // subsequent items always start from line 0
 
-      for (let i = fromLine; i < examples.length; i++) {
-        if (cancelRef.current) break;
-        const ttsText = examples[i].replace(/^[AB]:\s*/i, "");
-        await speakLine(ttsText, i, rateRef.current);
-        if (i < examples.length - 1 && !cancelRef.current) {
-          await pause(10);
+        for (let i = fromLine; i < examples.length; i++) {
+          if (cancelRef.current) break;
+          const ttsText = examples[i].replace(/^[AB]:\s*/i, "");
+          await speakLine(ttsText, i, rateRef.current);
+          if (i < examples.length - 1 && !cancelRef.current) {
+            await pause(10);
+          }
         }
+
+        if (cancelRef.current) break;
+
+        resumeLineRef.current = 0;
+        setCurrentLine(-1);
+        playCount++;
+        incrementGrammarPlayCount(item.id); // fire and forget for faster transition
+
+        // Update play_count locally for display only — never remove items mid-session
+        localItems = localItems.map((it, idx) =>
+          idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
+        );
+        localIndex = (localIndex + 1) % localItems.length;
+
+        setItems([...localItems]);
+        setIndex(localIndex);
+        await pause(50);
       }
-
-      if (cancelRef.current) break;
-
-      resumeLineRef.current = 0;
+    } finally {
+      setPlaying(false);
       setCurrentLine(-1);
-      playCount++;
-      incrementGrammarPlayCount(item.id); // fire and forget for faster transition
-
-      // Update play_count locally for display only — never remove items mid-session
-      localItems = localItems.map((it, idx) =>
-        idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
-      );
-      localIndex = (localIndex + 1) % localItems.length;
-
-      setItems([...localItems]);
-      setIndex(localIndex);
-      await pause(50);
-    }
-
-    setPlaying(false);
-    setCurrentLine(-1);
-    if (!userCancelledRef.current) {
-      setShowComplete(true);
+      if (!userCancelledRef.current) {
+        setShowComplete(true);
+      }
     }
   }, [items, index, speakLine]);
+
+  // スペースキーで再生/停止トグル（YouTube ライク）
+  useEffect(() => {
+    if (!sessionStarted || showComplete) return;
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      if (playing) {
+        stopSpeech();
+      } else {
+        handlePlay();
+      }
+    };
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  }, [sessionStarted, showComplete, playing, handlePlay, stopSpeech]);
 
   if (loading) {
     return (

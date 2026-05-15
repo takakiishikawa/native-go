@@ -119,7 +119,8 @@ export default function ExpressionRepeatingPage() {
       .eq("language", language)
       .lt("play_count", 10)
       .order("is_priority", { ascending: false })
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
     setAllItems(data ?? []);
     setLoading(false);
   }, [language, supabase]);
@@ -280,6 +281,30 @@ export default function ExpressionRepeatingPage() {
       }
     }
   }, [items, index, speakLine]);
+
+  useEffect(() => {
+    if (!sessionStarted || showComplete) return;
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      if (playing) {
+        stopSpeech();
+      } else {
+        handlePlay();
+      }
+    };
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  }, [sessionStarted, showComplete, playing, handlePlay, stopSpeech]);
 
   if (loading) {
     return (
