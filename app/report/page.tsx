@@ -62,6 +62,7 @@ export default async function ReportPage() {
         ncLogs={ncLogs}
         youtubeLogs={youtubeLogs}
         showNativeCamp={isEn}
+        showWord={!isEn}
       />
     </div>
   );

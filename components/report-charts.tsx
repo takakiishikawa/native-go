@@ -195,11 +195,13 @@ export function ReportCharts({
   ncLogs,
   youtubeLogs,
   showNativeCamp = true,
+  showWord = true,
 }: {
   logs: PracticeLog[];
   ncLogs: NcLog[];
   youtubeLogs: YoutubeLog[];
   showNativeCamp?: boolean;
+  showWord?: boolean;
 }) {
   const [mode, setMode] = useState<"monthly" | "alltime">("monthly");
   const monthly = useMemo(() => buildMonthlyData(logs, ncLogs), [logs, ncLogs]);
@@ -209,6 +211,17 @@ export function ReportCharts({
     () => buildShadowingData(youtubeLogs, mode),
     [youtubeLogs, mode],
   );
+
+  // 英語モードでは単語シリーズを出さない
+  const repeatingYKeys = showWord
+    ? ["grammar", "expression", "word"]
+    : ["grammar", "expression"];
+  const repeatingChartConfig: ChartConfig = showWord
+    ? repeatingConfig
+    : {
+        grammar: repeatingConfig.grammar,
+        expression: repeatingConfig.expression,
+      };
 
   return (
     <Tabs
@@ -222,9 +235,9 @@ export function ReportCharts({
       <TabsContent value={mode} className="space-y-3 mt-4">
         <ReportAreaChart
           data={data.repeating as Record<string, unknown>[]}
-          config={repeatingConfig}
+          config={repeatingChartConfig}
           xKey="label"
-          yKeys={["grammar", "expression", "word"]}
+          yKeys={repeatingYKeys}
           title="リピーティング"
           unit="回"
         />
