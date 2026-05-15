@@ -30,6 +30,17 @@ import {
   toggleWordPriority,
   regenerateWordNotes,
 } from "@/app/actions/practice";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Spinner,
+} from "@takaki/go-design-system";
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
 type ExpressionWithLesson = Expression & {
@@ -804,7 +815,73 @@ export default function ListPage() {
   const [wordCount, setWordCount] = useState<number | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const bumpReload = useCallback(() => setReloadKey((k) => k + 1), []);
+
+  async function handleBulkRegenerate() {
+    setShowBulkConfirm(false);
+    setBulkBusy(true);
+    const supabase = createClient();
+
+    try {
+      const [g, e, w] = await Promise.all([
+        supabase.from("grammar").select("id").eq("language", language),
+        supabase.from("expressions").select("id").eq("language", language),
+        supabase.from("words").select("id").eq("language", language),
+      ]);
+
+      type Task = { type: "grammar" | "expression" | "word"; id: string };
+      const tasks: Task[] = [
+        ...((g.data ?? []) as { id: string }[]).map((r) => ({
+          type: "grammar" as const,
+          id: r.id,
+        })),
+        ...((e.data ?? []) as { id: string }[]).map((r) => ({
+          type: "expression" as const,
+          id: r.id,
+        })),
+        ...((w.data ?? []) as { id: string }[]).map((r) => ({
+          type: "word" as const,
+          id: r.id,
+        })),
+      ];
+
+      setBulkProgress({ done: 0, total: tasks.length });
+      if (tasks.length === 0) {
+        toast.info("再生成する項目がありません");
+        return;
+      }
+
+      // 3並列でぶん回す（Anthropic API のレート制限を避けつつ高速化）
+      const BATCH_SIZE = 3;
+      let success = 0;
+      let failure = 0;
+      for (let i = 0; i < tasks.length; i += BATCH_SIZE) {
+        const batch = tasks.slice(i, i + BATCH_SIZE);
+        const results = await Promise.allSettled(
+          batch.map((t) => regenerateWordNotes(t.type, t.id)),
+        );
+        success += results.filter((r) => r.status === "fulfilled").length;
+        failure += results.filter((r) => r.status === "rejected").length;
+        setBulkProgress({
+          done: Math.min(i + batch.length, tasks.length),
+          total: tasks.length,
+        });
+      }
+
+      if (failure === 0) {
+        toast.success(`${success}件を再生成しました`);
+      } else {
+        toast.error(`再生成完了: ${success}件成功 / ${failure}件失敗`);
+      }
+      bumpReload();
+    } finally {
+      setBulkBusy(false);
+      setBulkProgress({ done: 0, total: 0 });
+    }
+  }
 
   const reloadCounts = useCallback(() => {
     const supabase = createClient();
@@ -838,10 +915,32 @@ export default function ListPage() {
         title="ライブラリ"
         actions={
           isVi ? (
-            <Button onClick={() => setShowAddModal(true)}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              追加
-            </Button>
+            <div className="flex items-center gap-2">
+              {bulkBusy ? (
+                <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <Spinner size="sm" />
+                  再生成中 {bulkProgress.done} / {bulkProgress.total}
+                </span>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBulkConfirm(true)}
+                  disabled={
+                    (grammarCount ?? 0) +
+                      (phraseCount ?? 0) +
+                      (wordCount ?? 0) ===
+                    0
+                  }
+                >
+                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  全件再生成
+                </Button>
+              )}
+              <Button onClick={() => setShowAddModal(true)} disabled={bulkBusy}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                追加
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -906,6 +1005,30 @@ export default function ListPage() {
           onSaved={bumpReload}
         />
       )}
+
+      <AlertDialog
+        open={showBulkConfirm}
+        onOpenChange={(o) => {
+          if (!o) setShowBulkConfirm(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>全件を AI で再生成します</AlertDialogTitle>
+            <AlertDialogDescription>
+              文法 {grammarCount ?? 0} 件、フレーズ {phraseCount ?? 0} 件、単語{" "}
+              {wordCount ?? 0} 件の対話・単語注釈を AI で再生成します。
+              数分かかります。実行しますか？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>いいえ</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkRegenerate}>
+              実行する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
