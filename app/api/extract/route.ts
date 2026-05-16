@@ -104,6 +104,17 @@ const EXTRACT_INPUT_SCHEMA = {
           },
           word_notes: WORD_NOTES_SCHEMA,
           topic: TOPIC_SCHEMA,
+          examples_ja: {
+            type: "array" as const,
+            items: { type: "string" as const },
+            description:
+              "Japanese translation of EACH line in examples — same length and order. Translate only the spoken sentence (drop the 'A:'/'B:' prefix).",
+          },
+          pattern_quote: {
+            type: "string" as const,
+            description:
+              "The exact contiguous substring, copied verbatim from one of the examples lines, that is the concrete instance of this grammar pattern. MUST be an exact substring of a line so the UI can highlight it.",
+          },
         },
         required: [
           "name",
@@ -112,6 +123,8 @@ const EXTRACT_INPUT_SCHEMA = {
           "usage_scene",
           "frequency",
           "topic",
+          "examples_ja",
+          "pattern_quote",
         ],
       },
     },
@@ -136,6 +149,12 @@ const EXTRACT_INPUT_SCHEMA = {
           },
           word_notes: WORD_NOTES_SCHEMA,
           topic: TOPIC_SCHEMA,
+          conversation_ja: {
+            type: "array" as const,
+            items: { type: "string" as const },
+            description:
+              "Japanese translation of EACH line in conversation — same length and order. Translate only the spoken sentence (drop the 'A:'/'B:' prefix).",
+          },
           nuance: {
             type: ["string", "null"] as const,
             description:
@@ -150,6 +169,7 @@ const EXTRACT_INPUT_SCHEMA = {
           "usage_scene",
           "frequency",
           "topic",
+          "conversation_ja",
         ],
       },
     },
@@ -180,6 +200,12 @@ const EXTRACT_INPUT_SCHEMA = {
           },
           word_notes: WORD_NOTES_SCHEMA,
           topic: TOPIC_SCHEMA,
+          example_ja: {
+            type: ["array", "null"] as const,
+            items: { type: "string" as const },
+            description:
+              "Japanese translation of EACH line in example — same length and order. null if example is null.",
+          },
         },
         required: ["word", "meaning", "frequency", "topic"],
       },
@@ -243,6 +269,12 @@ TOPIC (each item — required):
 - For every grammar / expression item, also set "topic": the subject of the example conversation you wrote for it.
 - topic.label: a short English label, 1-2 words (例: "Cooking", "Product work", "Dating", "Café", "Reading", "Money", "Fitness", "Pets"). English only.
 - topic.icon: pick the single best-matching icon name from this fixed list — [chef-hat, briefcase, plane, heart, book-open, coffee, shopping-bag, home, dumbbell, code, cat, dog, bike, utensils, music, users, map-pin, wallet, shirt, brain, sparkles, message-circle]. Use "message-circle" only when nothing else fits.
+
+PER-LINE JAPANESE (each item — required):
+- examples_ja (grammar) / conversation_ja (expressions): a Japanese translation for EVERY dialogue line, as an array the SAME length and order as the lines. Translate only the spoken sentence (no "A:"/"B:" prefix). Natural Japanese.
+
+GRAMMAR PATTERN HIGHLIGHT (grammar items — required):
+- pattern_quote: copy verbatim the exact run of words FROM one of the examples lines that is the concrete instance of this grammar pattern. It MUST be an exact substring of a line (so the UI can highlight it).
 - Return ONLY valid JSON, no markdown, no explanation`;
 
 const SYSTEM_PROMPT_VI = `You are a Vietnamese language tutor for an absolute beginner (CEFR A1).
@@ -382,6 +414,13 @@ TOPIC (each item — required):
 - For every grammar / expression / word item, also set "topic": the subject of the example conversation/dialogue you wrote for it.
 - topic.label: a short English label, 1-2 words (例: "Cooking", "Market", "Coffee", "Family", "Shopping", "Directions", "Greetings"). English only — even though the dialogue itself is Vietnamese.
 - topic.icon: pick the single best-matching icon name from this fixed list — [chef-hat, briefcase, plane, heart, book-open, coffee, shopping-bag, home, dumbbell, code, cat, dog, bike, utensils, music, users, map-pin, wallet, shirt, brain, sparkles, message-circle]. Use "message-circle" only when nothing else fits.
+
+PER-LINE JAPANESE (each item — required):
+- examples_ja (grammar) / conversation_ja (expressions) / example_ja (words): a Japanese translation for EVERY dialogue line, as an array the SAME length and order as the lines. Translate only the spoken sentence (no "A:"/"B:" prefix). 自然な日本語訳。
+- For words: example_ja matches the lines of "example" (null if example is null).
+
+GRAMMAR PATTERN HIGHLIGHT (grammar items — required):
+- pattern_quote: copy verbatim the exact run of words FROM one of the examples lines that is the concrete instance of this grammar pattern. It MUST be an exact substring of a line (so the UI can highlight it).
 - Return ONLY valid JSON, no markdown, no explanation.`;
 
 const CORE_VI_VOCAB = [

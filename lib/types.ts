@@ -39,6 +39,8 @@ export interface Grammar {
   source_title: string | null;
   topic_label: string | null;
   topic_icon: string | null;
+  examples_ja: string[] | null;
+  pattern_quote: string | null;
 }
 
 export interface SpeakingScene {
@@ -78,6 +80,7 @@ export interface Expression {
   source_title: string | null;
   topic_label: string | null;
   topic_icon: string | null;
+  conversation_ja: string[] | null;
 }
 
 export interface Word {
@@ -98,6 +101,7 @@ export interface Word {
   category: string | null;
   topic_label: string | null;
   topic_icon: string | null;
+  example_ja: string[] | null;
 }
 
 export interface Lesson {
@@ -187,6 +191,8 @@ export interface ExtractedGrammar {
   word_notes?: WordNote[];
   category?: string;
   topic?: ItemTopic;
+  examples_ja?: string[];
+  pattern_quote?: string;
 }
 
 export interface ExtractedExpression {
@@ -199,6 +205,7 @@ export interface ExtractedExpression {
   word_notes?: WordNote[];
   nuance?: string;
   topic?: ItemTopic;
+  conversation_ja?: string[];
 }
 
 export interface ExtractedWord {
@@ -210,6 +217,7 @@ export interface ExtractedWord {
   frequency: number;
   category?: string | null;
   topic?: ItemTopic;
+  example_ja?: string[] | null;
 }
 
 export interface ExtractResult {

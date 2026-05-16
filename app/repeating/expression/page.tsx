@@ -339,8 +339,10 @@ export default function ExpressionRepeatingPage() {
         topicLabel={current.topic_label}
         topicIcon={current.topic_icon}
         lines={lines}
+        linesJa={current.conversation_ja}
         currentLine={currentLine}
         wordNotes={language === "vi" ? current.word_notes : null}
+        patternQuote={current.expression}
         playCount={current.play_count}
         sessionCurrent={index + 1}
         sessionTotal={items.length}

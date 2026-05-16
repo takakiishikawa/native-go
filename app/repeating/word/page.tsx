@@ -331,8 +331,10 @@ export default function WordRepeatingPage() {
         topicLabel={current.topic_label}
         topicIcon={current.topic_icon}
         lines={exampleLines}
+        linesJa={current.example_ja}
         currentLine={dialogueLine}
         wordNotes={current.word_notes}
+        patternQuote={current.word}
         playCount={current.play_count}
         sessionCurrent={index + 1}
         sessionTotal={items.length}

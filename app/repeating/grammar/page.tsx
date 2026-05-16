@@ -346,8 +346,10 @@ export default function GrammarRepeatingPage() {
         topicLabel={current.topic_label}
         topicIcon={current.topic_icon}
         lines={examples}
+        linesJa={current.examples_ja}
         currentLine={currentLine}
         wordNotes={language === "vi" ? current.word_notes : null}
+        patternQuote={current.pattern_quote}
         playCount={current.play_count}
         sessionCurrent={index + 1}
         sessionTotal={items.length}

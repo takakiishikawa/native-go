@@ -421,6 +421,8 @@ export async function saveGrammar(
     summary: string;
     detail?: string | null;
     examples: string[];
+    examples_ja?: string[];
+    pattern_quote?: string | null;
     usage_scene: string;
     frequency: number;
     word_notes?: WordNote[] | null;
@@ -450,6 +452,8 @@ export async function saveGrammar(
     source_title: g.source_title ?? null,
     topic_label: g.topic?.label ?? null,
     topic_icon: g.topic?.icon ?? null,
+    examples_ja: g.examples_ja ?? null,
+    pattern_quote: g.pattern_quote ?? null,
   }));
 
   const { data, error } = await supabase
@@ -468,6 +472,7 @@ export async function saveExpressions(
     expression: string;
     meaning: string;
     conversation: string[];
+    conversation_ja?: string[];
     usage_scene: string;
     frequency: number;
     word_notes?: WordNote[] | null;
@@ -497,6 +502,7 @@ export async function saveExpressions(
     source_title: e.source_title ?? null,
     topic_label: e.topic?.label ?? null,
     topic_icon: e.topic?.icon ?? null,
+    conversation_ja: e.conversation_ja ?? null,
   }));
 
   const { error } = await supabase.from("expressions").insert(rows);
@@ -510,6 +516,7 @@ export async function saveWords(
     word: string;
     meaning: string;
     example?: string | null;
+    example_ja?: string[] | null;
     usage_scene?: string | null;
     frequency: number;
     word_notes?: WordNote[] | null;
@@ -553,6 +560,7 @@ export async function saveWords(
     category: w.category ?? null,
     topic_label: w.topic?.label ?? null,
     topic_icon: w.topic?.icon ?? null,
+    example_ja: w.example_ja ?? null,
   }));
 
   const { error } = await supabase.from("words").insert(rows);
