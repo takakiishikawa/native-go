@@ -81,6 +81,7 @@ function ratioOf(
 const repeatingConfig: ChartConfig = {
   grammar: { label: "文法", color: "var(--color-primary)" },
   expression: { label: "フレーズ", color: "var(--color-primary-chart-2)" },
+  word: { label: "単語", color: "var(--color-primary-chart-3)" },
   total: { label: "合計", color: "var(--color-primary)" },
 };
 const speakingConfig: ChartConfig = {
@@ -370,7 +371,11 @@ export default async function HomePage() {
             data={repeatingChartData}
             config={repeatingConfig}
             xKey="label"
-            yKeys={["grammar", "expression"]}
+            yKeys={
+              isEn
+                ? ["grammar", "expression"]
+                : ["grammar", "expression", "word"]
+            }
             lineKeys={["total"]}
             unit="回"
             baseline={
