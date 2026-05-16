@@ -58,7 +58,7 @@ INPUT shape:
 - KNOWN_VOCAB: words the learner already knows (use these PLUS the target word in the dialogue; do not introduce unfamiliar words)
 
 TASK: produce
-1) "example": a natural A/B/A 3-turn dialogue (2-3 turns, max 4 lines) using the target word at least once. Each line starts with "A: " or "B: ". Each line ≤ 8 words. No slang or regional variants unless the target itself is regional.
+1) "example": a natural A/B/A 3-turn dialogue (2-3 turns, max 4 lines) using the target word at least once. Each line starts with "A: " or "B: ". Each line ≤ 8 words. 南部ベトナム語 (Southern / Saigon) で書く — ユーザーはホーチミン市在住。北部 (ハノイ) 方言は使わない。南部語彙 (mắc / ký / ba / má / xe hơi 等) と南部語尾 (nha / nghen) を優先。極端なスラングは避ける。
 2) "word_notes": Japanese glosses covering EVERY non-trivial word from the dialogue, plus the target word itself.
 
 word_notes rules:

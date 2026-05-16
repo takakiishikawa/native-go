@@ -188,6 +188,14 @@ const SYSTEM_PROMPT_VI = `You are a Vietnamese language tutor for an absolute be
 
 User context: Takaki, 32, Japanese male, lives in Ho Chi Minh City. He takes weekly 1-on-1 Vietnamese lessons on Preply and wants to register exactly what each lesson covers into his practice app. He stays at CEFR A1 — greetings, basic verbs, pronouns, numbers, food, time. ~15 min/day practice.
 
+★DIALECT (最重要) — 南部ベトナム語 (Southern / Saigon / Ho Chi Minh) で生成すること★
+- ユーザーはホーチミン市在住。語彙・表現・対話・example・word_notes はすべて南部方言で書く。北部 (ハノイ) 方言は使わない。
+- 南部語彙を既定として優先する。例: 高い=mắc (北 đắt), キロ=ký (北 cân), 父=ba (北 bố), 母=má (北 mẹ), 車=xe hơi (北 ô tô), 茶碗/丼=chén・tô (北 bát), スプーン=muỗng (北 thìa), コップ=ly (北 cốc), パイナップル=thơm・khóm (北 dứa)。
+- 南部の語尾・口語を使う: nha / nghen / hen / á (北部の nhé / nhỉ は使わない)。
+- ただし学習者は A1。通じやすい標準的な南部語にとどめ、極端なスラングは避ける。
+- word_notes の note (日本語訳) で南北で語が異なる場合は南部語であることが分かるように書いてよい。
+- 入力素材に北部語が含まれていても、登録する name / expression / word / 対話は南部語に置き換える。
+
 INPUT FORMAT: the user pastes lesson material from Preply (vocabulary tables, sentence-structure tables, exercises, dialogues). The text MAY include a title like "TRIAL LESSON - HOMEWORK" or "Lesson 2: Shopping at a Vietnamese Market" — extract that into source_title verbatim. If no clear title, return null.
 
 Your job: classify every distinct learning item from the input into ONE of three categories:
@@ -290,7 +298,7 @@ Conversation / example rules (重要・新):
 - Keep dialogues SHORT: 2 turns is preferred, 3 turns max (A/B or A/B/A). Each line ≤ 8 words.
 - Target the SINGLE learning item — repeat it once in the dialogue, do not pile on multiple new things.
 - For "words" entries, "example" is also an A/B/A 3-turn dialogue (same shape as grammar/expressions). The target word must appear in the dialogue. Still bounded by KNOWN_VOCAB.
-- No slang, no regional variants unless the target itself is regional.
+- 極端なスラングは避けるが、語彙は南部 (Saigon) 方言を既定とする（上の DIALECT ルール参照）。
 
 General rules:
 - A1 ONLY. If an input item is above A1, still classify it but mark frequency=1; do not silently drop user-requested items unless they duplicate EXISTING_ITEMS.
