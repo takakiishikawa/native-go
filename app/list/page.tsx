@@ -18,7 +18,7 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Grammar, Expression, Word } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
-import { Plus, RefreshCw, Star, Trash2 } from "lucide-react";
+import { Plus, Star, Trash2 } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
 import { CategoryTag } from "@/components/category-tag";
 import {
@@ -28,19 +28,7 @@ import {
   toggleGrammarPriority,
   toggleExpressionPriority,
   toggleWordPriority,
-  regenerateWordNotes,
 } from "@/app/actions/practice";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Spinner,
-} from "@takaki/go-design-system";
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
 type ExpressionWithLesson = Expression & {
@@ -57,28 +45,6 @@ function StarRating({ value }: { value: number }) {
         />
       ))}
     </span>
-  );
-}
-
-function RegenerateButton({
-  onClick,
-  disabled,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-7 w-7 text-muted-foreground hover:text-foreground"
-      onClick={onClick}
-      disabled={disabled}
-      title="単語注釈を AI で再生成"
-      aria-label="単語注釈を再生成"
-    >
-      <RefreshCw className={cn("h-3.5 w-3.5", disabled && "animate-spin")} />
-    </Button>
   );
 }
 
@@ -245,23 +211,6 @@ function GrammarTab({
     }
   }
 
-  async function handleRegenerate(row: GrammarWithLesson) {
-    setBusyId(row.id);
-    try {
-      const newNotes = await regenerateWordNotes("grammar", row.id);
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === row.id ? { ...it, word_notes: newNotes } : it,
-        ),
-      );
-      toast.success("単語注釈を再生成しました");
-    } catch {
-      toast.error("再生成に失敗しました");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   const columns = useMemo(
     (): ColumnDef<GrammarWithLesson>[] => {
       const cols: ColumnDef<GrammarWithLesson>[] = [
@@ -348,22 +297,16 @@ function GrammarTab({
           id: "actions",
           header: "",
           cell: ({ row }) => (
-            <div className="flex items-center gap-0.5">
-              <RegenerateButton
-                onClick={() => handleRegenerate(row.original)}
-                disabled={busyId === row.original.id}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                onClick={() => handleDelete(row.original)}
-                disabled={busyId === row.original.id}
-                aria-label="削除"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => handleDelete(row.original)}
+              disabled={busyId === row.original.id}
+              aria-label="削除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
           ),
         },
       );
@@ -460,23 +403,6 @@ function PhraseTab({
     }
   }
 
-  async function handleRegenerate(row: ExpressionWithLesson) {
-    setBusyId(row.id);
-    try {
-      const newNotes = await regenerateWordNotes("expression", row.id);
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === row.id ? { ...it, word_notes: newNotes } : it,
-        ),
-      );
-      toast.success("単語注釈を再生成しました");
-    } catch {
-      toast.error("再生成に失敗しました");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   const columns = useMemo(
     (): ColumnDef<ExpressionWithLesson>[] => {
       const cols: ColumnDef<ExpressionWithLesson>[] = [
@@ -563,22 +489,16 @@ function PhraseTab({
           id: "actions",
           header: "",
           cell: ({ row }) => (
-            <div className="flex items-center gap-0.5">
-              <RegenerateButton
-                onClick={() => handleRegenerate(row.original)}
-                disabled={busyId === row.original.id}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                onClick={() => handleDelete(row.original)}
-                disabled={busyId === row.original.id}
-                aria-label="削除"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => handleDelete(row.original)}
+              disabled={busyId === row.original.id}
+              aria-label="削除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
           ),
         },
       );
@@ -676,23 +596,6 @@ function WordTab({
     }
   }
 
-  async function handleRegenerate(row: Word) {
-    setBusyId(row.id);
-    try {
-      const newNotes = await regenerateWordNotes("word", row.id);
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === row.id ? { ...it, word_notes: newNotes } : it,
-        ),
-      );
-      toast.success("単語注釈を再生成しました");
-    } catch {
-      toast.error("再生成に失敗しました");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   const columns = useMemo(
     (): ColumnDef<Word>[] => [
       {
@@ -761,22 +664,16 @@ function WordTab({
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex items-center gap-0.5">
-            <RegenerateButton
-              onClick={() => handleRegenerate(row.original)}
-              disabled={busyId === row.original.id}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-              onClick={() => handleDelete(row.original)}
-              disabled={busyId === row.original.id}
-              aria-label="削除"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            onClick={() => handleDelete(row.original)}
+            disabled={busyId === row.original.id}
+            aria-label="削除"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         ),
       },
     ],
@@ -815,73 +712,7 @@ export default function ListPage() {
   const [wordCount, setWordCount] = useState<number | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
-  const [bulkBusy, setBulkBusy] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const bumpReload = useCallback(() => setReloadKey((k) => k + 1), []);
-
-  async function handleBulkRegenerate() {
-    setShowBulkConfirm(false);
-    setBulkBusy(true);
-    const supabase = createClient();
-
-    try {
-      const [g, e, w] = await Promise.all([
-        supabase.from("grammar").select("id").eq("language", language),
-        supabase.from("expressions").select("id").eq("language", language),
-        supabase.from("words").select("id").eq("language", language),
-      ]);
-
-      type Task = { type: "grammar" | "expression" | "word"; id: string };
-      const tasks: Task[] = [
-        ...((g.data ?? []) as { id: string }[]).map((r) => ({
-          type: "grammar" as const,
-          id: r.id,
-        })),
-        ...((e.data ?? []) as { id: string }[]).map((r) => ({
-          type: "expression" as const,
-          id: r.id,
-        })),
-        ...((w.data ?? []) as { id: string }[]).map((r) => ({
-          type: "word" as const,
-          id: r.id,
-        })),
-      ];
-
-      setBulkProgress({ done: 0, total: tasks.length });
-      if (tasks.length === 0) {
-        toast.info("再生成する項目がありません");
-        return;
-      }
-
-      // 3並列でぶん回す（Anthropic API のレート制限を避けつつ高速化）
-      const BATCH_SIZE = 3;
-      let success = 0;
-      let failure = 0;
-      for (let i = 0; i < tasks.length; i += BATCH_SIZE) {
-        const batch = tasks.slice(i, i + BATCH_SIZE);
-        const results = await Promise.allSettled(
-          batch.map((t) => regenerateWordNotes(t.type, t.id)),
-        );
-        success += results.filter((r) => r.status === "fulfilled").length;
-        failure += results.filter((r) => r.status === "rejected").length;
-        setBulkProgress({
-          done: Math.min(i + batch.length, tasks.length),
-          total: tasks.length,
-        });
-      }
-
-      if (failure === 0) {
-        toast.success(`${success}件を再生成しました`);
-      } else {
-        toast.error(`再生成完了: ${success}件成功 / ${failure}件失敗`);
-      }
-      bumpReload();
-    } finally {
-      setBulkBusy(false);
-      setBulkProgress({ done: 0, total: 0 });
-    }
-  }
 
   const reloadCounts = useCallback(() => {
     const supabase = createClient();
@@ -915,32 +746,10 @@ export default function ListPage() {
         title="ライブラリ"
         actions={
           isVi ? (
-            <div className="flex items-center gap-2">
-              {bulkBusy ? (
-                <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                  <Spinner size="sm" />
-                  再生成中 {bulkProgress.done} / {bulkProgress.total}
-                </span>
-              ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowBulkConfirm(true)}
-                  disabled={
-                    (grammarCount ?? 0) +
-                      (phraseCount ?? 0) +
-                      (wordCount ?? 0) ===
-                    0
-                  }
-                >
-                  <RefreshCw className="mr-1.5 h-4 w-4" />
-                  全件再生成
-                </Button>
-              )}
-              <Button onClick={() => setShowAddModal(true)} disabled={bulkBusy}>
-                <Plus className="mr-1.5 h-4 w-4" />
-                追加
-              </Button>
-            </div>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              追加
+            </Button>
           ) : undefined
         }
       />
@@ -1005,30 +814,6 @@ export default function ListPage() {
           onSaved={bumpReload}
         />
       )}
-
-      <AlertDialog
-        open={showBulkConfirm}
-        onOpenChange={(o) => {
-          if (!o) setShowBulkConfirm(false);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>全件を AI で再生成します</AlertDialogTitle>
-            <AlertDialogDescription>
-              文法 {grammarCount ?? 0} 件、フレーズ {phraseCount ?? 0} 件、単語{" "}
-              {wordCount ?? 0} 件の対話・単語注釈を AI で再生成します。
-              数分かかります。実行しますか？
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>いいえ</AlertDialogCancel>
-            <AlertDialogAction onClick={handleBulkRegenerate}>
-              実行する
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
