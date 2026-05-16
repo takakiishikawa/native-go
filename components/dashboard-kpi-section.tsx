@@ -1,7 +1,3 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { useState } from "react";
 import {
   Card,
   CardDescription,
@@ -10,15 +6,6 @@ import {
   CardTitle,
   Tag,
 } from "@takaki/go-design-system";
-import type { SpeakingScore } from "@/lib/types";
-
-const SpeakingScoreModal = dynamic(
-  () =>
-    import("@/components/speaking-score-modal").then((m) => ({
-      default: m.SpeakingScoreModal,
-    })),
-  { ssr: false },
-);
 
 export type DashboardKpi = {
   title: string;
@@ -62,27 +49,12 @@ function KpiCardItem({ card }: { card: DashboardKpi }) {
   );
 }
 
-export function DashboardKpiSection({
-  cards,
-  initialScores,
-}: {
-  cards: DashboardKpi[];
-  initialScores: SpeakingScore[];
-}) {
-  const [scoreOpen, setScoreOpen] = useState(false);
-
+export function DashboardKpiSection({ cards }: { cards: DashboardKpi[] }) {
   return (
-    <>
-      <div className="@xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-3">
-        {cards.map((card, i) => (
-          <KpiCardItem key={i} card={card} />
-        ))}
-      </div>
-      <SpeakingScoreModal
-        open={scoreOpen}
-        onClose={() => setScoreOpen(false)}
-        initialScores={initialScores}
-      />
-    </>
+    <div className="@xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-3">
+      {cards.map((card, i) => (
+        <KpiCardItem key={i} card={card} />
+      ))}
+    </div>
   );
 }

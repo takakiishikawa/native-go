@@ -7,10 +7,8 @@ import {
   DashboardKpiSection,
   type DashboardKpi,
 } from "@/components/dashboard-kpi-section";
-import { SpeakingTestReminder } from "@/components/speaking-test-reminder";
 import { StreakPopup } from "@/components/streak-popup";
 import { ChevronRight, Repeat2, Play } from "lucide-react";
-import type { SpeakingScore } from "@/lib/types";
 
 // ─── CTACard (inline, CTA向けカード) ────────────────────────────────────────
 
@@ -87,9 +85,6 @@ const repeatingConfig: ChartConfig = {
 const shadowingConfig: ChartConfig = {
   minutes: { label: "視聴時間", color: "var(--color-primary)" },
 };
-const scoreConfig: ChartConfig = {
-  score: { label: "スコア", color: "var(--color-primary)" },
-};
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -115,7 +110,6 @@ export default async function HomePage() {
   const [
     logsResult,
     allRangeLogsResult,
-    scoresResult,
     allYoutubeLogsResult,
     settingsResult,
   ] = await Promise.all([
@@ -132,10 +126,6 @@ export default async function HomePage() {
       .gte("practiced_at", prev14StartStr)
       .lte("practiced_at", todayStr)
       .order("practiced_at"),
-    supabase
-      .from("speaking_scores")
-      .select("id, user_id, score, tested_at, created_at")
-      .order("tested_at"),
     supabase
       .from("youtube_logs")
       .select("completed_at, youtube_videos(duration)")
@@ -187,8 +177,6 @@ export default async function HomePage() {
   const prevRangeLogs = allRangeLogs.filter(
     (l) => l.practiced_at < rangeStartStr,
   );
-
-  const scores = (scoresResult.data ?? []) as SpeakingScore[];
 
   const streak = calculateStreak(allLogs.map((l) => l.practiced_at));
 
@@ -284,12 +272,6 @@ export default async function HomePage() {
       total: grammar + expression + word,
     };
   });
-  const scoreChartData = [...scores]
-    .sort((a, b) => a.tested_at.localeCompare(b.tested_at))
-    .map((s) => {
-      const d = new Date(s.tested_at);
-      return { label: fmtDate(d), score: s.score };
-    });
   const shadowingChartData = days.map(({ str, label }) => ({
     label,
     minutes: ytByDate.get(str) ?? 0,
@@ -298,8 +280,6 @@ export default async function HomePage() {
   return (
     <div className="space-y-8 max-w-4xl">
       <StreakPopup streak={streak} />
-
-      {isEn && <SpeakingTestReminder initialScores={scores} />}
 
       <div>
         <PageHeader title="ダッシュボード" />
@@ -327,7 +307,7 @@ export default async function HomePage() {
       {/* 今週のサマリー */}
       <div className="space-y-4">
         <h2 className="section-label">今週のサマリー</h2>
-        <DashboardKpiSection cards={kpiCards} initialScores={scores} />
+        <DashboardKpiSection cards={kpiCards} />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <DashboardChart
             title="リピーティング（7日間）"
@@ -356,18 +336,6 @@ export default async function HomePage() {
               settings ? Math.round(settings.baseline_shadowing / 7) : undefined
             }
           />
-          {isEn && (
-            <DashboardChart
-              title="NC AI Speaking Test スコア"
-              data={scoreChartData}
-              config={scoreConfig}
-              xKey="label"
-              yKeys={["score"]}
-              unit="点"
-              yDomain={[0, 100]}
-              emptyText="スコアを記録するとグラフが表示されます"
-            />
-          )}
         </div>
       </div>
     </div>
