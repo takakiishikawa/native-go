@@ -20,17 +20,21 @@ function hasScoreThisMonth(scores: SpeakingScore[]): boolean {
   return scores.some((s) => s.tested_at.startsWith(ym));
 }
 
+// 受検は 2 ヶ月に 1 回（4 月起点 = 偶数月: 4, 6, 8, 10, 12, 2 月）
+function isTestMonth(): boolean {
+  return (new Date().getMonth() + 1) % 2 === 0;
+}
+
 export function SpeakingTestReminder({
-  testDay,
   initialScores,
 }: {
-  testDay: number;
   initialScores: SpeakingScore[];
 }) {
   const [justSaved, setJustSaved] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  if (justSaved || hasScoreThisMonth(initialScores)) return null;
+  if (justSaved || !isTestMonth() || hasScoreThisMonth(initialScores))
+    return null;
 
   return (
     <>
@@ -45,7 +49,7 @@ export function SpeakingTestReminder({
               今月の NC AI Speaking Test
             </p>
             <p className="text-sm text-muted-foreground">
-              毎月 {testDay} 日が受検日です。スコアを記録すると非表示になります。
+              2 ヶ月に 1 回の受検です。スコアを記録すると非表示になります。
             </p>
           </div>
         </div>

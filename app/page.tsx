@@ -9,7 +9,7 @@ import {
 } from "@/components/dashboard-kpi-section";
 import { SpeakingTestReminder } from "@/components/speaking-test-reminder";
 import { StreakPopup } from "@/components/streak-popup";
-import { ChevronRight, Repeat2, Mic, Play } from "lucide-react";
+import { ChevronRight, Repeat2, Play } from "lucide-react";
 import type { SpeakingScore } from "@/lib/types";
 
 // ─── CTACard (inline, CTA向けカード) ────────────────────────────────────────
@@ -83,9 +83,6 @@ const repeatingConfig: ChartConfig = {
   expression: { label: "フレーズ", color: "var(--color-primary-chart-2)" },
   word: { label: "単語", color: "var(--color-primary-chart-3)" },
   total: { label: "合計", color: "var(--color-primary)" },
-};
-const speakingConfig: ChartConfig = {
-  count: { label: "練習回数", color: "var(--color-primary)" },
 };
 const shadowingConfig: ChartConfig = {
   minutes: { label: "視聴時間", color: "var(--color-primary)" },
@@ -202,7 +199,6 @@ export default async function HomePage() {
   );
   const weeklyWord = rangeLogs.reduce((s, l) => s + l.word_done_count, 0);
   const weeklyRepeating = weeklyGrammar + weeklyExpression + weeklyWord;
-  const weeklySpeaking = rangeLogs.reduce((s, l) => s + l.speaking_count, 0);
 
   const prevWeeklyGrammar = prevRangeLogs.reduce(
     (s, l) => s + l.grammar_done_count,
@@ -218,16 +214,11 @@ export default async function HomePage() {
   );
   const prevWeeklyRepeating =
     prevWeeklyGrammar + prevWeeklyExpression + prevWeeklyWord;
-  const prevWeeklySpeaking = prevRangeLogs.reduce(
-    (s, l) => s + l.speaking_count,
-    0,
-  );
 
   const hasPrevData = allRangeLogs.some((l) => l.practiced_at < rangeStartStr);
   const repeatingDiff = hasPrevData
     ? weeklyRepeating - prevWeeklyRepeating
     : null;
-  const speakingDiff = hasPrevData ? weeklySpeaking - prevWeeklySpeaking : null;
 
   function parseDurToMin(dur: string | null | undefined): number {
     if (!dur) return 0;
@@ -268,17 +259,6 @@ export default async function HomePage() {
       weekDiff: repeatingDiff,
       diffUnit: "回",
     },
-    ...(isEn
-      ? [
-          {
-            title: "スピーキング",
-            value: `${weeklySpeaking}回`,
-            ratio: ratioOf(weeklySpeaking, settings?.baseline_speaking),
-            weekDiff: speakingDiff,
-            diffUnit: "回",
-          },
-        ]
-      : []),
     {
       title: "シャドーイング",
       value: `${weeklyShadowing}分`,
@@ -304,10 +284,6 @@ export default async function HomePage() {
       total: grammar + expression + word,
     };
   });
-  const speakingChartData = days.map(({ str, label }) => {
-    const l = logMap.get(str);
-    return { label, count: l?.speaking_count ?? 0 };
-  });
   const scoreChartData = [...scores]
     .sort((a, b) => a.tested_at.localeCompare(b.tested_at))
     .map((s) => {
@@ -323,12 +299,7 @@ export default async function HomePage() {
     <div className="space-y-8 max-w-4xl">
       <StreakPopup streak={streak} />
 
-      {isEn && settings?.speaking_test_day && (
-        <SpeakingTestReminder
-          testDay={settings.speaking_test_day}
-          initialScores={scores}
-        />
-      )}
+      {isEn && <SpeakingTestReminder initialScores={scores} />}
 
       <div>
         <PageHeader title="ダッシュボード" />
@@ -344,14 +315,6 @@ export default async function HomePage() {
             label="リピーティング"
             sub={isEn ? "文法・フレーズ" : "文法・フレーズ・単語"}
           />
-          {isEn && (
-            <CTACard
-              href="/speaking"
-              icon={<Mic className="h-4 w-4" />}
-              label="スピーキング"
-              sub="4コマを話す"
-            />
-          )}
           <CTACard
             href="/shadowing"
             icon={<Play className="h-4 w-4" />}
@@ -382,21 +345,6 @@ export default async function HomePage() {
               settings ? Math.round(settings.baseline_repeating / 7) : undefined
             }
           />
-          {isEn && (
-            <DashboardChart
-              title="スピーキング（7日間）"
-              data={speakingChartData}
-              config={speakingConfig}
-              xKey="label"
-              yKeys={["count"]}
-              unit="回"
-              baseline={
-                settings
-                  ? Math.round(settings.baseline_speaking / 7)
-                  : undefined
-              }
-            />
-          )}
           <DashboardChart
             title="シャドーイング（7日間）"
             data={shadowingChartData}

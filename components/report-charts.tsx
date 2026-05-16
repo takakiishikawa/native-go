@@ -148,9 +148,6 @@ const repeatingConfig: ChartConfig = {
   expression: { label: "フレーズ", color: "var(--color-primary-chart-2)" },
   word: { label: "単語", color: "var(--color-primary-chart-3)" },
 };
-const speakingConfig: ChartConfig = {
-  speaking: { label: "スピーキング", color: "var(--color-primary)" },
-};
 const shadowingConfig: ChartConfig = {
   minutes: { label: "視聴時間", color: "var(--color-primary)" },
 };
@@ -200,14 +197,6 @@ export function ReportCharts({
           xKey="label"
           yKeys={repeatingYKeys}
           title="リピーティング"
-          unit="回"
-        />
-        <ReportAreaChart
-          data={data.speaking as Record<string, unknown>[]}
-          config={speakingConfig}
-          xKey="label"
-          yKeys={["speaking"]}
-          title="スピーキング"
           unit="回"
         />
         <ReportAreaChart

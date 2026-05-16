@@ -23,7 +23,6 @@ import {
 import {
   Home,
   Repeat2,
-  Mic,
   Volume2,
   FileText,
   BookOpen,
@@ -53,7 +52,6 @@ type NavItem = {
 const navItems: NavItem[] = [
   { href: "/", label: "ダッシュボード", icon: Home },
   { href: "/repeating", label: "リピーティング", icon: Repeat2 },
-  { href: "/speaking", label: "スピーキング", icon: Mic, languages: ["en"] },
   { href: "/shadowing", label: "シャドーイング", icon: Volume2 },
   { href: "/texts", label: "ライブラリ", icon: FileText, languages: ["en"] },
   {
@@ -68,8 +66,6 @@ const navItems: NavItem[] = [
 function isActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
   if (href === "/repeating") return pathname.startsWith("/repeating");
-  if (href === "/speaking")
-    return pathname === "/speaking" || pathname.startsWith("/speaking/");
   if (href === "/texts")
     return (
       pathname === "/texts" ||
