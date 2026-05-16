@@ -59,6 +59,7 @@ INPUT shape:
 
 TASK: produce
 1) "example": a natural A/B/A 3-turn dialogue (2-3 turns, max 4 lines) using the target word at least once. Each line starts with "A: " or "B: ". Each line ≤ 8 words. 南部ベトナム語 (Southern / Saigon) で書く — ユーザーはホーチミン市在住。北部 (ハノイ) 方言は使わない。南部語彙 (mắc / ký / ba / má / xe hơi 等) と南部語尾 (nha / nghen) を優先。極端なスラングは避ける。
+   自然でフランクな日常会話にする。一人称 "tôi" は日常会話では使わない — 相手との関係で代名詞を選ぶ (同年代=mình、年上に対して自分=em・相手=anh/chị、年下に対して自分=anh/chị・相手=em)。教科書的な堅い言い回しは避ける。
 2) "word_notes": Japanese glosses covering EVERY non-trivial word from the dialogue, plus the target word itself.
 
 word_notes rules:
