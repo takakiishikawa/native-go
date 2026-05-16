@@ -3,7 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
-import type { Language, WordNote } from "@/lib/types";
+import type { Language, WordNote, ItemTopic } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -427,6 +427,7 @@ export async function saveGrammar(
     category?: string | null;
     is_priority?: boolean;
     source_title?: string | null;
+    topic?: ItemTopic | null;
   }[],
   lessonId?: string,
 ): Promise<{ id: string; name: string }[]> {
@@ -447,6 +448,8 @@ export async function saveGrammar(
     category: g.category ?? null,
     is_priority: g.is_priority ?? false,
     source_title: g.source_title ?? null,
+    topic_label: g.topic?.label ?? null,
+    topic_icon: g.topic?.icon ?? null,
   }));
 
   const { data, error } = await supabase
@@ -471,6 +474,7 @@ export async function saveExpressions(
     nuance?: string | null;
     is_priority?: boolean;
     source_title?: string | null;
+    topic?: ItemTopic | null;
   }[],
   lessonId?: string,
 ) {
@@ -491,6 +495,8 @@ export async function saveExpressions(
     nuance: e.nuance ?? null,
     is_priority: e.is_priority ?? false,
     source_title: e.source_title ?? null,
+    topic_label: e.topic?.label ?? null,
+    topic_icon: e.topic?.icon ?? null,
   }));
 
   const { error } = await supabase.from("expressions").insert(rows);
@@ -510,6 +516,7 @@ export async function saveWords(
     is_priority?: boolean;
     source_title?: string | null;
     category?: string | null;
+    topic?: ItemTopic | null;
   }[],
   lessonId?: string,
 ): Promise<{ inserted: number; skipped: number }> {
@@ -544,6 +551,8 @@ export async function saveWords(
     is_priority: w.is_priority ?? false,
     source_title: w.source_title ?? null,
     category: w.category ?? null,
+    topic_label: w.topic?.label ?? null,
+    topic_icon: w.topic?.icon ?? null,
   }));
 
   const { error } = await supabase.from("words").insert(rows);

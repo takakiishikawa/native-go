@@ -25,6 +25,51 @@ const WORD_NOTES_SCHEMA = {
   },
 };
 
+// Conversation topic shown as a chip on the repeating screen.
+export const TOPIC_ICONS = [
+  "chef-hat",
+  "briefcase",
+  "plane",
+  "heart",
+  "book-open",
+  "coffee",
+  "shopping-bag",
+  "home",
+  "dumbbell",
+  "code",
+  "cat",
+  "dog",
+  "bike",
+  "utensils",
+  "music",
+  "users",
+  "map-pin",
+  "wallet",
+  "shirt",
+  "brain",
+  "sparkles",
+  "message-circle",
+] as const;
+
+const TOPIC_SCHEMA = {
+  type: "object" as const,
+  description:
+    "The subject of the example conversation, shown as a chip on the practice screen.",
+  properties: {
+    label: {
+      type: "string" as const,
+      description:
+        'Short English label, 1-2 words (例: "Cooking", "Product work", "Dating", "Café", "Reading").',
+    },
+    icon: {
+      type: "string" as const,
+      enum: [...TOPIC_ICONS],
+      description: "lucide-react icon name best matching the topic.",
+    },
+  },
+  required: ["label", "icon"],
+};
+
 const EXTRACT_INPUT_SCHEMA = {
   type: "object" as const,
   properties: {
@@ -58,8 +103,16 @@ const EXTRACT_INPUT_SCHEMA = {
             maximum: 5,
           },
           word_notes: WORD_NOTES_SCHEMA,
+          topic: TOPIC_SCHEMA,
         },
-        required: ["name", "summary", "examples", "usage_scene", "frequency"],
+        required: [
+          "name",
+          "summary",
+          "examples",
+          "usage_scene",
+          "frequency",
+          "topic",
+        ],
       },
     },
     expressions: {
@@ -82,6 +135,7 @@ const EXTRACT_INPUT_SCHEMA = {
             maximum: 5,
           },
           word_notes: WORD_NOTES_SCHEMA,
+          topic: TOPIC_SCHEMA,
           nuance: {
             type: ["string", "null"] as const,
             description:
@@ -95,6 +149,7 @@ const EXTRACT_INPUT_SCHEMA = {
           "conversation",
           "usage_scene",
           "frequency",
+          "topic",
         ],
       },
     },
@@ -124,8 +179,9 @@ const EXTRACT_INPUT_SCHEMA = {
             maximum: 5,
           },
           word_notes: WORD_NOTES_SCHEMA,
+          topic: TOPIC_SCHEMA,
         },
-        required: ["word", "meaning", "frequency"],
+        required: ["word", "meaning", "frequency", "topic"],
       },
     },
   },
@@ -182,6 +238,11 @@ Rules:
 - Use Ho Chi Minh locations naturally (District 3, Nguyen Trai, Thao Dien, etc.) when geographically relevant — but don't force a location into every line.
 - Natural conversational tone (not too formal, not too casual)
 - detail can be null if summary is sufficient
+
+TOPIC (each item — required):
+- For every grammar / expression item, also set "topic": the subject of the example conversation you wrote for it.
+- topic.label: a short English label, 1-2 words (例: "Cooking", "Product work", "Dating", "Café", "Reading", "Money", "Fitness", "Pets"). English only.
+- topic.icon: pick the single best-matching icon name from this fixed list — [chef-hat, briefcase, plane, heart, book-open, coffee, shopping-bag, home, dumbbell, code, cat, dog, bike, utensils, music, users, map-pin, wallet, shirt, brain, sparkles, message-circle]. Use "message-circle" only when nothing else fits.
 - Return ONLY valid JSON, no markdown, no explanation`;
 
 const SYSTEM_PROMPT_VI = `You are a Vietnamese language tutor for an absolute beginner (CEFR A1).
@@ -316,6 +377,11 @@ General rules:
 - Personalize lightly to Takaki's life (coworkers, bạn (friend), cafe, motorbike, District 1-3) but stay simple and stay within KNOWN_VOCAB.
 - frequency = 5 for must-know greetings, 3 for common, 1 for rare.
 - detail can be null if summary is sufficient.
+
+TOPIC (each item — required):
+- For every grammar / expression / word item, also set "topic": the subject of the example conversation/dialogue you wrote for it.
+- topic.label: a short English label, 1-2 words (例: "Cooking", "Market", "Coffee", "Family", "Shopping", "Directions", "Greetings"). English only — even though the dialogue itself is Vietnamese.
+- topic.icon: pick the single best-matching icon name from this fixed list — [chef-hat, briefcase, plane, heart, book-open, coffee, shopping-bag, home, dumbbell, code, cat, dog, bike, utensils, music, users, map-pin, wallet, shirt, brain, sparkles, message-circle]. Use "message-circle" only when nothing else fits.
 - Return ONLY valid JSON, no markdown, no explanation.`;
 
 const CORE_VI_VOCAB = [

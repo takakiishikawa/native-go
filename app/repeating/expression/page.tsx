@@ -3,47 +3,16 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Slider,
-  PageHeader,
-} from "@takaki/go-design-system";
+import { Button } from "@takaki/go-design-system";
 import { incrementExpressionPlayCount } from "@/app/actions/practice";
 import { useCurrentLanguage } from "@/lib/language-context";
 import type { Expression } from "@/lib/types";
-import {
-  Play,
-  Square,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  CheckCircle2,
-  ArrowRight,
-} from "lucide-react";
-import { ConversationLines } from "@/components/conversation-lines";
-import { WordNotesPanel } from "@/components/word-notes";
+import { CheckCircle2, ArrowRight } from "lucide-react";
+import { RepeatingSession } from "@/components/repeating-session";
 import { RepeatingCountPicker } from "@/components/repeating-count-picker";
 import { RepeatingCompleteModal } from "@/components/repeating-complete-modal";
 import { RepeatingLeaveConfirm } from "@/components/repeating-leave-confirm";
 import { useRepeatingSessionGuard } from "@/lib/hooks/use-repeating-session-guard";
-
-function StarRating({ value }: { value: number }) {
-  return (
-    <span className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-5 w-5 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground"}`}
-        />
-      ))}
-    </span>
-  );
-}
 
 type TodayStatus = {
   grammar: boolean;
@@ -356,135 +325,49 @@ export default function ExpressionRepeatingPage() {
   }
 
   const current = items[index];
-  const lines = current?.conversation.split("\n").filter(Boolean) ?? [];
+  if (!current) return null;
+  const lines = current.conversation.split("\n").filter(Boolean);
 
   return (
     <>
-      <div className="space-y-6 max-w-2xl">
-        <PageHeader
-          title="フレーズリピーティング"
-          description={`${index + 1} / ${items.length} 件`}
-          actions={
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  stopSpeech();
-                  await Promise.allSettled(pendingIncrementsRef.current);
-                  pendingIncrementsRef.current = [];
-                  router.push("/");
-                }}
-              >
-                途中終了
-              </Button>
-              <Badge variant="secondary" className="text-lg px-3 py-1">
-                {current?.play_count} / 10 回
-              </Badge>
-            </div>
-          }
-        />
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <Badge variant="outline" className="mb-2">
-                  {current?.category}
-                </Badge>
-                <CardTitle className="text-3xl">
-                  {current?.expression}
-                </CardTitle>
-              </div>
-              <StarRating value={current?.frequency ?? 0} />
-            </div>
-            <p className="text-lg text-muted-foreground whitespace-pre-line leading-relaxed">
-              {current?.meaning?.replace(/\\n/g, "\n")}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {current?.usage_scene && (
-              <p className="text-base text-muted-foreground">
-                場面: {current.usage_scene}
-              </p>
-            )}
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-3">
-                会話
-              </p>
-              <ConversationLines lines={lines} currentLine={currentLine} />
-            </div>
-            {language === "vi" && current?.nuance && (
-              <div className="rounded-md border border-border/60 bg-muted/30 px-4 py-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">
-                  ニュアンス
-                </p>
-                <p className="text-sm leading-relaxed">{current.nuance}</p>
-              </div>
-            )}
-            {language === "vi" && current?.word_notes && (
-              <WordNotesPanel notes={current.word_notes} />
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
-              速度
-            </span>
-            <Slider
-              min={60}
-              max={140}
-              step={10}
-              value={[Math.round(rate * 100)]}
-              onValueChange={([v]) => setRate(v / 100)}
-              className="w-32"
-            />
-            <span className="text-sm text-muted-foreground w-10">
-              {rate.toFixed(1)}x
-            </span>
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              stopSpeech();
-              resumeLineRef.current = 0;
-              setIndex((i) => Math.max(0, i - 1));
-            }}
-            disabled={index === 0 || playing}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          {playing ? (
-            <Button onClick={stopSpeech} variant="destructive" size="lg">
-              <Square className="mr-2 h-4 w-4" />
-              停止
-            </Button>
-          ) : (
-            <Button onClick={handlePlay} size="lg">
-              <Play className="mr-2 h-4 w-4" />
-              再生
-            </Button>
-          )}
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              stopSpeech();
-              resumeLineRef.current = 0;
-              setIndex((i) => Math.min(items.length - 1, i + 1));
-            }}
-            disabled={index === items.length - 1 || playing}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <RepeatingSession
+        kindLabel="フレーズ"
+        eyebrow="フレーズ"
+        title={current.expression}
+        summary={current.meaning?.replace(/\\n/g, " ")}
+        importance={current.frequency}
+        topicLabel={current.topic_label}
+        topicIcon={current.topic_icon}
+        lines={lines}
+        currentLine={currentLine}
+        wordNotes={language === "vi" ? current.word_notes : null}
+        playCount={current.play_count}
+        sessionCurrent={index + 1}
+        sessionTotal={items.length}
+        speed={rate}
+        onSpeedChange={setRate}
+        playing={playing}
+        onPlay={handlePlay}
+        onStop={stopSpeech}
+        onPrev={() => {
+          stopSpeech();
+          resumeLineRef.current = 0;
+          setIndex((i) => Math.max(0, i - 1));
+        }}
+        onNext={() => {
+          stopSpeech();
+          resumeLineRef.current = 0;
+          setIndex((i) => Math.min(items.length - 1, i + 1));
+        }}
+        prevDisabled={index === 0 || playing}
+        nextDisabled={index === items.length - 1 || playing}
+        onExit={async () => {
+          stopSpeech();
+          await Promise.allSettled(pendingIncrementsRef.current);
+          pendingIncrementsRef.current = [];
+          router.push("/");
+        }}
+      />
 
       <RepeatingLeaveConfirm
         open={pendingHref !== null}

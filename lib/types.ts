@@ -12,6 +12,14 @@ export interface WordNote {
   note: string;
 }
 
+/** Conversation topic shown as a chip on the repeating screen. */
+export interface ItemTopic {
+  /** Short English label (例: "Cooking"). */
+  label: string;
+  /** lucide-react icon name from the fixed TOPIC_ICONS set. */
+  icon: string;
+}
+
 export interface Grammar {
   id: string;
   name: string;
@@ -29,6 +37,8 @@ export interface Grammar {
   category: string | null;
   is_priority: boolean;
   source_title: string | null;
+  topic_label: string | null;
+  topic_icon: string | null;
 }
 
 export interface SpeakingScene {
@@ -66,6 +76,8 @@ export interface Expression {
   nuance: string | null;
   is_priority: boolean;
   source_title: string | null;
+  topic_label: string | null;
+  topic_icon: string | null;
 }
 
 export interface Word {
@@ -84,6 +96,8 @@ export interface Word {
   is_priority: boolean;
   source_title: string | null;
   category: string | null;
+  topic_label: string | null;
+  topic_icon: string | null;
 }
 
 export interface Lesson {
@@ -172,6 +186,7 @@ export interface ExtractedGrammar {
   frequency: number;
   word_notes?: WordNote[];
   category?: string;
+  topic?: ItemTopic;
 }
 
 export interface ExtractedExpression {
@@ -183,6 +198,7 @@ export interface ExtractedExpression {
   frequency: number;
   word_notes?: WordNote[];
   nuance?: string;
+  topic?: ItemTopic;
 }
 
 export interface ExtractedWord {
@@ -193,6 +209,7 @@ export interface ExtractedWord {
   word_notes?: WordNote[];
   frequency: number;
   category?: string | null;
+  topic?: ItemTopic;
 }
 
 export interface ExtractResult {
