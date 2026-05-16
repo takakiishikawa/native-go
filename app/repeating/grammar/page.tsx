@@ -281,22 +281,26 @@ export default function GrammarRepeatingPage() {
         localItems = localItems.map((it, idx) =>
           idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
         );
-        localIndex = (localIndex + 1) % localItems.length;
-
         setItems([...localItems]);
-        setIndex(localIndex);
-        await pause(50);
+
+        // 最終アイテム再生後はインデックスを進めない（先頭へ巻き戻さない）
+        if (playCount < initialCount) {
+          localIndex = (localIndex + 1) % localItems.length;
+          setIndex(localIndex);
+          await pause(50);
+        }
       }
     } finally {
       setPlaying(false);
       setCurrentLine(-1);
-      // セッション終了時に、ここまでに走らせた全ての increment 完了を待つ
-      // （通常時の遷移は速いまま、終了タイミングだけ確実に DB に届ける）
-      await Promise.allSettled(pendingIncrementsRef.current);
-      pendingIncrementsRef.current = [];
+      // 完了モーダルを先に表示してから increment の flush を待つ
+      // （DB 書き込み完了を待たされてモーダル表示が遅れないように）
       if (!userCancelledRef.current) {
         setShowComplete(true);
       }
+      // セッション終了時に、ここまでに走らせた全ての increment 完了を待つ
+      await Promise.allSettled(pendingIncrementsRef.current);
+      pendingIncrementsRef.current = [];
     }
   }, [items, index, speakLine]);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
@@ -9,17 +10,14 @@ import {
   DialogTitle,
 } from "@takaki/go-design-system";
 import { Zap, Flame, Mountain, ChevronRight } from "lucide-react";
-import { useCurrentLanguage } from "@/lib/language-context";
 
-const PRESETS_EN = [30, 50, 100] as const;
-const PRESETS_VI = [10, 20, 30] as const;
+const PRESETS = [10, 30, 50] as const;
 
 type Option = {
   count: number;
   label: string;
   desc: string;
   icon: React.ReactNode;
-  primary?: boolean;
 };
 
 export function RepeatingCountPicker({
@@ -30,7 +28,14 @@ export function RepeatingCountPicker({
   onSelect: (count: number) => void;
 }) {
   const router = useRouter();
-  const language = useCurrentLanguage();
+
+  // 別ページの Dialog/Sheet がナビゲーション中にアンマウントすると
+  // body に pointer-events:none が残り、本ダイアログが操作不能になることがある
+  useEffect(() => {
+    if (document.body.style.pointerEvents === "none") {
+      document.body.style.pointerEvents = "";
+    }
+  }, []);
 
   const descs = ["サクッと", "集中して", "がっつり"] as const;
   const icons = [
@@ -39,18 +44,16 @@ export function RepeatingCountPicker({
     <Mountain key="m" className="h-4 w-4" />,
   ];
 
-  const presets = language === "vi" ? PRESETS_VI : PRESETS_EN;
-  const options: Option[] = presets.map((n, i) => ({
+  // 実データ件数に合わせる: プリセットを total で頭打ちにして重複を除く
+  // 例) total=15 → [10, 15] / total>=50 → [10, 30, 50]
+  const seen = new Set<number>();
+  const options: Option[] = PRESETS.map((n, i) => ({
     count: Math.min(n, total),
     label: `${Math.min(n, total)}件`,
     desc: descs[i],
     icon: icons[i],
-  }));
-
-  // Dedupe (e.g. when total < 10, all three options would say the same number)
-  const seen = new Set<number>();
-  const uniqueOptions = options.filter((o) => {
-    if (seen.has(o.count)) return false;
+  })).filter((o) => {
+    if (o.count <= 0 || seen.has(o.count)) return false;
     seen.add(o.count);
     return true;
   });
@@ -67,11 +70,11 @@ export function RepeatingCountPicker({
           <DialogTitle>今日のペースを選ぼう</DialogTitle>
         </DialogHeader>
         <div className="space-y-2 pt-2">
-          {uniqueOptions.map((o) => (
+          {options.map((o) => (
             <Button
               key={o.count}
               size="lg"
-              variant={o.primary ? "default" : "outline"}
+              variant="outline"
               className="w-full justify-between h-14"
               onClick={() => onSelect(o.count)}
             >

@@ -278,20 +278,24 @@ export default function ExpressionRepeatingPage() {
         localItems = localItems.map((it, idx) =>
           idx === localIndex ? { ...it, play_count: it.play_count + 1 } : it,
         );
-        localIndex = (localIndex + 1) % localItems.length;
-
         setItems([...localItems]);
-        setIndex(localIndex);
-        await pause(50);
+
+        // 最終アイテム再生後はインデックスを進めない（先頭へ巻き戻さない）
+        if (playCount < initialCount) {
+          localIndex = (localIndex + 1) % localItems.length;
+          setIndex(localIndex);
+          await pause(50);
+        }
       }
     } finally {
       setPlaying(false);
       setCurrentLine(-1);
-      await Promise.allSettled(pendingIncrementsRef.current);
-      pendingIncrementsRef.current = [];
+      // 完了モーダルを先に表示してから increment の flush を待つ
       if (!userCancelledRef.current) {
         setShowComplete(true);
       }
+      await Promise.allSettled(pendingIncrementsRef.current);
+      pendingIncrementsRef.current = [];
     }
   }, [items, index, speakLine]);
 
