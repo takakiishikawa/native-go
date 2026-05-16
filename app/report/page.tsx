@@ -49,14 +49,14 @@ export default async function ReportPage() {
   return (
     <div className="mx-auto w-full max-w-5xl">
       {/* ヘッダー */}
-      <div className="mb-6">
-        <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-foreground">
+      <header className="mb-8">
+        <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-foreground">
           レポート
         </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1.5 text-[13px] text-muted-foreground">
           学習量とテストスコアの推移
         </p>
-      </div>
+      </header>
 
       <div className="space-y-5">
         <EfSetSection scores={efSetScores} />

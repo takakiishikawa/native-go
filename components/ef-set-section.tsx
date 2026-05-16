@@ -191,12 +191,12 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
   return (
     <div className="rounded-xl border border-[var(--color-border-default)] bg-card">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border-default)] px-5 py-3.5">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border-default)] px-5 py-4">
         <div>
-          <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">
             EF SET スコア
           </h2>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
             4技能テストのスコア記録
           </p>
         </div>
@@ -214,9 +214,9 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
         </div>
       </div>
 
-      <div className="grid gap-0 md:grid-cols-[200px_1fr]">
+      <div className="grid gap-0 md:grid-cols-[210px_1fr]">
         {/* 最新スコア */}
-        <div className="border-b border-[var(--color-border-default)] px-5 py-4 md:border-b-0 md:border-r">
+        <div className="border-b border-[var(--color-border-default)] p-5 md:border-b-0 md:border-r">
           <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
             最新スコア
           </div>
@@ -250,13 +250,13 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
         </div>
 
         {/* 受験記録一覧 */}
-        <div className="px-2 py-1">
+        <div className="p-2">
           {scores.length === 0 ? (
-            <div className="flex h-[150px] items-center justify-center text-[13px] text-muted-foreground">
+            <div className="flex h-[160px] items-center justify-center text-[13px] text-muted-foreground">
               受験記録がここに表示されます
             </div>
           ) : (
-            <div className="max-h-[190px] overflow-y-auto">
+            <div className="max-h-[200px] overflow-y-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

@@ -1,7 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
 import Link from "next/link";
-import { ActivityHeatmap } from "@/components/activity-heatmap";
+import {
+  ActivityHeatmap,
+  type HeatmapCell,
+} from "@/components/activity-heatmap";
 import { StreakPopup } from "@/components/streak-popup";
 import { ChevronRight, Repeat2, Play } from "lucide-react";
 
@@ -20,12 +23,12 @@ function CTACard({
 }) {
   return (
     <Link href={href} className="group block">
-      <div className="flex items-center gap-3 rounded-xl border border-[var(--color-border-default)] bg-card px-4 py-3.5 transition-all hover:border-[var(--color-border-strong)] hover:shadow-[0_1px_4px_rgba(0,0,0,0.05)]">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--color-surface-subtle)] text-foreground">
+      <div className="flex items-center gap-3.5 rounded-xl border border-[var(--color-border-default)] bg-card p-5 transition-all hover:border-[var(--color-border-strong)] hover:shadow-[0_1px_6px_rgba(0,0,0,0.06)]">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[var(--color-surface-subtle)] text-foreground">
           {icon}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-semibold text-foreground">{label}</p>
+          <p className="text-[15px] font-semibold text-foreground">{label}</p>
           <p className="mt-0.5 text-[12px] text-muted-foreground">{sub}</p>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
@@ -51,6 +54,15 @@ function MetricCard({
   weekDiff: number | null;
   diffUnit: string;
 }) {
+  const reached = ratio != null && ratio >= 100;
+
+  let diffText: string | null = null;
+  if (weekDiff != null) {
+    if (weekDiff > 0) diffText = `先週より ${weekDiff}${diffUnit}多い`;
+    else if (weekDiff < 0)
+      diffText = `先週より ${-weekDiff}${diffUnit}少ない`;
+    else diffText = "先週と同じペース";
+  }
   const diffColor =
     weekDiff == null || weekDiff === 0
       ? "text-muted-foreground"
@@ -59,29 +71,38 @@ function MetricCard({
         : "text-[#9a3a2a] dark:text-[#d98a78]";
 
   return (
-    <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-4">
-      <div className="text-[12px] text-muted-foreground">{label}</div>
-      <div className="mt-2 flex items-baseline gap-1.5">
-        <span className="text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-foreground">
+    <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-5">
+      <div className="text-[13px] text-muted-foreground">{label}</div>
+      <div className="mt-2.5 flex items-baseline gap-1.5">
+        <span className="text-[38px] font-semibold leading-none tracking-[-0.035em] tabular-nums text-foreground">
           {value}
         </span>
         <span className="text-[13px] text-muted-foreground">{unit}</span>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
-        {ratio != null && (
-          <span className="text-muted-foreground">
-            達成率{" "}
-            <span className="font-semibold text-foreground">{ratio}%</span>
-          </span>
-        )}
-        {weekDiff != null && (
-          <span className={diffColor}>
-            先週比 {weekDiff > 0 ? "+" : ""}
-            {weekDiff}
-            {diffUnit}
-          </span>
-        )}
-      </div>
+
+      {ratio != null && (
+        <div className="mt-4">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-surface-subtle)]">
+            <div
+              className={`h-full rounded-full ${
+                reached
+                  ? "bg-[#4d6b3a] dark:bg-[#8fb574]"
+                  : "bg-foreground"
+              }`}
+              style={{ width: `${Math.min(ratio, 100)}%` }}
+            />
+          </div>
+          <div className="mt-2 text-[12px] text-muted-foreground">
+            {reached
+              ? "今週の目標を達成しました 🎉"
+              : `今週の目標まで あと ${100 - ratio}%`}
+          </div>
+        </div>
+      )}
+
+      {diffText && (
+        <div className={`mt-1 text-[12px] ${diffColor}`}>{diffText}</div>
+      )}
     </div>
   );
 }
@@ -141,13 +162,6 @@ const MONTH_ABBR = [
   "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
 ];
-
-function activityLevel(count: number): number {
-  if (count <= 0) return 0;
-  if (count < 10) return 1;
-  if (count < 25) return 2;
-  return 3;
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -270,16 +284,16 @@ export default async function HomePage() {
   for (const l of rangeLogs) {
     countByDate.set(l.practiced_at, dayTotal(l));
   }
-  const heatmapCells: number[] = [];
+  const heatmapCells: HeatmapCell[] = [];
   for (let col = 0; col < 12; col++) {
     const colStart = addDays(todayUTC, -weekday - (11 - col) * 7);
     for (let row = 0; row < 7; row++) {
       const cellStr = toStr(addDays(colStart, row));
-      heatmapCells.push(
-        cellStr > todayStr
-          ? -1
-          : activityLevel(countByDate.get(cellStr) ?? 0),
-      );
+      heatmapCells.push({
+        date: cellStr,
+        count: countByDate.get(cellStr) ?? 0,
+        future: cellStr > todayStr,
+      });
     }
   }
   const monthLabels: string[] = [];
@@ -302,72 +316,59 @@ export default async function HomePage() {
     <div className="mx-auto w-full max-w-5xl">
       <StreakPopup streak={streak} />
 
-      {/* ヘッダー */}
-      <div className="mb-6">
-        <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-foreground">
+      <header className="mb-8">
+        <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-foreground">
           ダッシュボード
         </h1>
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1.5 text-[13px] text-muted-foreground">
           {dateLabel} · 学習{streak}日連続
         </p>
-      </div>
+      </header>
 
-      <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
-        {/* 左カラム: 今日の練習 + 今週のサマリー */}
-        <div className="flex flex-col gap-6">
-          <section>
-            <h2 className="section-label">今日の練習</h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <CTACard
-                href="/repeating"
-                icon={<Repeat2 className="h-5 w-5" />}
-                label="リピーティング"
-                sub={isEn ? "文法・フレーズ" : "文法・フレーズ・単語"}
-              />
-              <CTACard
-                href="/shadowing"
-                icon={<Play className="h-5 w-5" />}
-                label="シャドーイング"
-                sub="YouTubeを見る"
-              />
-            </div>
-          </section>
-
-          <section>
-            <h2 className="section-label">今週のサマリー</h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <MetricCard
-                label="リピーティング"
-                value={weeklyRepeating}
-                unit="回"
-                ratio={ratioOf(weeklyRepeating, settings?.baseline_repeating)}
-                weekDiff={repeatingDiff}
-                diffUnit="回"
-              />
-              <MetricCard
-                label="シャドーイング"
-                value={weeklyShadowing}
-                unit="分"
-                ratio={ratioOf(weeklyShadowing, settings?.baseline_shadowing)}
-                weekDiff={shadowingDiff}
-                diffUnit="分"
-              />
-            </div>
-          </section>
+      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        {/* 左カラム: 練習への導線 + 今週の数字 */}
+        <div className="flex flex-col gap-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <CTACard
+              href="/repeating"
+              icon={<Repeat2 className="h-5 w-5" />}
+              label="リピーティング"
+              sub={isEn ? "文法・フレーズ" : "文法・フレーズ・単語"}
+            />
+            <CTACard
+              href="/shadowing"
+              icon={<Play className="h-5 w-5" />}
+              label="シャドーイング"
+              sub="YouTubeを見る"
+            />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <MetricCard
+              label="今週のリピーティング"
+              value={weeklyRepeating}
+              unit="回"
+              ratio={ratioOf(weeklyRepeating, settings?.baseline_repeating)}
+              weekDiff={repeatingDiff}
+              diffUnit="回"
+            />
+            <MetricCard
+              label="今週のシャドーイング"
+              value={weeklyShadowing}
+              unit="分"
+              ratio={ratioOf(weeklyShadowing, settings?.baseline_shadowing)}
+              weekDiff={shadowingDiff}
+              diffUnit="分"
+            />
+          </div>
         </div>
 
         {/* 右カラム: アクティビティ */}
-        <section className="flex flex-col">
-          <h2 className="section-label">アクティビティ</h2>
-          <div className="flex-1">
-            <ActivityHeatmap
-              cells={heatmapCells}
-              monthLabels={monthLabels}
-              streak={streak}
-              longest={longest}
-            />
-          </div>
-        </section>
+        <ActivityHeatmap
+          cells={heatmapCells}
+          monthLabels={monthLabels}
+          streak={streak}
+          longest={longest}
+        />
       </div>
     </div>
   );

@@ -116,28 +116,25 @@ export function ReportCharts({
       };
 
   return (
-    <section>
-      <h2 className="section-label">月次アクティビティ</h2>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <ReportAreaChart
-          data={repeatingData as Record<string, unknown>[]}
-          config={repeatingChartConfig}
-          xKey="label"
-          yKeys={repeatingYKeys}
-          title="リピーティング（月次）"
-          unit="回"
-          height={170}
-        />
-        <ReportAreaChart
-          data={shadowingData as Record<string, unknown>[]}
-          config={shadowingConfig}
-          xKey="label"
-          yKeys={["minutes"]}
-          title="シャドーイング（月次）"
-          unit="分"
-          height={170}
-        />
-      </div>
-    </section>
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <ReportAreaChart
+        data={repeatingData as Record<string, unknown>[]}
+        config={repeatingChartConfig}
+        xKey="label"
+        yKeys={repeatingYKeys}
+        title="リピーティング（月次）"
+        unit="回"
+        height={170}
+      />
+      <ReportAreaChart
+        data={shadowingData as Record<string, unknown>[]}
+        config={shadowingConfig}
+        xKey="label"
+        yKeys={["minutes"]}
+        title="シャドーイング（月次）"
+        unit="分"
+        height={170}
+      />
+    </div>
   );
 }
