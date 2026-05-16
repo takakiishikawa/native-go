@@ -1,13 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@takaki/go-design-system";
+import { useMemo } from "react";
 import type { ChartConfig } from "@takaki/go-design-system";
 
 const ReportAreaChart = dynamic(
@@ -49,98 +43,41 @@ function fmtMonth(ym: string): string {
   return `${y}/${m}`;
 }
 
-function fmtDate(str: string): string {
-  const [, m, d] = str.split("-");
-  return `${m}/${d}`;
-}
-
 type ChartRow = Record<string, string | number>;
 
-function buildMonthlyData(logs: PracticeLog[]): {
-  repeating: ChartRow[];
-  speaking: ChartRow[];
-} {
-  const rMap = new Map<
+/** リピーティングを月単位で集計 */
+function buildMonthlyRepeating(logs: PracticeLog[]): ChartRow[] {
+  const map = new Map<
     string,
-    {
-      grammar: number;
-      expression: number;
-      word: number;
-      speaking: number;
-    }
+    { grammar: number; expression: number; word: number }
   >();
   for (const l of logs) {
     const ym = l.practiced_at.slice(0, 7);
-    const e =
-      rMap.get(ym) ?? { grammar: 0, expression: 0, word: 0, speaking: 0 };
-    rMap.set(ym, {
+    const e = map.get(ym) ?? { grammar: 0, expression: 0, word: 0 };
+    map.set(ym, {
       grammar: e.grammar + l.grammar_done_count,
       expression: e.expression + l.expression_done_count,
       word: e.word + l.word_done_count,
-      speaking: e.speaking + l.speaking_count,
     });
   }
-  const allMonths = [...rMap.keys()].sort();
-  return {
-    repeating: allMonths.map((ym) => ({
-      label: fmtMonth(ym),
-      grammar: rMap.get(ym)?.grammar ?? 0,
-      expression: rMap.get(ym)?.expression ?? 0,
-      word: rMap.get(ym)?.word ?? 0,
-    })),
-    speaking: allMonths.map((ym) => ({
-      label: fmtMonth(ym),
-      speaking: rMap.get(ym)?.speaking ?? 0,
-    })),
-  };
+  return [...map.keys()].sort().map((ym) => ({
+    label: fmtMonth(ym),
+    grammar: map.get(ym)?.grammar ?? 0,
+    expression: map.get(ym)?.expression ?? 0,
+    word: map.get(ym)?.word ?? 0,
+  }));
 }
 
-function buildAllTimeData(logs: PracticeLog[]): {
-  repeating: ChartRow[];
-  speaking: ChartRow[];
-} {
-  const sorted = [...logs].sort((a, b) =>
-    a.practiced_at.localeCompare(b.practiced_at),
-  );
-  return {
-    repeating: sorted.map((l) => ({
-      label: fmtDate(l.practiced_at),
-      grammar: l.grammar_done_count,
-      expression: l.expression_done_count,
-      word: l.word_done_count,
-    })),
-    speaking: sorted.map((l) => ({
-      label: fmtDate(l.practiced_at),
-      speaking: l.speaking_count,
-    })),
-  };
-}
-
-function buildShadowingData(
-  youtubeLogs: YoutubeLog[],
-  mode: "monthly" | "alltime",
-): ChartRow[] {
-  if (mode === "monthly") {
-    const map = new Map<string, number>();
-    for (const l of youtubeLogs) {
-      const ym = l.completed_at.slice(0, 7);
-      map.set(
-        ym,
-        (map.get(ym) ?? 0) + parseDurToMin(l.youtube_videos?.duration),
-      );
-    }
-    return [...map.keys()]
-      .sort()
-      .map((ym) => ({ label: fmtMonth(ym), minutes: map.get(ym) ?? 0 }));
-  }
+/** シャドーイング（YouTube視聴時間）を月単位で集計 */
+function buildMonthlyShadowing(youtubeLogs: YoutubeLog[]): ChartRow[] {
   const map = new Map<string, number>();
   for (const l of youtubeLogs) {
-    const d = l.completed_at.slice(0, 10);
-    map.set(d, (map.get(d) ?? 0) + parseDurToMin(l.youtube_videos?.duration));
+    const ym = l.completed_at.slice(0, 7);
+    map.set(ym, (map.get(ym) ?? 0) + parseDurToMin(l.youtube_videos?.duration));
   }
   return [...map.keys()]
     .sort()
-    .map((d) => ({ label: fmtDate(d), minutes: map.get(d) ?? 0 }));
+    .map((ym) => ({ label: fmtMonth(ym), minutes: map.get(ym) ?? 0 }));
 }
 
 const repeatingConfig: ChartConfig = {
@@ -161,13 +98,10 @@ export function ReportCharts({
   youtubeLogs: YoutubeLog[];
   showWord?: boolean;
 }) {
-  const [mode, setMode] = useState<"monthly" | "alltime">("monthly");
-  const monthly = useMemo(() => buildMonthlyData(logs), [logs]);
-  const alltime = useMemo(() => buildAllTimeData(logs), [logs]);
-  const data = mode === "monthly" ? monthly : alltime;
+  const repeatingData = useMemo(() => buildMonthlyRepeating(logs), [logs]);
   const shadowingData = useMemo(
-    () => buildShadowingData(youtubeLogs, mode),
-    [youtubeLogs, mode],
+    () => buildMonthlyShadowing(youtubeLogs),
+    [youtubeLogs],
   );
 
   // 英語モードでは単語シリーズを出さない
@@ -182,21 +116,15 @@ export function ReportCharts({
       };
 
   return (
-    <Tabs
-      value={mode}
-      onValueChange={(v) => setMode(v as "monthly" | "alltime")}
-    >
-      <TabsList>
-        <TabsTrigger value="monthly">月次</TabsTrigger>
-        <TabsTrigger value="alltime">全期間</TabsTrigger>
-      </TabsList>
-      <TabsContent value={mode} className="space-y-3 mt-4">
+    <section className="space-y-4">
+      <h2 className="section-label">月次アクティビティ</h2>
+      <div className="space-y-3">
         <ReportAreaChart
-          data={data.repeating as Record<string, unknown>[]}
+          data={repeatingData as Record<string, unknown>[]}
           config={repeatingChartConfig}
           xKey="label"
           yKeys={repeatingYKeys}
-          title="リピーティング"
+          title="リピーティング（月次）"
           unit="回"
         />
         <ReportAreaChart
@@ -204,10 +132,10 @@ export function ReportCharts({
           config={shadowingConfig}
           xKey="label"
           yKeys={["minutes"]}
-          title="シャドーイング"
+          title="シャドーイング（月次）"
           unit="分"
         />
-      </TabsContent>
-    </Tabs>
+      </div>
+    </section>
   );
 }

@@ -1,16 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
 import Link from "next/link";
-import { PageHeader, type ChartConfig } from "@takaki/go-design-system";
-import { DashboardChart } from "@/components/dashboard-chart";
+import { PageHeader } from "@takaki/go-design-system";
 import {
   DashboardKpiSection,
   type DashboardKpi,
 } from "@/components/dashboard-kpi-section";
+import { ActivityHeatmap } from "@/components/activity-heatmap";
 import { StreakPopup } from "@/components/streak-popup";
 import { ChevronRight, Repeat2, Play } from "lucide-react";
 
-// ─── CTACard (inline, CTA向けカード) ────────────────────────────────────────
+// ─── CTACard（今日の練習に進むカード） ─────────────────────────────────────
 
 function CTACard({
   href,
@@ -24,22 +24,26 @@ function CTACard({
   sub: string;
 }) {
   return (
-    <Link href={href}>
-      <div className="group flex items-center gap-3 rounded-lg border border-[var(--color-border-default)] bg-card px-4 py-3 border border-border hover:border-[var(--color-border-strong)] hover:border border-border transition-all cursor-pointer">
-        <span className="shrink-0 flex items-center justify-center rounded-md bg-[var(--color-surface-subtle)] p-2 text-muted-foreground">
+    <Link href={href} className="group block">
+      <div className="flex items-center gap-3 rounded-xl border border-[var(--color-border-default)] bg-card px-4 py-4 transition-all hover:border-[var(--color-primary)] hover:shadow-sm">
+        <span className="flex shrink-0 items-center justify-center rounded-lg bg-[var(--color-sidebar-accent)] p-2.5 text-[var(--color-sidebar-accent-foreground)]">
           {icon}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-base font-medium text-foreground">{label}</p>
-          <p className="text-sm text-muted-foreground mt-0.5">{sub}</p>
+          <p className="text-base font-semibold text-foreground">{label}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{sub}</p>
         </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
       </div>
     </Link>
   );
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const toStr = (d: Date): string => d.toISOString().split("T")[0];
+const addDays = (d: Date, n: number): Date =>
+  new Date(d.getTime() + n * 86400000);
 
 function calculateStreak(dates: string[]): number {
   if (dates.length === 0) return 0;
@@ -62,29 +66,41 @@ function calculateStreak(dates: string[]): number {
   return streak;
 }
 
-function fmtDate(d: Date): string {
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+function longestStreak(dates: string[]): number {
+  const sorted = [...new Set(dates)].sort();
+  let best = 0;
+  let current = 0;
+  let prev = "";
+  for (const date of sorted) {
+    if (prev) {
+      const diff =
+        (new Date(date).getTime() - new Date(prev).getTime()) / 86400000;
+      current = diff === 1 ? current + 1 : 1;
+    } else {
+      current = 1;
+    }
+    if (current > best) best = current;
+    prev = date;
+  }
+  return best;
 }
 
-function ratioOf(
-  value: number,
-  baseline: number | undefined,
-): number | null {
+function ratioOf(value: number, baseline: number | undefined): number | null {
   if (!baseline || baseline <= 0) return null;
   return Math.round((value / baseline) * 100);
 }
 
-// ─── Chart configs ────────────────────────────────────────────────────────────
+const MONTH_ABBR = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+];
 
-const repeatingConfig: ChartConfig = {
-  grammar: { label: "文法", color: "var(--color-primary)" },
-  expression: { label: "フレーズ", color: "var(--color-primary-chart-2)" },
-  word: { label: "単語", color: "var(--color-primary-chart-3)" },
-  total: { label: "合計", color: "var(--color-primary)" },
-};
-const shadowingConfig: ChartConfig = {
-  minutes: { label: "視聴時間", color: "var(--color-primary)" },
-};
+function activityLevel(count: number): number {
+  if (count <= 0) return 0;
+  if (count < 10) return 1;
+  if (count < 25) return 2;
+  return 3;
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -92,25 +108,23 @@ export default async function HomePage() {
   const supabase = await createClient();
   const currentLanguage = await getCurrentLanguage();
 
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const now = new Date();
+  const todayStr = toStr(now);
+  const todayUTC = new Date(todayStr + "T00:00:00Z");
+  const weekday = todayUTC.getUTCDay(); // 0=Sun … 6=Sat
 
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - (6 - i));
-    const str = d.toISOString().split("T")[0];
-    return { str, label: fmtDate(d) };
-  });
-  const rangeStartStr = days[0].str;
+  // 12週間ヒートマップの最初の列の開始日（= 11週前の週の日曜）
+  const heatmapStart = addDays(todayUTC, -weekday - 77);
+  const heatmapStartStr = toStr(heatmapStart);
 
-  const prev14Start = new Date(today);
-  prev14Start.setDate(prev14Start.getDate() - 13);
-  const prev14StartStr = prev14Start.toISOString().split("T")[0];
+  // KPI（直近7日 / その前7日）
+  const rangeStartStr = toStr(addDays(todayUTC, -6));
+  const prev7StartStr = toStr(addDays(todayUTC, -13));
 
   const [
-    logsResult,
-    allRangeLogsResult,
-    allYoutubeLogsResult,
+    allDatesResult,
+    rangeLogsResult,
+    youtubeLogsResult,
     settingsResult,
   ] = await Promise.all([
     supabase
@@ -120,94 +134,76 @@ export default async function HomePage() {
     supabase
       .from("practice_logs")
       .select(
-        "practiced_at, grammar_done_count, expression_done_count, word_done_count, speaking_count",
+        "practiced_at, grammar_done_count, expression_done_count, word_done_count",
       )
       .eq("language", currentLanguage)
-      .gte("practiced_at", prev14StartStr)
+      .gte("practiced_at", heatmapStartStr)
       .lte("practiced_at", todayStr)
       .order("practiced_at"),
     supabase
       .from("youtube_logs")
       .select("completed_at, youtube_videos(duration)")
       .eq("language", currentLanguage)
-      .gte(
-        "completed_at",
-        new Date(new Date(prev14Start).setHours(0, 0, 0, 0)).toISOString(),
-      )
-      .lte(
-        "completed_at",
-        new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString(),
-      ),
+      .gte("completed_at", new Date(prev7StartStr + "T00:00:00").toISOString())
+      .lte("completed_at", new Date(todayStr + "T23:59:59").toISOString()),
     supabase.from("user_settings").select("*").maybeSingle(),
   ]);
-
-  const allLogs = logsResult.data ?? [];
 
   type RangeLog = {
     practiced_at: string;
     grammar_done_count: number;
     expression_done_count: number;
     word_done_count: number;
-    speaking_count: number;
   };
 
-  let allRangeLogs: RangeLog[];
-  if (allRangeLogsResult.error) {
+  let rangeLogs: RangeLog[];
+  if (rangeLogsResult.error) {
+    // word_done_count カラムが無い旧環境向けフォールバック
     const { data: fallback } = await supabase
       .from("practice_logs")
       .select("practiced_at, grammar_done_count, expression_done_count")
       .eq("language", currentLanguage)
-      .gte("practiced_at", prev14StartStr)
+      .gte("practiced_at", heatmapStartStr)
       .lte("practiced_at", todayStr)
       .order("practiced_at");
-    allRangeLogs = (fallback ?? []).map((l) => ({
-      ...l,
+    rangeLogs = (fallback ?? []).map((l) => ({
+      practiced_at: l.practiced_at,
+      grammar_done_count: l.grammar_done_count ?? 0,
+      expression_done_count: l.expression_done_count ?? 0,
       word_done_count: 0,
-      speaking_count: 0,
     }));
   } else {
-    allRangeLogs = (allRangeLogsResult.data ?? []).map((l) => ({
-      ...l,
+    rangeLogs = (rangeLogsResult.data ?? []).map((l) => ({
+      practiced_at: l.practiced_at,
+      grammar_done_count: l.grammar_done_count ?? 0,
+      expression_done_count: l.expression_done_count ?? 0,
       word_done_count: l.word_done_count ?? 0,
-      speaking_count: l.speaking_count ?? 0,
     }));
   }
 
-  const rangeLogs = allRangeLogs.filter((l) => l.practiced_at >= rangeStartStr);
-  const prevRangeLogs = allRangeLogs.filter(
-    (l) => l.practiced_at < rangeStartStr,
-  );
+  // ── 連続学習日数 ──
+  const allDates = (allDatesResult.data ?? []).map((l) => l.practiced_at);
+  const streak = calculateStreak(allDates);
+  const longest = Math.max(longestStreak(allDates), streak);
 
-  const streak = calculateStreak(allLogs.map((l) => l.practiced_at));
+  // ── KPI 集計 ──
+  const dayTotal = (l: RangeLog) =>
+    l.grammar_done_count + l.expression_done_count + l.word_done_count;
 
-  const weeklyGrammar = rangeLogs.reduce((s, l) => s + l.grammar_done_count, 0);
-  const weeklyExpression = rangeLogs.reduce(
-    (s, l) => s + l.expression_done_count,
-    0,
-  );
-  const weeklyWord = rangeLogs.reduce((s, l) => s + l.word_done_count, 0);
-  const weeklyRepeating = weeklyGrammar + weeklyExpression + weeklyWord;
-
-  const prevWeeklyGrammar = prevRangeLogs.reduce(
-    (s, l) => s + l.grammar_done_count,
-    0,
-  );
-  const prevWeeklyExpression = prevRangeLogs.reduce(
-    (s, l) => s + l.expression_done_count,
-    0,
-  );
-  const prevWeeklyWord = prevRangeLogs.reduce(
-    (s, l) => s + l.word_done_count,
-    0,
-  );
-  const prevWeeklyRepeating =
-    prevWeeklyGrammar + prevWeeklyExpression + prevWeeklyWord;
-
-  const hasPrevData = allRangeLogs.some((l) => l.practiced_at < rangeStartStr);
+  const weeklyRepeating = rangeLogs
+    .filter((l) => l.practiced_at >= rangeStartStr)
+    .reduce((s, l) => s + dayTotal(l), 0);
+  const prevWeeklyRepeating = rangeLogs
+    .filter(
+      (l) => l.practiced_at >= prev7StartStr && l.practiced_at < rangeStartStr,
+    )
+    .reduce((s, l) => s + dayTotal(l), 0);
+  const hasPrevData = rangeLogs.some((l) => l.practiced_at < rangeStartStr);
   const repeatingDiff = hasPrevData
     ? weeklyRepeating - prevWeeklyRepeating
     : null;
 
+  // ── シャドーイング（YouTube視聴時間） ──
   function parseDurToMin(dur: string | null | undefined): number {
     if (!dur) return 0;
     const parts = dur.split(":").map(Number);
@@ -215,30 +211,24 @@ export default async function HomePage() {
     if (parts.length === 2) return parts[0];
     return 0;
   }
-  const allYoutubeLogs = allYoutubeLogsResult.data ?? [];
-  const ytByDate = new Map<string, number>();
-  const prevYtByDate = new Map<string, number>();
-  for (const yt of allYoutubeLogs) {
+  let weeklyShadowing = 0;
+  let prevWeeklyShadowing = 0;
+  for (const yt of youtubeLogsResult.data ?? []) {
     const dateStr = yt.completed_at.slice(0, 10);
-    const dur = (
-      yt.youtube_videos as unknown as { duration: string | null } | null
-    )?.duration;
-    const min = parseDurToMin(dur);
-    const target = dateStr >= rangeStartStr ? ytByDate : prevYtByDate;
-    target.set(dateStr, (target.get(dateStr) ?? 0) + min);
+    const min = parseDurToMin(
+      (yt.youtube_videos as unknown as { duration: string | null } | null)
+        ?.duration,
+    );
+    if (dateStr >= rangeStartStr) weeklyShadowing += min;
+    else if (dateStr >= prev7StartStr) prevWeeklyShadowing += min;
   }
-  const weeklyShadowing = [...ytByDate.values()].reduce((s, c) => s + c, 0);
-  const prevWeeklyShadowing = [...prevYtByDate.values()].reduce(
-    (s, c) => s + c,
-    0,
-  );
   const shadowingDiff = hasPrevData
     ? weeklyShadowing - prevWeeklyShadowing
     : null;
 
   const settings = settingsResult.data ?? null;
-
   const isEn = currentLanguage === "en";
+
   const kpiCards: DashboardKpi[] = [
     {
       title: "リピーティング",
@@ -256,88 +246,76 @@ export default async function HomePage() {
     },
   ];
 
-  // Chart data (7 days)
-  const logMap = new Map(rangeLogs.map((l) => [l.practiced_at, l]));
-
-  const repeatingChartData = days.map(({ str, label }) => {
-    const l = logMap.get(str);
-    const grammar = l?.grammar_done_count ?? 0;
-    const expression = l?.expression_done_count ?? 0;
-    const word = l?.word_done_count ?? 0;
-    return {
-      label,
-      grammar,
-      expression,
-      word,
-      total: grammar + expression + word,
-    };
-  });
-  const shadowingChartData = days.map(({ str, label }) => ({
-    label,
-    minutes: ytByDate.get(str) ?? 0,
-  }));
+  // ── 12週間ヒートマップ（7行 × 12列, 列方向に古→新） ──
+  const countByDate = new Map<string, number>();
+  for (const l of rangeLogs) {
+    countByDate.set(l.practiced_at, dayTotal(l));
+  }
+  const heatmapCells: number[] = [];
+  for (let col = 0; col < 12; col++) {
+    const colStart = addDays(todayUTC, -weekday - (11 - col) * 7);
+    for (let row = 0; row < 7; row++) {
+      const cellStr = toStr(addDays(colStart, row));
+      if (cellStr > todayStr) {
+        heatmapCells.push(-1);
+      } else {
+        heatmapCells.push(activityLevel(countByDate.get(cellStr) ?? 0));
+      }
+    }
+  }
+  // 月ラベル（列の開始日が属する月を重複なく列挙）
+  const monthLabels: string[] = [];
+  let lastMonth = -1;
+  for (let col = 0; col < 12; col++) {
+    const colStart = addDays(todayUTC, -weekday - (11 - col) * 7);
+    const m = colStart.getUTCMonth();
+    if (m !== lastMonth) {
+      monthLabels.push(MONTH_ABBR[m]);
+      lastMonth = m;
+    }
+  }
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="max-w-4xl space-y-10">
       <StreakPopup streak={streak} />
 
-      <div>
-        <PageHeader title="ダッシュボード" />
-      </div>
+      <PageHeader title="ダッシュボード" />
 
       {/* 今日の練習 */}
-      <div>
+      <section>
         <h2 className="section-label">今日の練習</h2>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <CTACard
             href="/repeating"
-            icon={<Repeat2 className="h-4 w-4" />}
+            icon={<Repeat2 className="h-5 w-5" />}
             label="リピーティング"
             sub={isEn ? "文法・フレーズ" : "文法・フレーズ・単語"}
           />
           <CTACard
             href="/shadowing"
-            icon={<Play className="h-4 w-4" />}
+            icon={<Play className="h-5 w-5" />}
             label="シャドーイング"
             sub="YouTubeを見る"
           />
         </div>
-      </div>
+      </section>
 
       {/* 今週のサマリー */}
-      <div className="space-y-4">
+      <section className="space-y-4">
         <h2 className="section-label">今週のサマリー</h2>
         <DashboardKpiSection cards={kpiCards} />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <DashboardChart
-            title="リピーティング（7日間）"
-            data={repeatingChartData}
-            config={repeatingConfig}
-            xKey="label"
-            yKeys={
-              isEn
-                ? ["grammar", "expression"]
-                : ["grammar", "expression", "word"]
-            }
-            lineKeys={["total"]}
-            unit="回"
-            baseline={
-              settings ? Math.round(settings.baseline_repeating / 7) : undefined
-            }
-          />
-          <DashboardChart
-            title="シャドーイング（7日間）"
-            data={shadowingChartData}
-            config={shadowingConfig}
-            xKey="label"
-            yKeys={["minutes"]}
-            unit="分"
-            baseline={
-              settings ? Math.round(settings.baseline_shadowing / 7) : undefined
-            }
-          />
-        </div>
-      </div>
+      </section>
+
+      {/* アクティビティ */}
+      <section className="space-y-4">
+        <h2 className="section-label">アクティビティ</h2>
+        <ActivityHeatmap
+          cells={heatmapCells}
+          monthLabels={monthLabels}
+          streak={streak}
+          longest={longest}
+        />
+      </section>
     </div>
   );
 }

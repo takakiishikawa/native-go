@@ -2,12 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
 import { PageHeader } from "@takaki/go-design-system";
 import { ReportCharts } from "@/components/report-charts";
+import { EfSetSection, type EfSetScore } from "@/components/ef-set-section";
+
 export default async function ReportPage() {
   const supabase = await createClient();
   const language = await getCurrentLanguage();
   const isEn = language === "en";
 
-  const [logsResult, youtubeLogsResult] = await Promise.all([
+  const [logsResult, youtubeLogsResult, efSetResult] = await Promise.all([
     supabase
       .from("practice_logs")
       .select(
@@ -20,14 +22,19 @@ export default async function ReportPage() {
       .select("completed_at, youtube_videos(duration)")
       .eq("language", language)
       .order("completed_at"),
+    supabase
+      .from("ef_set_scores")
+      .select(
+        "id, tested_at, reading, listening, writing, speaking, cefr_level",
+      )
+      .order("tested_at", { ascending: false }),
   ]);
 
   const logs = (logsResult.data ?? []).map((l) => ({
     practiced_at: l.practiced_at,
     grammar_done_count: l.grammar_done_count ?? 0,
     expression_done_count: l.expression_done_count ?? 0,
-    word_done_count:
-      (l as { word_done_count?: number }).word_done_count ?? 0,
+    word_done_count: (l as { word_done_count?: number }).word_done_count ?? 0,
     speaking_count: (l as { speaking_count?: number }).speaking_count ?? 0,
   }));
 
@@ -38,15 +45,15 @@ export default async function ReportPage() {
       null,
   }));
 
+  const efSetScores: EfSetScore[] = (efSetResult.data ?? []) as EfSetScore[];
+
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-10 max-w-4xl">
       <PageHeader title="レポート" />
 
-      <ReportCharts
-        logs={logs}
-        youtubeLogs={youtubeLogs}
-        showWord={!isEn}
-      />
+      <EfSetSection scores={efSetScores} />
+
+      <ReportCharts logs={logs} youtubeLogs={youtubeLogs} showWord={!isEn} />
     </div>
   );
 }
