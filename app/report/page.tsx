@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentLanguage } from "@/lib/language";
-import { PageHeader } from "@takaki/go-design-system";
 import { ReportCharts } from "@/components/report-charts";
 import { EfSetSection, type EfSetScore } from "@/components/ef-set-section";
 
@@ -48,12 +47,21 @@ export default async function ReportPage() {
   const efSetScores: EfSetScore[] = (efSetResult.data ?? []) as EfSetScore[];
 
   return (
-    <div className="space-y-10 max-w-4xl">
-      <PageHeader title="レポート" />
+    <div className="mx-auto w-full max-w-5xl">
+      {/* ヘッダー */}
+      <div className="mb-6">
+        <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-foreground">
+          レポート
+        </h1>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          学習量とテストスコアの推移
+        </p>
+      </div>
 
-      <EfSetSection scores={efSetScores} />
-
-      <ReportCharts logs={logs} youtubeLogs={youtubeLogs} showWord={!isEn} />
+      <div className="space-y-5">
+        <EfSetSection scores={efSetScores} />
+        <ReportCharts logs={logs} youtubeLogs={youtubeLogs} showWord={!isEn} />
+      </div>
     </div>
   );
 }

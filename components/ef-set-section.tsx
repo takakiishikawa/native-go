@@ -6,17 +6,17 @@ import {
   Button,
   Input,
   DatePicker,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  FormActions,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  EmptyState,
   toast,
 } from "@takaki/go-design-system";
 import { ExternalLink, Trash2, Plus } from "lucide-react";
@@ -37,19 +37,16 @@ export type EfSetScore = {
 function toDateObj(str: string): Date {
   return new Date(str + "T00:00:00");
 }
-
 function toDateStr(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
-
 function fmtDate(str: string): string {
   const [y, m, d] = str.split("-");
   return `${y}/${m}/${d}`;
 }
-
 function overall(s: EfSetScore): number {
   return Math.round((s.reading + s.listening + s.writing + s.speaking) / 4);
 }
@@ -63,10 +60,18 @@ const SKILL_FIELDS = [
 
 type SkillKey = (typeof SKILL_FIELDS)[number]["key"];
 
-export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
-  const router = useRouter();
-  const today = new Date().toISOString().split("T")[0];
+// ─── 入力ダイアログ ──────────────────────────────────────────────────────────
 
+function EfSetDialog({
+  open,
+  onOpenChange,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSaved: () => void;
+}) {
+  const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(today);
   const [skills, setSkills] = useState<Record<SkillKey, string>>({
     reading: "",
@@ -80,6 +85,12 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
   const canSave =
     SKILL_FIELDS.every((f) => skills[f.key].trim() !== "") &&
     cefr.trim() !== "";
+
+  function reset() {
+    setDate(today);
+    setSkills({ reading: "", listening: "", writing: "", speaking: "" });
+    setCefr("");
+  }
 
   async function handleSave() {
     if (!canSave) return;
@@ -98,52 +109,37 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
       return;
     }
     toast.success("EF SET スコアを記録しました");
-    setSkills({ reading: "", listening: "", writing: "", speaking: "" });
-    setCefr("");
-    setDate(today);
-    router.refresh();
-  }
-
-  async function handleDelete(id: string) {
-    await deleteEfSetScore(id);
-    router.refresh();
+    reset();
+    onOpenChange(false);
+    onSaved();
   }
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="section-label !mb-0">EF SET スコア</h2>
-        <Button asChild variant="outline" size="sm">
-          <a href={EF_SET_URL} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-3.5 w-3.5" />
-            EF SET 公式テスト
-          </a>
-        </Button>
-      </div>
-
-      {/* 記録フォーム */}
-      <Card className="border border-[var(--color-border-default)]">
-        <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-medium">スコアを記録</CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-5 pt-2">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                受験日
-              </label>
-              <DatePicker
-                value={toDateObj(date)}
-                onChange={(d) => {
-                  if (d) setDate(toDateStr(d));
-                }}
-              />
-            </div>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) reset();
+        onOpenChange(v);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>EF SET スコアを記録</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium">受験日</label>
+            <DatePicker
+              value={toDateObj(date)}
+              onChange={(d) => {
+                if (d) setDate(toDateStr(d));
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             {SKILL_FIELDS.map((f) => (
               <div key={f.key} className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
-                  {f.label}
-                </label>
+                <label className="text-[13px] font-medium">{f.label}</label>
                 <Input
                   type="number"
                   min={0}
@@ -157,97 +153,172 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
                 />
               </div>
             ))}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">
-                CEFR レベル
-              </label>
-              <Input
-                placeholder="例: B1, B1+"
-                value={cefr}
-                onChange={(e) => setCefr(e.target.value)}
-              />
-            </div>
           </div>
-          <div className="mt-4 flex justify-end">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium">CEFR レベル</label>
+            <Input
+              placeholder="例: B1, B1+"
+              value={cefr}
+              onChange={(e) => setCefr(e.target.value)}
+            />
+          </div>
+          <FormActions>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              キャンセル
+            </Button>
             <Button onClick={handleSave} disabled={!canSave || saving}>
-              <Plus className="h-4 w-4" />
               {saving ? "記録中…" : "記録する"}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </FormActions>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-      {/* 記録一覧 */}
-      <Card className="border border-[var(--color-border-default)]">
-        <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            受験記録
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-4 pt-2">
-          {scores.length === 0 ? (
-            <EmptyState
-              title="まだ記録がありません"
-              description="EF SET を受験したらスコアを記録しましょう"
-            />
+// ─── EF SET カード ───────────────────────────────────────────────────────────
+
+export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const latest = scores[0];
+
+  async function handleDelete(id: string) {
+    await deleteEfSetScore(id);
+    router.refresh();
+  }
+
+  return (
+    <div className="rounded-xl border border-[var(--color-border-default)] bg-card">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border-default)] px-5 py-3.5">
+        <div>
+          <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">
+            EF SET スコア
+          </h2>
+          <p className="text-[12px] text-muted-foreground">
+            4技能テストのスコア記録
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={EF_SET_URL} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3.5 w-3.5" />
+              公式テスト
+            </a>
+          </Button>
+          <Button size="sm" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" />
+            記録する
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-0 md:grid-cols-[200px_1fr]">
+        {/* 最新スコア */}
+        <div className="border-b border-[var(--color-border-default)] px-5 py-4 md:border-b-0 md:border-r">
+          <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+            最新スコア
+          </div>
+          {latest ? (
+            <>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-[42px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-foreground">
+                  {overall(latest)}
+                </span>
+                <span className="inline-flex items-center rounded-md bg-[var(--color-surface-subtle)] px-2 py-0.5 text-[12px] font-semibold text-foreground">
+                  {latest.cefr_level}
+                </span>
+              </div>
+              <div className="mt-2 text-[12px] text-muted-foreground">
+                受験日 {fmtDate(latest.tested_at)}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+                <span>R {latest.reading}</span>
+                <span>L {latest.listening}</span>
+                <span>W {latest.writing}</span>
+                <span>S {latest.speaking}</span>
+              </div>
+            </>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>受験日</TableHead>
-                  <TableHead className="text-right">総合</TableHead>
-                  <TableHead className="text-right">R</TableHead>
-                  <TableHead className="text-right">L</TableHead>
-                  <TableHead className="text-right">W</TableHead>
-                  <TableHead className="text-right">S</TableHead>
-                  <TableHead>CEFR</TableHead>
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {scores.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">
-                      {fmtDate(s.tested_at)}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold tabular-nums">
-                      {overall(s)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {s.reading}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {s.listening}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {s.writing}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {s.speaking}
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center rounded-md bg-[var(--color-sidebar-accent)] px-2 py-0.5 text-xs font-medium text-[var(--color-sidebar-accent-foreground)]">
-                        {s.cefr_level}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDelete(s.id)}
-                        aria-label="削除"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <p className="mt-3 text-[13px] text-muted-foreground">
+              まだ記録がありません。
+              <br />
+              受験したら記録しましょう。
+            </p>
           )}
-        </CardContent>
-      </Card>
-    </section>
+        </div>
+
+        {/* 受験記録一覧 */}
+        <div className="px-2 py-1">
+          {scores.length === 0 ? (
+            <div className="flex h-[150px] items-center justify-center text-[13px] text-muted-foreground">
+              受験記録がここに表示されます
+            </div>
+          ) : (
+            <div className="max-h-[190px] overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>受験日</TableHead>
+                    <TableHead className="text-right">総合</TableHead>
+                    <TableHead className="text-right">R</TableHead>
+                    <TableHead className="text-right">L</TableHead>
+                    <TableHead className="text-right">W</TableHead>
+                    <TableHead className="text-right">S</TableHead>
+                    <TableHead>CEFR</TableHead>
+                    <TableHead className="w-8" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {scores.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium">
+                        {fmtDate(s.tested_at)}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">
+                        {overall(s)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {s.reading}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {s.listening}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {s.writing}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {s.speaking}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {s.cefr_level}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDelete(s.id)}
+                          aria-label="削除"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <EfSetDialog
+        open={open}
+        onOpenChange={setOpen}
+        onSaved={() => router.refresh()}
+      />
+    </div>
   );
 }

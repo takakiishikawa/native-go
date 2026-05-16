@@ -24,6 +24,7 @@ export function ReportAreaChart({
   yKeys,
   title,
   unit,
+  height = 220,
 }: {
   data: Record<string, unknown>[];
   config: ChartConfig;
@@ -31,16 +32,17 @@ export function ReportAreaChart({
   yKeys: string[];
   title: string;
   unit?: string;
+  height?: number;
 }) {
   return (
-    <Card className="border border-border border border-[var(--color-border-default)]">
+    <Card className="rounded-xl border border-[var(--color-border-default)]">
       <CardHeader className="pb-1 pt-4 px-5">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-[13px] font-semibold tracking-[-0.01em] text-foreground">
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="px-5 pb-4 pt-2">
-        <div className="h-[220px] w-full">
+        <div className="w-full" style={{ height }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}

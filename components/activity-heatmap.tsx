@@ -1,19 +1,17 @@
-import { Card } from "@takaki/go-design-system";
-import { Flame } from "lucide-react";
-
 /**
- * 12週間（7×12=84セル）のアクティビティヒートマップ。
+ * 12週間（7行×12列＝84セル）のアクティビティヒートマップ。
+ * Claude Design「A · Studio」の配色をそのまま採用したモノトーンランプ。
  * cells: 84要素。値 -1 = 未来日 / 0 = 練習なし / 1-3 = 練習量レベル。
  * 列方向（grid-flow-col）に古い週→新しい週で並ぶ。
  */
-function cellStyle(level: number): React.CSSProperties {
-  if (level < 0) return { background: "var(--color-surface-subtle)", opacity: 0.35 };
-  if (level === 0) return { background: "var(--color-surface-subtle)" };
-  return {
-    background: "var(--color-primary)",
-    opacity: level === 1 ? 0.3 : level === 2 ? 0.6 : 1,
-  };
-}
+
+// Studio: ['#f1ede5', '#dfd6c2', '#a39a87', '#1a1814']
+const HEAT = [
+  "bg-[#f1ede5] dark:bg-[#262430]",
+  "bg-[#dfd6c2] dark:bg-[#3b3747]",
+  "bg-[#a39a87] dark:bg-[#6e697d]",
+  "bg-[#1a1814] dark:bg-[#eceaf2]",
+];
 
 export function ActivityHeatmap({
   cells,
@@ -27,55 +25,45 @@ export function ActivityHeatmap({
   longest: number;
 }) {
   return (
-    <Card className="border border-[var(--color-border-default)] p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">
-            12週間のアクティビティ
-          </h3>
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Flame className="h-3.5 w-3.5 text-[var(--color-primary)]" />
-            <span className="font-medium text-foreground">
-              {streak}日連続
-            </span>
-            <span>· 最長 {longest}日</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span>少</span>
-          {[0, 1, 2, 3].map((l) => (
-            <span
-              key={l}
-              className="h-2.5 w-2.5 rounded-[2px]"
-              style={cellStyle(l)}
-            />
-          ))}
-          <span>多</span>
-        </div>
+    <div className="flex h-full flex-col rounded-xl border border-[var(--color-border-default)] bg-card p-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="text-[13px] font-semibold tracking-[-0.01em] text-foreground">
+          12週間のアクティビティ
+        </h3>
+        <p className="text-[12px] text-muted-foreground">
+          <span className="font-semibold text-foreground">{streak}</span>
+          日連続 · 最長 {longest}日
+        </p>
       </div>
 
       <div
-        className="mt-4 grid gap-[3px]"
+        className="mt-5 grid flex-1"
         style={{
           gridTemplateColumns: "repeat(12, 1fr)",
           gridTemplateRows: "repeat(7, 1fr)",
           gridAutoFlow: "column",
+          gap: "4px",
+          minHeight: "120px",
         }}
       >
         {cells.map((level, i) => (
           <div
             key={i}
-            className="aspect-square rounded-[3px]"
-            style={cellStyle(level)}
+            className={
+              level < 0
+                ? `${HEAT[0]} opacity-40`
+                : HEAT[Math.min(level, 3)]
+            }
+            style={{ borderRadius: "2px" }}
           />
         ))}
       </div>
 
-      <div className="mt-2 flex justify-between text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="mt-3 flex justify-between font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
         {monthLabels.map((m, i) => (
           <span key={i}>{m}</span>
         ))}
       </div>
-    </Card>
+    </div>
   );
 }
