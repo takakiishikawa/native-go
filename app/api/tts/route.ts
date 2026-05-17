@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const VOICE_BY_LANGUAGE = {
   en: { languageCode: "en-US", name: "en-US-Neural2-F" },
-  vi: { languageCode: "vi-VN", name: "vi-VN-Neural2-A" },
+  vi: { languageCode: "vi-VN", name: "vi-VN-Wavenet-C" },
 } as const;
 
 export async function POST(req: NextRequest) {
