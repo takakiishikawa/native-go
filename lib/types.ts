@@ -39,26 +39,10 @@ export interface Grammar {
   source_title: string | null;
   topic_label: string | null;
   topic_icon: string | null;
-  examples_ja: string[] | null;
   pattern_quote: string | null;
-}
-
-export interface SpeakingScene {
-  id: string;
-  image_url: string | null;
-  theme: string | null;
-  created_at: string;
-}
-
-export interface SpeakingLog {
-  id: string;
-  user_id: string;
-  scene_id: string;
-  speech_text: string;
-  scores: number[];
-  total_score: number;
-  comment: string;
-  created_at: string;
+  study_flag: boolean;
+  study_done: boolean;
+  study_note: string | null;
 }
 
 export interface Expression {
@@ -80,7 +64,9 @@ export interface Expression {
   source_title: string | null;
   topic_label: string | null;
   topic_icon: string | null;
-  conversation_ja: string[] | null;
+  study_flag: boolean;
+  study_done: boolean;
+  study_note: string | null;
 }
 
 export interface Word {
@@ -101,7 +87,9 @@ export interface Word {
   category: string | null;
   topic_label: string | null;
   topic_icon: string | null;
-  example_ja: string[] | null;
+  study_flag: boolean;
+  study_done: boolean;
+  study_note: string | null;
 }
 
 export interface Lesson {
@@ -129,14 +117,6 @@ export interface NativeCampLog {
   logged_at: string;
   count: number;
   minutes: number;
-  created_at: string;
-}
-
-export interface SpeakingScore {
-  id: string;
-  user_id: string;
-  score: number;
-  tested_at: string;
   created_at: string;
 }
 
@@ -191,7 +171,6 @@ export interface ExtractedGrammar {
   word_notes?: WordNote[];
   category?: string;
   topic?: ItemTopic;
-  examples_ja?: string[];
   pattern_quote?: string;
 }
 
@@ -205,7 +184,6 @@ export interface ExtractedExpression {
   word_notes?: WordNote[];
   nuance?: string;
   topic?: ItemTopic;
-  conversation_ja?: string[];
 }
 
 export interface ExtractedWord {
@@ -217,7 +195,6 @@ export interface ExtractedWord {
   frequency: number;
   category?: string | null;
   topic?: ItemTopic;
-  example_ja?: string[] | null;
 }
 
 export interface ExtractResult {

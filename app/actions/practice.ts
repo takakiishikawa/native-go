@@ -421,7 +421,6 @@ export async function saveGrammar(
     summary: string;
     detail?: string | null;
     examples: string[];
-    examples_ja?: string[];
     pattern_quote?: string | null;
     usage_scene: string;
     frequency: number;
@@ -452,7 +451,6 @@ export async function saveGrammar(
     source_title: g.source_title ?? null,
     topic_label: g.topic?.label ?? null,
     topic_icon: g.topic?.icon ?? null,
-    examples_ja: g.examples_ja ?? null,
     pattern_quote: g.pattern_quote ?? null,
   }));
 
@@ -472,7 +470,6 @@ export async function saveExpressions(
     expression: string;
     meaning: string;
     conversation: string[];
-    conversation_ja?: string[];
     usage_scene: string;
     frequency: number;
     word_notes?: WordNote[] | null;
@@ -502,7 +499,6 @@ export async function saveExpressions(
     source_title: e.source_title ?? null,
     topic_label: e.topic?.label ?? null,
     topic_icon: e.topic?.icon ?? null,
-    conversation_ja: e.conversation_ja ?? null,
   }));
 
   const { error } = await supabase.from("expressions").insert(rows);
@@ -516,7 +512,6 @@ export async function saveWords(
     word: string;
     meaning: string;
     example?: string | null;
-    example_ja?: string[] | null;
     usage_scene?: string | null;
     frequency: number;
     word_notes?: WordNote[] | null;
@@ -560,7 +555,6 @@ export async function saveWords(
     category: w.category ?? null,
     topic_label: w.topic?.label ?? null,
     topic_icon: w.topic?.icon ?? null,
-    example_ja: w.example_ja ?? null,
   }));
 
   const { error } = await supabase.from("words").insert(rows);
@@ -613,6 +607,56 @@ export async function toggleWordPriority(id: string, next: boolean) {
   revalidatePath("/list");
 }
 
+// ── 「学習したい」リスト ───────────────────────────────────────────────
+type StudyKind = "grammar" | "expression" | "word";
+const STUDY_TABLE: Record<StudyKind, string> = {
+  grammar: "grammar",
+  expression: "expressions",
+  word: "words",
+};
+
+export async function setStudyFlag(
+  kind: StudyKind,
+  id: string,
+  value: boolean,
+) {
+  const supabase = await createClient();
+  // フラグを外したら完了状態もリセット
+  const patch = value
+    ? { study_flag: true }
+    : { study_flag: false, study_done: false };
+  const { error } = await supabase
+    .from(STUDY_TABLE[kind])
+    .update(patch)
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/list");
+}
+
+export async function setStudyDone(
+  kind: StudyKind,
+  id: string,
+  value: boolean,
+) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from(STUDY_TABLE[kind])
+    .update({ study_done: value })
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/list");
+}
+
+export async function setStudyNote(kind: StudyKind, id: string, note: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from(STUDY_TABLE[kind])
+    .update({ study_note: note.trim() || null })
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/list");
+}
+
 export async function upsertNativeCampLog(
   date: string,
   count: number,
@@ -648,30 +692,6 @@ export async function upsertNativeCampLog(
   revalidatePath("/");
   revalidatePath("/report");
   return null;
-}
-
-export async function saveSpeakingScore(date: string, score: number) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data, error } = await supabase
-    .from("speaking_scores")
-    .insert({ user_id: user.id, score, tested_at: date })
-    .select()
-    .single();
-
-  if (error) return null;
-  revalidatePath("/");
-  return data;
-}
-
-export async function deleteSpeakingScore(id: string) {
-  const supabase = await createClient();
-  await supabase.from("speaking_scores").delete().eq("id", id);
-  revalidatePath("/");
 }
 
 export async function deleteGrammar(id: string) {
