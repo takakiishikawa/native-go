@@ -196,9 +196,6 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">
             EF SET スコア
           </h2>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
-            4技能テストのスコア記録
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="outline" size="sm">
@@ -214,48 +211,38 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
         </div>
       </div>
 
-      <div className="grid gap-0 md:grid-cols-[210px_1fr]">
-        {/* 最新スコア */}
-        <div className="border-b border-[var(--color-border-default)] p-5 md:border-b-0 md:border-r">
-          <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-            最新スコア
-          </div>
-          {latest ? (
-            <>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-[42px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-foreground">
-                  {overall(latest)}
-                </span>
-                <span className="inline-flex items-center rounded-md bg-[var(--color-surface-subtle)] px-2 py-0.5 text-[12px] font-semibold text-foreground">
-                  {latest.cefr_level}
-                </span>
-              </div>
-              <div className="mt-2 text-[12px] text-muted-foreground">
-                受験日 {fmtDate(latest.tested_at)}
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
-                <span>R {latest.reading}</span>
-                <span>L {latest.listening}</span>
-                <span>W {latest.writing}</span>
-                <span>S {latest.speaking}</span>
-              </div>
-            </>
-          ) : (
-            <p className="mt-3 text-[13px] text-muted-foreground">
-              まだ記録がありません。
-              <br />
-              受験したら記録しましょう。
-            </p>
-          )}
+      {!latest ? (
+        <div className="flex h-[120px] items-center justify-center text-[13px] text-muted-foreground">
+          まだ記録がありません
         </div>
-
-        {/* 受験記録一覧 */}
-        <div className="p-2">
-          {scores.length === 0 ? (
-            <div className="flex h-[160px] items-center justify-center text-[13px] text-muted-foreground">
-              受験記録がここに表示されます
+      ) : (
+        <div className="grid gap-0 md:grid-cols-[210px_1fr]">
+          {/* 最新スコア */}
+          <div className="border-b border-[var(--color-border-default)] p-5 md:border-b-0 md:border-r">
+            <div className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+              最新スコア
             </div>
-          ) : (
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-[42px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-foreground">
+                {overall(latest)}
+              </span>
+              <span className="inline-flex items-center rounded-md bg-[var(--color-surface-subtle)] px-2 py-0.5 text-[12px] font-semibold text-foreground">
+                {latest.cefr_level}
+              </span>
+            </div>
+            <div className="mt-2 text-[12px] text-muted-foreground">
+              受験日 {fmtDate(latest.tested_at)}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+              <span>R {latest.reading}</span>
+              <span>L {latest.listening}</span>
+              <span>W {latest.writing}</span>
+              <span>S {latest.speaking}</span>
+            </div>
+          </div>
+
+          {/* 受験記録一覧 */}
+          <div className="p-2">
             <div className="max-h-[200px] overflow-y-auto">
               <Table>
                 <TableHeader>
@@ -310,9 +297,9 @@ export function EfSetSection({ scores }: { scores: EfSetScore[] }) {
                 </TableBody>
               </Table>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       <EfSetDialog
         open={open}

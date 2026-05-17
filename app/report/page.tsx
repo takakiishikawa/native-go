@@ -47,19 +47,20 @@ export default async function ReportPage() {
   const efSetScores: EfSetScore[] = (efSetResult.data ?? []) as EfSetScore[];
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="w-full max-w-5xl">
       {/* ヘッダー */}
       <header className="mb-8">
         <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-foreground">
           レポート
         </h1>
         <p className="mt-1.5 text-[13px] text-muted-foreground">
-          学習量とテストスコアの推移
+          学習量{isEn ? "とテストスコア" : ""}の推移
         </p>
       </header>
 
       <div className="space-y-5">
-        <EfSetSection scores={efSetScores} />
+        {/* EF SET は英語学習時のみ */}
+        {isEn && <EfSetSection scores={efSetScores} />}
         <ReportCharts logs={logs} youtubeLogs={youtubeLogs} showWord={!isEn} />
       </div>
     </div>

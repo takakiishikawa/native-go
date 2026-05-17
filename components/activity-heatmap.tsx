@@ -9,17 +9,19 @@ import {
 
 /**
  * 12週間（7行×12列＝84セル）のアクティビティヒートマップ。
- * Claude Design「A · Studio」の配色をそのまま採用したモノトーンランプ。
+ * アプリのプライマリ（青）に寄せた6段階グラデーション。
  * 列方向（grid-flow-col）に古い週→新しい週で並ぶ。
  * GitHub のように hover で日付と回数を tooltip 表示する。
  */
 
-// Studio: ['#f1ede5', '#dfd6c2', '#a39a87', '#1a1814']
+// 0 = 練習なし、1-5 = 練習量（青系グラデーション）
 const HEAT = [
-  "bg-[#f1ede5] dark:bg-[#262430]",
-  "bg-[#dfd6c2] dark:bg-[#3b3747]",
-  "bg-[#a39a87] dark:bg-[#6e697d]",
-  "bg-[#1a1814] dark:bg-[#eceaf2]",
+  "bg-[#eef1f6] dark:bg-[#1b2130]",
+  "bg-[#d2e2f5] dark:bg-[#1f3a5c]",
+  "bg-[#a7c6ec] dark:bg-[#2b568c]",
+  "bg-[#6f9fdd] dark:bg-[#4279bd]",
+  "bg-[#356dc6] dark:bg-[#6ba3e6]",
+  "bg-[#0a3f86] dark:bg-[#9cc6f7]",
 ];
 
 export type HeatmapCell = {
@@ -32,7 +34,9 @@ function level(count: number): number {
   if (count <= 0) return 0;
   if (count < 10) return 1;
   if (count < 25) return 2;
-  return 3;
+  if (count < 45) return 3;
+  if (count < 70) return 4;
+  return 5;
 }
 
 function formatDate(date: string): string {
@@ -55,7 +59,7 @@ export function ActivityHeatmap({
   longest: number;
 }) {
   return (
-    <div className="flex h-full flex-col rounded-xl border border-[var(--color-border-default)] bg-card p-5">
+    <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">
           12週間のアクティビティ
@@ -68,13 +72,13 @@ export function ActivityHeatmap({
 
       <TooltipProvider delayDuration={0}>
         <div
-          className="mt-6 grid flex-1"
+          className="mt-6 grid"
           style={{
             gridTemplateColumns: "repeat(12, 1fr)",
             gridTemplateRows: "repeat(7, 1fr)",
             gridAutoFlow: "column",
-            gap: "4px",
-            minHeight: "112px",
+            gap: "6px",
+            height: "264px",
           }}
         >
           {cells.map((c, i) => {
@@ -90,11 +94,14 @@ export function ActivityHeatmap({
                   <div
                     className={`${
                       lv < 0 ? `${HEAT[0]} opacity-40` : HEAT[lv]
-                    } cursor-default ring-foreground/40 transition-shadow hover:ring-1`}
-                    style={{ borderRadius: "2px" }}
+                    } cursor-default ring-foreground/30 transition-shadow hover:ring-2`}
+                    style={{ borderRadius: "3px" }}
                   />
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[12px]">
+                <TooltipContent
+                  side="top"
+                  className="bg-[#1f1d1a] text-[12px] text-white dark:bg-[#2a2833] dark:text-[#f0eef4]"
+                >
                   {label}
                 </TooltipContent>
               </Tooltip>
