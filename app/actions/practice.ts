@@ -657,6 +657,60 @@ export async function setStudyNote(kind: StudyKind, id: string, note: string) {
   revalidatePath("/list");
 }
 
+// ── パターン箇所の AI 判定 ──────────────────────────────────────────────
+const PATTERN_DETECT_SYSTEM = `You locate where a grammar pattern (or fixed expression) actually appears inside a short dialogue, so the app can highlight it.
+
+You are given PATTERN and DIALOGUE (2-4 lines, each starting with "A: " or "B: ").
+Return ONLY the exact contiguous substring — copied verbatim (identical characters, spacing, accents, casing) from ONE dialogue line — that is the concrete realization of the pattern in that dialogue.
+- It MUST be an exact substring of a single line's text (excluding the "A:"/"B:" prefix).
+- Output ONLY that substring. No quotes, no labels, no explanation.
+- If the pattern genuinely does not appear, output exactly: NONE`;
+
+export async function detectPatternQuote(
+  kind: "grammar" | "expression",
+  id: string,
+): Promise<string | null> {
+  const supabase = await createClient();
+  const table = kind === "grammar" ? "grammar" : "expressions";
+  const { data } = await supabase
+    .from(table)
+    .select(kind === "grammar" ? "name, examples" : "expression, conversation")
+    .eq("id", id)
+    .single();
+  if (!data) return null;
+  const row = data as Record<string, string | null>;
+  const pattern = kind === "grammar" ? row.name : row.expression;
+  const dialogue = kind === "grammar" ? row.examples : row.conversation;
+  if (!pattern || !dialogue) return null;
+
+  const message = await anthropic.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 200,
+    system: PATTERN_DETECT_SYSTEM,
+    messages: [
+      {
+        role: "user",
+        content: `PATTERN: ${pattern}\n\nDIALOGUE:\n${dialogue}`,
+      },
+    ],
+  });
+  const block = message.content.find((c) => c.type === "text");
+  const raw = block && block.type === "text" ? block.text.trim() : "";
+
+  // 各行（A:/B: プレフィックス除去）の部分文字列として実在するか検証
+  const lines = dialogue
+    .split("\n")
+    .map((l) => l.replace(/^[AB]:\s*/i, "").trim())
+    .filter(Boolean);
+  const quote = raw && raw !== "NONE" && lines.some((l) => l.includes(raw))
+    ? raw
+    : null;
+
+  await supabase.from(table).update({ pattern_quote: quote }).eq("id", id);
+  revalidatePath("/list");
+  return quote;
+}
+
 export async function upsertNativeCampLog(
   date: string,
   count: number,

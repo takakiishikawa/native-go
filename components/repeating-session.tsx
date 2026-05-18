@@ -403,18 +403,29 @@ function Bubble({
   );
 }
 
-// ─── Word list (VI — beside the conversation) ───────────────────────
+// ─── Word list (VI — floats to the right of the conversation) ───────
 function WordList({ notes }: { notes: WordNote[] }) {
   return (
-    <aside className="w-[210px] shrink-0 rounded-xl border border-border bg-muted/40 p-3.5">
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+    <aside className="absolute right-6 top-1/2 max-h-[78%] w-[228px] -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card p-4 shadow-[0_6px_24px_rgba(15,23,42,0.07)]">
+      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+        <BookOpen className="h-3.5 w-3.5" />
         単語
-      </p>
-      <ul className="flex flex-col gap-2">
+      </div>
+      <ul className="flex flex-col">
         {notes.map((n, i) => (
-          <li key={i} className="text-sm leading-snug">
-            <span className="font-semibold text-foreground">{n.word}</span>
-            <span className="ml-1.5 text-muted-foreground">{n.note}</span>
+          <li
+            key={i}
+            className={cn(
+              "py-2",
+              i > 0 && "border-t border-border/50",
+            )}
+          >
+            <div className="text-[15px] font-semibold leading-tight text-foreground">
+              {n.word}
+            </div>
+            <div className="mt-1 text-[13px] leading-snug text-muted-foreground">
+              {n.note}
+            </div>
           </li>
         ))}
       </ul>
@@ -563,7 +574,7 @@ export function RepeatingSession({
       </header>
 
       {/* Stage — vertically centered, compact */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-4">
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-4">
         {/* Pattern block — plain, no border */}
         <div className="max-w-[680px] text-center">
           <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
@@ -590,24 +601,24 @@ export function RepeatingSession({
         {/* Topic chip — the conversation's genre, right by the conversation */}
         {topicLabel && <TopicChip label={topicLabel} icon={topicIcon ?? null} />}
 
-        {/* Conversation — chat bubbles (+ word list on the right for VI) */}
-        <div className="flex w-full items-start justify-center gap-5">
-          <div className="flex w-full max-w-[680px] flex-col gap-3">
-            {lines.map((line, i) => (
-              <Bubble
-                key={i}
-                line={line}
-                active={i === currentLine}
-                showJa={showJa}
-                jaText={jaForKey?.[i] ?? null}
-                jaLoading={jaLoading}
-                patternQuote={patternQuote}
-                wordNotes={inlineNotes}
-              />
-            ))}
-          </div>
-          {sideNotes && <WordList notes={sideNotes} />}
+        {/* Conversation — chat bubbles (stays centered) */}
+        <div className="flex w-full max-w-[680px] flex-col gap-3">
+          {lines.map((line, i) => (
+            <Bubble
+              key={i}
+              line={line}
+              active={i === currentLine}
+              showJa={showJa}
+              jaText={jaForKey?.[i] ?? null}
+              jaLoading={jaLoading}
+              patternQuote={patternQuote}
+              wordNotes={inlineNotes}
+            />
+          ))}
         </div>
+
+        {/* VI: word list floats on the right without shifting the conversation */}
+        {sideNotes && <WordList notes={sideNotes} />}
       </div>
 
       {/* Player */}

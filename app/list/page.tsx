@@ -18,7 +18,7 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Grammar, Expression, Word } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
-import { Plus, Star, Trash2, Check } from "lucide-react";
+import { Plus, Star, Trash2, Check, Sparkles } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
 import { CategoryTag } from "@/components/category-tag";
 import {
@@ -31,6 +31,7 @@ import {
   setStudyFlag,
   setStudyDone,
   setStudyNote,
+  detectPatternQuote,
 } from "@/app/actions/practice";
 
 type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
@@ -946,6 +947,9 @@ export default function ListPage() {
   const [phraseCount, setPhraseCount] = useState<number | null>(null);
   const [wordCount, setWordCount] = useState<number | null>(null);
   const [studyCount, setStudyCount] = useState<number | null>(null);
+  const [patternMissing, setPatternMissing] = useState<number | null>(null);
+  const [patternBusy, setPatternBusy] = useState(false);
+  const [patternProgress, setPatternProgress] = useState({ done: 0, total: 0 });
   const [reloadKey, setReloadKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
   const bumpReload = useCallback(() => setReloadKey((k) => k + 1), []);
@@ -958,6 +962,12 @@ export default function ListPage() {
         .select("id", { count: "exact", head: true })
         .eq("language", language)
         .eq("study_flag", true);
+    const missingPatternQuery = (table: string) =>
+      supabase
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .eq("language", language)
+        .is("pattern_quote", null);
     Promise.all([
       supabase
         .from("grammar")
@@ -974,13 +984,74 @@ export default function ListPage() {
       studyCountQuery("grammar"),
       studyCountQuery("expressions"),
       studyCountQuery("words"),
-    ]).then(([g, e, w, gs, es, ws]) => {
+      missingPatternQuery("grammar"),
+      missingPatternQuery("expressions"),
+    ]).then(([g, e, w, gs, es, ws, gp, ep]) => {
       setGrammarCount(g.count ?? 0);
       setPhraseCount(e.count ?? 0);
       setWordCount(w.count ?? 0);
       setStudyCount((gs.count ?? 0) + (es.count ?? 0) + (ws.count ?? 0));
+      setPatternMissing((gp.count ?? 0) + (ep.count ?? 0));
     });
   }, [language]);
+
+  async function handleDetectPatterns() {
+    setPatternBusy(true);
+    const supabase = createClient();
+    try {
+      const [g, e] = await Promise.all([
+        supabase
+          .from("grammar")
+          .select("id")
+          .eq("language", language)
+          .is("pattern_quote", null)
+          .limit(30),
+        supabase
+          .from("expressions")
+          .select("id")
+          .eq("language", language)
+          .is("pattern_quote", null)
+          .limit(30),
+      ]);
+      type Task = { kind: "grammar" | "expression"; id: string };
+      const tasks: Task[] = [
+        ...((g.data ?? []) as { id: string }[]).map((r) => ({
+          kind: "grammar" as const,
+          id: r.id,
+        })),
+        ...((e.data ?? []) as { id: string }[]).map((r) => ({
+          kind: "expression" as const,
+          id: r.id,
+        })),
+      ].slice(0, 30);
+      if (tasks.length === 0) {
+        toast.info("判定対象がありません");
+        return;
+      }
+      setPatternProgress({ done: 0, total: tasks.length });
+      const BATCH = 3;
+      let ok = 0;
+      let fail = 0;
+      for (let i = 0; i < tasks.length; i += BATCH) {
+        const batch = tasks.slice(i, i + BATCH);
+        const res = await Promise.allSettled(
+          batch.map((t) => detectPatternQuote(t.kind, t.id)),
+        );
+        ok += res.filter((r) => r.status === "fulfilled").length;
+        fail += res.filter((r) => r.status === "rejected").length;
+        setPatternProgress({
+          done: Math.min(i + batch.length, tasks.length),
+          total: tasks.length,
+        });
+      }
+      if (fail === 0) toast.success(`${ok}件のパターンを判定しました`);
+      else toast.error(`判定完了: ${ok}件成功 / ${fail}件失敗`);
+      bumpReload();
+    } finally {
+      setPatternBusy(false);
+      setPatternProgress({ done: 0, total: 0 });
+    }
+  }
 
   useEffect(() => {
     reloadCounts();
@@ -991,12 +1062,30 @@ export default function ListPage() {
       <PageHeader
         title="ライブラリ"
         actions={
-          isVi ? (
-            <Button onClick={() => setShowAddModal(true)}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              追加
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            {patternBusy ? (
+              <span className="text-sm text-muted-foreground tabular-nums">
+                パターン判定中 {patternProgress.done} / {patternProgress.total}
+              </span>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleDetectPatterns}
+                disabled={!patternMissing}
+                title="会話内の文法・フレーズの該当箇所を AI で判定（30件ずつ）"
+              >
+                <Sparkles className="mr-1.5 h-4 w-4" />
+                パターン判定
+                {patternMissing ? `（残り${patternMissing}）` : ""}
+              </Button>
+            )}
+            {isVi && (
+              <Button onClick={() => setShowAddModal(true)} disabled={patternBusy}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                追加
+              </Button>
+            )}
+          </div>
         }
       />
 

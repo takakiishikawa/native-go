@@ -194,15 +194,11 @@ export default function WordRepeatingPage() {
 
     let localItems = [...items];
     let localIndex = index;
-    const initialCount = localItems.length;
-    let playCount = 0;
 
     try {
-      while (
-        localItems.length > 0 &&
-        !cancelRef.current &&
-        playCount < initialCount
-      ) {
+      // index から末尾まで順番に再生。途中停止→再開しても index は保持される
+      // ので残りだけを再生し、セッションは必ず items.length 件ちょうどで終わる。
+      while (localIndex < localItems.length && !cancelRef.current) {
         const item = localItems[localIndex];
         // example は A/B/A 3ターン対話 (新形式) or 単一文 (旧形式)。
         // 単語そのものを先頭に置き、続いて対話を1行ずつ再生する。
@@ -225,7 +221,6 @@ export default function WordRepeatingPage() {
         if (cancelRef.current) break;
 
         setCurrentSegment(-1);
-        playCount++;
         setCompletedCount((c) => c + 1);
         pendingIncrementsRef.current.push(
           incrementWordPlayCount(item.id).catch((e) => {
@@ -238,12 +233,11 @@ export default function WordRepeatingPage() {
         );
         setItems([...localItems]);
 
-        // 最終アイテム再生後はインデックスを進めない（先頭へ巻き戻さない）
-        if (playCount < initialCount) {
-          localIndex = (localIndex + 1) % localItems.length;
-          setIndex(localIndex);
-          await pause(50);
-        }
+        // 最終アイテムまで来たら終了（先頭へ巻き戻さない）
+        if (localIndex >= localItems.length - 1) break;
+        localIndex += 1;
+        setIndex(localIndex);
+        await pause(50);
       }
     } finally {
       setPlaying(false);

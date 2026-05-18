@@ -209,16 +209,12 @@ export default function ExpressionRepeatingPage() {
 
     let localItems = [...items];
     let localIndex = index;
-    const initialCount = localItems.length;
-    let playCount = 0;
     let startLine = resumeLineRef.current;
 
     try {
-      while (
-        localItems.length > 0 &&
-        !cancelRef.current &&
-        playCount < initialCount
-      ) {
+      // index から末尾まで順番に再生。途中停止→再開しても index は保持される
+      // ので残りだけを再生し、セッションは必ず items.length 件ちょうどで終わる。
+      while (localIndex < localItems.length && !cancelRef.current) {
         const item = localItems[localIndex];
         const lines = (item.conversation ?? "").split("\n").filter(Boolean);
         const fromLine = startLine;
@@ -237,7 +233,6 @@ export default function ExpressionRepeatingPage() {
 
         resumeLineRef.current = 0;
         setCurrentLine(-1);
-        playCount++;
         setCompletedCount((c) => c + 1);
         pendingIncrementsRef.current.push(
           incrementExpressionPlayCount(item.id).catch((e) => {
@@ -251,12 +246,11 @@ export default function ExpressionRepeatingPage() {
         );
         setItems([...localItems]);
 
-        // 最終アイテム再生後はインデックスを進めない（先頭へ巻き戻さない）
-        if (playCount < initialCount) {
-          localIndex = (localIndex + 1) % localItems.length;
-          setIndex(localIndex);
-          await pause(50);
-        }
+        // 最終アイテムまで来たら終了（先頭へ巻き戻さない）
+        if (localIndex >= localItems.length - 1) break;
+        localIndex += 1;
+        setIndex(localIndex);
+        await pause(50);
       }
     } finally {
       setPlaying(false);
@@ -363,7 +357,7 @@ export default function ExpressionRepeatingPage() {
         lines={lines}
         currentLine={currentLine}
         wordNotes={language === "vi" ? current.word_notes : null}
-        patternQuote={current.expression}
+        patternQuote={current.pattern_quote ?? current.expression}
         playCount={current.play_count}
         sessionCurrent={index + 1}
         sessionTotal={items.length}

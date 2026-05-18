@@ -64,6 +64,7 @@ export interface Expression {
   source_title: string | null;
   topic_label: string | null;
   topic_icon: string | null;
+  pattern_quote: string | null;
   study_flag: boolean;
   study_done: boolean;
   study_note: string | null;
