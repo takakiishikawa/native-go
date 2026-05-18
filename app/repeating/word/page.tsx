@@ -86,7 +86,6 @@ export default function WordRepeatingPage() {
       .select("*")
       .eq("language", language)
       .lt("play_count", 10)
-      .order("is_priority", { ascending: false })
       .order("created_at", { ascending: true })
       .order("id", { ascending: true });
     setAllItems(data ?? []);

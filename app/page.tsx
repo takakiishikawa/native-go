@@ -23,8 +23,8 @@ function CTACard({
 }) {
   return (
     <Link href={href} className="group block">
-      <div className="flex items-center gap-3.5 rounded-xl border border-[var(--color-border-default)] bg-card p-5 transition-all hover:border-[var(--color-border-strong)] hover:shadow-[0_1px_6px_rgba(0,0,0,0.06)]">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[var(--color-surface-subtle)] text-foreground">
+      <div className="flex items-center gap-3 rounded-xl border border-[var(--color-border-default)] bg-card p-4 transition-all hover:border-[var(--color-border-strong)] hover:shadow-[0_1px_6px_rgba(0,0,0,0.06)]">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--color-surface-subtle)] text-foreground">
           {icon}
         </span>
         <div className="min-w-0 flex-1">
@@ -61,17 +61,23 @@ function MetricCard({
         : "text-[#9a3a2a] dark:text-[#d98a78]";
 
   return (
-    <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-5">
+    <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-4">
       <div className="text-[13px] text-muted-foreground">{label}</div>
-      <div className="mt-2.5 flex items-baseline gap-1.5">
-        <span className="text-[40px] font-semibold leading-none tracking-[-0.035em] tabular-nums text-foreground">
+      <div className="mt-2 flex items-baseline gap-1.5">
+        <span className="text-[32px] font-semibold leading-none tracking-[-0.035em] tabular-nums text-foreground">
           {value}
         </span>
         <span className="text-[13px] text-muted-foreground">{unit}</span>
+        {weekDiff != null && (
+          <span className={`ml-1.5 text-[12px] ${diffColor}`}>
+            先週比 {weekDiff > 0 ? "+" : ""}
+            {weekDiff}
+          </span>
+        )}
       </div>
 
       {ratio != null && (
-        <div className="mt-5 flex items-center gap-2.5">
+        <div className="mt-4 flex items-center gap-2.5">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--color-surface-subtle)]">
             <div
               className={`h-full rounded-full ${
@@ -83,13 +89,6 @@ function MetricCard({
           <span className="text-[12px] font-semibold tabular-nums text-foreground">
             {ratio}%
           </span>
-        </div>
-      )}
-
-      {weekDiff != null && (
-        <div className={`mt-2.5 text-[12px] ${diffColor}`}>
-          先週比 {weekDiff > 0 ? "+" : ""}
-          {weekDiff}
         </div>
       )}
     </div>
@@ -187,7 +186,10 @@ export default async function HomePage() {
         .from("youtube_logs")
         .select("completed_at, youtube_videos(duration)")
         .eq("language", currentLanguage)
-        .gte("completed_at", new Date(prev7StartStr + "T00:00:00").toISOString())
+        .gte(
+          "completed_at",
+          new Date(heatmapStartStr + "T00:00:00").toISOString(),
+        )
         .lte("completed_at", new Date(todayStr + "T23:59:59").toISOString()),
       supabase.from("user_settings").select("*").maybeSingle(),
     ]);
@@ -252,12 +254,14 @@ export default async function HomePage() {
   }
   let weeklyShadowing = 0;
   let prevWeeklyShadowing = 0;
+  const shadowingByDate = new Map<string, number>();
   for (const yt of youtubeLogsResult.data ?? []) {
     const dateStr = yt.completed_at.slice(0, 10);
     const min = parseDurToMin(
       (yt.youtube_videos as unknown as { duration: string | null } | null)
         ?.duration,
     );
+    shadowingByDate.set(dateStr, (shadowingByDate.get(dateStr) ?? 0) + min);
     if (dateStr >= rangeStartStr) weeklyShadowing += min;
     else if (dateStr >= prev7StartStr) prevWeeklyShadowing += min;
   }
@@ -280,7 +284,8 @@ export default async function HomePage() {
       const cellStr = toStr(addDays(colStart, row));
       heatmapCells.push({
         date: cellStr,
-        count: countByDate.get(cellStr) ?? 0,
+        repeating: countByDate.get(cellStr) ?? 0,
+        shadowing: shadowingByDate.get(cellStr) ?? 0,
         future: cellStr > todayStr,
       });
     }
@@ -302,19 +307,19 @@ export default async function HomePage() {
   }).format(now);
 
   return (
-    <div className="w-full max-w-5xl">
+    <div className="w-full max-w-3xl">
       <StreakPopup streak={streak} />
 
-      <header className="mb-8">
-        <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-foreground">
+      <header className="mb-6">
+        <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-foreground">
           ダッシュボード
         </h1>
-        <p className="mt-1.5 text-[13px] text-muted-foreground">{dateLabel}</p>
+        <p className="mt-1 text-[13px] text-muted-foreground">{dateLabel}</p>
       </header>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         {/* 練習への導線 */}
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <CTACard
             href="/repeating"
             icon={<Repeat2 className="h-5 w-5" />}
@@ -330,7 +335,7 @@ export default async function HomePage() {
         </div>
 
         {/* 今週の数字 */}
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <MetricCard
             label="今週のリピーティング"
             value={weeklyRepeating}

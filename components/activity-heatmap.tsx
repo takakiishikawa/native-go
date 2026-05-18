@@ -26,7 +26,10 @@ const HEAT = [
 
 export type HeatmapCell = {
   date: string;
-  count: number;
+  /** リピーティング回数 */
+  repeating: number;
+  /** シャドーイング視聴分数 */
+  shadowing: number;
   future: boolean;
 };
 
@@ -59,7 +62,7 @@ export function ActivityHeatmap({
   longest: number;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-5">
+    <div className="rounded-xl border border-[var(--color-border-default)] bg-card p-4">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">
           12週間のアクティビティ
@@ -72,21 +75,25 @@ export function ActivityHeatmap({
 
       <TooltipProvider delayDuration={0}>
         <div
-          className="mt-6 grid"
+          className="mt-5 grid"
           style={{
             gridTemplateColumns: "repeat(12, 1fr)",
             gridTemplateRows: "repeat(7, 1fr)",
             gridAutoFlow: "column",
-            gap: "6px",
-            height: "264px",
+            gap: "5px",
+            height: "196px",
           }}
         >
           {cells.map((c, i) => {
-            const lv = c.future ? -1 : level(c.count);
+            const total = c.repeating + c.shadowing;
+            const lv = c.future ? -1 : level(total);
+            const parts: string[] = [];
+            if (c.repeating > 0) parts.push(`リピート ${c.repeating}回`);
+            if (c.shadowing > 0) parts.push(`シャドー ${c.shadowing}分`);
             const label = c.future
               ? formatDate(c.date)
-              : c.count > 0
-                ? `${c.count}回 · ${formatDate(c.date)}`
+              : parts.length > 0
+                ? `${parts.join(" · ")} · ${formatDate(c.date)}`
                 : `練習なし · ${formatDate(c.date)}`;
             return (
               <Tooltip key={i}>
