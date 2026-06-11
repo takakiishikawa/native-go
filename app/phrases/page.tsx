@@ -28,7 +28,7 @@ import { PhraseAudioButton } from "@/components/phrase-audio-button";
 
 const UNCATEGORIZED = "未分類";
 
-type Mode = "phrase" | "word";
+type Kind = "phrase" | "word";
 
 // AI 抽出が付ける日本語カテゴリと手動の場面タグの両方を緩くカバーする。
 const SCENE_ICON_RULES: { test: RegExp; icon: LucideIcon }[] = [
@@ -55,7 +55,13 @@ function sceneIcon(scene: string): LucideIcon {
   return MessageCircle;
 }
 
-type Entry = { id: string; vn: string; ja: string; category: string | null };
+type Entry = {
+  id: string;
+  vn: string;
+  ja: string;
+  category: string | null;
+  kind: Kind;
+};
 type Scene = { name: string; count: number; icon: LucideIcon };
 
 function SceneCard({
@@ -93,34 +99,35 @@ function SceneCard({
   );
 }
 
-function ModeToggle({
-  mode,
-  onChange,
-}: {
-  mode: Mode;
-  onChange: (m: Mode) => void;
-}) {
-  const tabs: { value: Mode; label: string }[] = [
-    { value: "phrase", label: "フレーズ" },
-    { value: "word", label: "単語" },
-  ];
+function EntryList({ entries }: { entries: Entry[] }) {
   return (
-    <div className="inline-flex rounded-full bg-muted p-1">
-      {tabs.map((t) => (
-        <button
-          key={t.value}
-          type="button"
-          onClick={() => onChange(t.value)}
-          className={cn(
-            "min-w-[88px] rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
-            mode === t.value
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
+    <ul className="space-y-2.5">
+      {entries.map((e) => (
+        <li
+          key={`${e.kind}-${e.id}`}
+          className="flex items-center gap-3 rounded-xl bg-[var(--color-primary)]/8 px-4 py-3.5"
         >
-          {t.label}
-        </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-[17px] font-bold leading-snug text-foreground">
+              {e.vn}
+            </p>
+            {e.ja && (
+              <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
+                {e.ja}
+              </p>
+            )}
+          </div>
+          <PhraseAudioButton text={e.vn} />
+        </li>
       ))}
+    </ul>
+  );
+}
+
+function GroupLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+      {children}
     </div>
   );
 }
@@ -132,7 +139,6 @@ export default function PhrasesPage() {
   const [expressions, setExpressions] = useState<Expression[]>([]);
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<Mode>("phrase");
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
@@ -164,22 +170,24 @@ export default function PhrasesPage() {
     };
   }, [isVi, supabase]);
 
+  // フレーズ・単語を一つの軸（場面 = category）にまとめる
   const items: Entry[] = useMemo(() => {
-    if (mode === "phrase") {
-      return expressions.map((e) => ({
-        id: e.id,
-        vn: e.expression,
-        ja: (e.meaning ?? "").replace(/\\n/g, " "),
-        category: e.category,
-      }));
-    }
-    return words.map((w) => ({
+    const fromExpr: Entry[] = expressions.map((e) => ({
+      id: e.id,
+      vn: e.expression,
+      ja: (e.meaning ?? "").replace(/\\n/g, " "),
+      category: e.category,
+      kind: "phrase",
+    }));
+    const fromWord: Entry[] = words.map((w) => ({
       id: w.id,
       vn: w.word,
       ja: (w.meaning ?? "").replace(/\\n/g, " "),
       category: w.category,
+      kind: "word",
     }));
-  }, [mode, expressions, words]);
+    return [...fromExpr, ...fromWord];
+  }, [expressions, words]);
 
   const sceneOf = (e: Entry) => e.category?.trim() || UNCATEGORIZED;
 
@@ -207,15 +215,15 @@ export default function PhrasesPage() {
   // 未選択なら先頭の場面を既定にする
   const active = selected ?? scenes[0]?.name ?? null;
 
-  const filtered = useMemo(
-    () => (active ? items.filter((e) => sceneOf(e) === active) : items),
-    [items, active],
-  );
-
-  function switchMode(m: Mode) {
-    setMode(m);
-    setSelected(null); // モードでカテゴリ体系が変わるので選択をリセット
-  }
+  const { phrases, vocab } = useMemo(() => {
+    const inScene = active
+      ? items.filter((e) => sceneOf(e) === active)
+      : items;
+    return {
+      phrases: inScene.filter((e) => e.kind === "phrase"),
+      vocab: inScene.filter((e) => e.kind === "word"),
+    };
+  }, [items, active]);
 
   if (!isVi) {
     return (
@@ -234,66 +242,53 @@ export default function PhrasesPage() {
     );
   }
 
-  const sceneHeading = mode === "phrase" ? "今どこにいる？" : "どんな単語？";
-  const kindLabel = mode === "phrase" ? "フレーズ" : "単語";
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        title="フレーズ・単語がまだありません"
+        description="ライブラリで追加し、場面タグ（カテゴリ）を設定するとここに並びます。"
+      />
+    );
+  }
+
+  const bothKinds = phrases.length > 0 && vocab.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
-      <div className="flex justify-center">
-        <ModeToggle mode={mode} onChange={switchMode} />
-      </div>
+      {/* 場面選択 */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-foreground">今どこにいる？</h2>
+        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+          {scenes.map((s) => (
+            <SceneCard
+              key={s.name}
+              label={s.name}
+              icon={s.icon}
+              active={active === s.name}
+              onClick={() => setSelected(s.name)}
+            />
+          ))}
+        </div>
+      </section>
 
-      {items.length === 0 ? (
-        <EmptyState
-          title={`${kindLabel}がまだありません`}
-          description="ライブラリで追加し、場面タグ（カテゴリ）を設定するとここに並びます。"
-        />
-      ) : (
-        <>
-          {/* 場面（カテゴリ）選択 */}
-          <section className="space-y-3">
-            <h2 className="text-lg font-bold text-foreground">{sceneHeading}</h2>
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
-              {scenes.map((s) => (
-                <SceneCard
-                  key={s.name}
-                  label={s.name}
-                  icon={s.icon}
-                  active={active === s.name}
-                  onClick={() => setSelected(s.name)}
-                />
-              ))}
-            </div>
-          </section>
+      {/* 選択した場面のフレーズ・単語 */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-bold text-foreground">{active}</h2>
 
-          {/* リスト */}
-          <section className="space-y-3">
-            <h2 className="text-lg font-bold text-foreground">
-              {active}の{kindLabel}
-            </h2>
-            <ul className="space-y-2.5">
-              {filtered.map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-center gap-3 rounded-xl bg-[var(--color-primary)]/8 px-4 py-3.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[17px] font-bold leading-snug text-foreground">
-                      {e.vn}
-                    </p>
-                    {e.ja && (
-                      <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
-                        {e.ja}
-                      </p>
-                    )}
-                  </div>
-                  <PhraseAudioButton text={e.vn} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )}
+        {phrases.length > 0 && (
+          <div className="space-y-2.5">
+            {bothKinds && <GroupLabel>フレーズ</GroupLabel>}
+            <EntryList entries={phrases} />
+          </div>
+        )}
+
+        {vocab.length > 0 && (
+          <div className="space-y-2.5">
+            {bothKinds && <GroupLabel>単語</GroupLabel>}
+            <EntryList entries={vocab} />
+          </div>
+        )}
+      </section>
     </div>
   );
 }
