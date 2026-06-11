@@ -47,7 +47,8 @@ export interface Grammar {
 
 export interface Expression {
   id: string;
-  category: string;
+  // DB は NOT NULL だが、UI 上は未設定（場面なし）を null として扱う
+  category: string | null;
   expression: string;
   meaning: string;
   conversation: string;

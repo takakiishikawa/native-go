@@ -20,7 +20,7 @@ import type { Grammar, Expression, Word } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
 import { Plus, Star, Trash2, Check, Sparkles } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
-import { CategoryTag } from "@/components/category-tag";
+import { SceneTag } from "@/components/scene-tag";
 import {
   deleteGrammar,
   deleteExpression,
@@ -38,6 +38,21 @@ type GrammarWithLesson = Grammar & { lessons: { lesson_no: string } | null };
 type ExpressionWithLesson = Expression & {
   lessons: { lesson_no: string } | null;
 };
+
+/** 登録済みの場面（category）を重複なく集めて場面タグの候補にする */
+function useSceneSuggestions(items: { category: string | null }[]): string[] {
+  return useMemo(
+    () =>
+      Array.from(
+        new Set(
+          items
+            .map((i) => i.category?.trim())
+            .filter((c): c is string => !!c),
+        ),
+      ).sort((a, b) => a.localeCompare(b, "ja")),
+    [items],
+  );
+}
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -215,6 +230,15 @@ function GrammarTab({
     }
   }
 
+  const suggestions = useSceneSuggestions(items);
+  const handleSceneChanged = useCallback(
+    (id: string, next: string | null) =>
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, category: next } : it)),
+      ),
+    [],
+  );
+
   const columns = useMemo(
     (): ColumnDef<GrammarWithLesson>[] => {
       const cols: ColumnDef<GrammarWithLesson>[] = [
@@ -241,8 +265,16 @@ function GrammarTab({
       }
       cols.push({
         id: "category",
-        header: "カテゴリ",
-        cell: ({ row }) => <CategoryTag category={row.original.category} />,
+        header: isVi ? "場面" : "カテゴリ",
+        cell: ({ row }) => (
+          <SceneTag
+            kind="grammar"
+            id={row.original.id}
+            value={row.original.category}
+            suggestions={suggestions}
+            onChanged={(next) => handleSceneChanged(row.original.id, next)}
+          />
+        ),
       });
       cols.push(
         {
@@ -316,7 +348,7 @@ function GrammarTab({
       );
       return cols;
     },
-    [isVi, busyId],
+    [isVi, busyId, suggestions, handleSceneChanged],
   );
 
   if (loading) {
@@ -407,6 +439,15 @@ function PhraseTab({
     }
   }
 
+  const suggestions = useSceneSuggestions(items);
+  const handleSceneChanged = useCallback(
+    (id: string, next: string | null) =>
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, category: next } : it)),
+      ),
+    [],
+  );
+
   const columns = useMemo(
     (): ColumnDef<ExpressionWithLesson>[] => {
       const cols: ColumnDef<ExpressionWithLesson>[] = [
@@ -434,8 +475,16 @@ function PhraseTab({
       cols.push(
         {
           accessorKey: "category",
-          header: "カテゴリ",
-          cell: ({ row }) => <CategoryTag category={row.original.category} />,
+          header: isVi ? "場面" : "カテゴリ",
+          cell: ({ row }) => (
+            <SceneTag
+              kind="expression"
+              id={row.original.id}
+              value={row.original.category}
+              suggestions={suggestions}
+              onChanged={(next) => handleSceneChanged(row.original.id, next)}
+            />
+          ),
         },
         {
           accessorKey: "expression",
@@ -508,7 +557,7 @@ function PhraseTab({
       );
       return cols;
     },
-    [isVi, busyId],
+    [isVi, busyId, suggestions, handleSceneChanged],
   );
 
   if (loading) {
@@ -600,6 +649,15 @@ function WordTab({
     }
   }
 
+  const suggestions = useSceneSuggestions(items);
+  const handleSceneChanged = useCallback(
+    (id: string, next: string | null) =>
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, category: next } : it)),
+      ),
+    [],
+  );
+
   const columns = useMemo(
     (): ColumnDef<Word>[] => [
       {
@@ -613,8 +671,16 @@ function WordTab({
       },
       {
         accessorKey: "category",
-        header: "カテゴリ",
-        cell: ({ row }) => <CategoryTag category={row.original.category} />,
+        header: "場面",
+        cell: ({ row }) => (
+          <SceneTag
+            kind="word"
+            id={row.original.id}
+            value={row.original.category}
+            suggestions={suggestions}
+            onChanged={(next) => handleSceneChanged(row.original.id, next)}
+          />
+        ),
       },
       {
         accessorKey: "word",
@@ -681,7 +747,7 @@ function WordTab({
         ),
       },
     ],
-    [busyId],
+    [busyId, suggestions, handleSceneChanged],
   );
 
   if (loading) {

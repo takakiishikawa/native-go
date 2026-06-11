@@ -24,6 +24,7 @@ import {
   Home,
   Repeat2,
   Volume2,
+  MessagesSquare,
   FileText,
   BookOpen,
   BarChart3,
@@ -53,6 +54,12 @@ const navItems: NavItem[] = [
   { href: "/", label: "ダッシュボード", icon: Home },
   { href: "/repeating", label: "リピーティング", icon: Repeat2 },
   { href: "/shadowing", label: "シャドーイング", icon: Volume2 },
+  {
+    href: "/phrases",
+    label: "フレーズ",
+    icon: MessagesSquare,
+    languages: ["vi"],
+  },
   { href: "/texts", label: "ライブラリ", icon: FileText, languages: ["en"] },
   {
     href: "/list",

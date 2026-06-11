@@ -659,6 +659,26 @@ export async function setStudyNote(kind: StudyKind, id: string, note: string) {
   revalidatePath("/list");
 }
 
+// ── 場面タグ（category）─ ライブラリで手動設定。/phrases の場面チップに使う ──
+export async function setItemCategory(
+  kind: StudyKind,
+  id: string,
+  category: string,
+) {
+  const supabase = await createClient();
+  const trimmed = category.trim();
+  // expressions.category は NOT NULL なのでクリア時は空文字を保存。
+  // grammar / words は nullable なので null にする。
+  const value = kind === "expression" ? trimmed : trimmed || null;
+  const { error } = await supabase
+    .from(STUDY_TABLE[kind])
+    .update({ category: value })
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/list");
+  revalidatePath("/phrases");
+}
+
 // ── パターン箇所の AI 判定 ──────────────────────────────────────────────
 const PATTERN_DETECT_SYSTEM = `You locate where a grammar pattern (or fixed expression) actually appears inside a short dialogue, so the app can highlight it.
 
