@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn, toast } from "@takaki/go-design-system";
-import { Play, Square, Loader2 } from "lucide-react";
+import { Volume2, Loader2 } from "lucide-react";
 
 // 画面内で同時に鳴るのは常に一つだけにする
 let stopCurrent: (() => void) | null = null;
@@ -69,16 +69,17 @@ export function PhraseAudioButton({
       disabled={state === "loading"}
       aria-label={state === "playing" ? "停止" : "再生"}
       className={cn(
-        "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white shadow-sm transition-transform active:scale-95 disabled:opacity-60",
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors active:scale-95 disabled:opacity-60",
+        state === "playing"
+          ? "bg-[color:var(--color-primary)] text-white"
+          : "text-[color:var(--color-primary)] hover:bg-[var(--color-primary)]/10",
         className,
       )}
     >
       {state === "loading" ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : state === "playing" ? (
-        <Square className="h-4 w-4 fill-current" />
+        <Loader2 className="h-5 w-5 animate-spin" />
       ) : (
-        <Play className="ml-0.5 h-5 w-5 fill-current" />
+        <Volume2 className="h-5 w-5" />
       )}
     </button>
   );

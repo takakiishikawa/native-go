@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { cn, PageHeader, EmptyState } from "@takaki/go-design-system";
+import { cn, EmptyState } from "@takaki/go-design-system";
 import {
   Coffee,
   ShoppingBag,
@@ -13,7 +13,6 @@ import {
   Home,
   Heart,
   MessageCircle,
-  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import type { Expression } from "@/lib/types";
@@ -41,15 +40,13 @@ function sceneIcon(scene: string): LucideIcon {
 
 type Scene = { name: string; count: number; icon: LucideIcon };
 
-function SceneChip({
+function SceneCard({
   label,
-  count,
   icon: Icon,
   active,
   onClick,
 }: {
   label: string;
-  count: number;
   icon: LucideIcon;
   active: boolean;
   onClick: () => void;
@@ -59,23 +56,20 @@ function SceneChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
+        "flex aspect-square flex-col items-center justify-center gap-2.5 rounded-2xl border-2 transition-colors",
         active
           ? "border-[color:var(--color-primary)] bg-[var(--color-primary)]/10 text-[color:var(--color-primary)]"
-          : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+          : "border-transparent bg-muted text-muted-foreground hover:bg-muted/70",
       )}
     >
-      <Icon className="h-4 w-4 shrink-0" />
-      {label}
+      <Icon className="h-7 w-7 shrink-0" />
       <span
         className={cn(
-          "rounded-full px-1.5 text-xs tabular-nums",
-          active
-            ? "bg-[var(--color-primary)]/15"
-            : "bg-muted text-muted-foreground",
+          "text-sm font-medium",
+          active ? "text-[color:var(--color-primary)]" : "text-foreground",
         )}
       >
-        {count}
+        {label}
       </span>
     </button>
   );
@@ -87,7 +81,7 @@ export default function PhrasesPage() {
   const isVi = language === "vi";
   const [items, setItems] = useState<Expression[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<string | null>(null); // null = すべて
+  const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isVi) {
@@ -121,9 +115,9 @@ export default function PhrasesPage() {
     }
     const named = [...counts.entries()]
       .filter(([name]) => name !== UNCATEGORIZED)
-      .sort((a, b) => a[0].localeCompare(b[0], "ja"))
+      // 件数の多い順（よく使う場面を上に）。同数は名前順
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ja"))
       .map(([name, count]) => ({ name, count, icon: sceneIcon(name) }));
-    // 未分類は末尾に
     if (counts.has(UNCATEGORIZED)) {
       named.push({
         name: UNCATEGORIZED,
@@ -134,85 +128,84 @@ export default function PhrasesPage() {
     return named;
   }, [items]);
 
+  // 未選択なら先頭の場面を既定にする
+  const active = selected ?? scenes[0]?.name ?? null;
+
   const filtered = useMemo(
-    () => (selected === null ? items : items.filter((e) => sceneOf(e) === selected)),
-    [items, selected],
+    () => (active ? items.filter((e) => sceneOf(e) === active) : items),
+    [items, active],
   );
 
   if (!isVi) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="フレーズ" />
-        <EmptyState
-          title="ベトナム語専用の機能です"
-          description="言語をベトナム語に切り替えると、場面別のフレーズが表示されます。"
-        />
+      <EmptyState
+        title="ベトナム語専用の機能です"
+        description="言語をベトナム語に切り替えると、場面別のフレーズが表示されます。"
+      />
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-muted-foreground">
+        読み込み中...
       </div>
     );
   }
 
-  return (
-    <div className="space-y-5">
-      <PageHeader
-        title="フレーズ"
-        description="場面を選んで、すぐに使えるフレーズを引き出せます。"
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        title="フレーズがまだありません"
+        description="ライブラリでフレーズを追加し、場面タグを設定するとここに並びます。"
       />
+    );
+  }
 
-      {loading ? (
-        <div className="flex h-64 items-center justify-center text-muted-foreground">
-          読み込み中...
-        </div>
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="フレーズがまだありません"
-          description="ライブラリでフレーズを追加し、場面タグを設定するとここに並びます。"
-        />
-      ) : (
-        <>
-          {/* 場面チップ — 横スクロール（モバイル）/ 折り返し（デスクトップ） */}
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-            <SceneChip
-              label="すべて"
-              count={items.length}
-              icon={LayoutGrid}
-              active={selected === null}
-              onClick={() => setSelected(null)}
+  return (
+    <div className="mx-auto w-full max-w-2xl space-y-6">
+      {/* 場面選択 */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-foreground">今どこにいる？</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {scenes.map((s) => (
+            <SceneCard
+              key={s.name}
+              label={s.name}
+              icon={s.icon}
+              active={active === s.name}
+              onClick={() => setSelected(s.name)}
             />
-            {scenes.map((s) => (
-              <SceneChip
-                key={s.name}
-                label={s.name}
-                count={s.count}
-                icon={s.icon}
-                active={selected === s.name}
-                onClick={() => setSelected(s.name)}
-              />
-            ))}
-          </div>
+          ))}
+        </div>
+      </section>
 
-          {/* フレーズリスト */}
-          <ul className="space-y-2.5">
-            {filtered.map((e) => (
-              <li
-                key={e.id}
-                className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-[17px] font-semibold leading-snug text-foreground">
-                    {e.expression}
+      {/* フレーズリスト */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-foreground">
+          {active}のフレーズ
+        </h2>
+        <ul className="space-y-2.5">
+          {filtered.map((e) => (
+            <li
+              key={e.id}
+              className="flex items-center gap-3 rounded-xl bg-[var(--color-primary)]/8 px-4 py-3.5"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-[17px] font-bold leading-snug text-foreground">
+                  {e.expression}
+                </p>
+                {e.meaning && (
+                  <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
+                    {e.meaning.replace(/\\n/g, " ")}
                   </p>
-                  {e.meaning && (
-                    <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
-                      {e.meaning.replace(/\\n/g, " ")}
-                    </p>
-                  )}
-                </div>
-                <PhraseAudioButton text={e.expression} />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+                )}
+              </div>
+              <PhraseAudioButton text={e.expression} />
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
