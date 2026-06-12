@@ -20,20 +20,7 @@ import type {
   ExtractedGrammar,
   ExtractedExpression,
 } from "@/lib/types";
-import { Loader2, Star } from "lucide-react";
-
-function StarRating({ value }: { value: number }) {
-  return (
-    <span className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-3 w-3 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground"}`}
-        />
-      ))}
-    </span>
-  );
-}
+import { Loader2 } from "lucide-react";
 
 function GrammarPreview({ item }: { item: ExtractedGrammar }) {
   return (
@@ -45,7 +32,6 @@ function GrammarPreview({ item }: { item: ExtractedGrammar }) {
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">文法</Badge>
-            <StarRating value={item.frequency} />
           </div>
         </div>
         <CardDescription>{item.summary}</CardDescription>
@@ -84,7 +70,6 @@ function ExpressionPreview({ item }: { item: ExtractedExpression }) {
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">{item.category}</Badge>
-            <StarRating value={item.frequency} />
           </div>
         </div>
         <CardDescription>{item.meaning}</CardDescription>

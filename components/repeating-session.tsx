@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Play,
   Square,
-  Star,
   X,
   Languages,
   ChefHat,
@@ -64,25 +63,6 @@ const TOPIC_ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const stripSpeaker = (line: string) => line.replace(/^[AB]:\s*/i, "");
-
-// ─── Stars ──────────────────────────────────────────────────────────
-function Stars({ value }: { value: number }) {
-  return (
-    <span className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={cn(
-            "h-4 w-4",
-            i <= value
-              ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]"
-              : "text-muted-foreground/30",
-          )}
-        />
-      ))}
-    </span>
-  );
-}
 
 // ─── Cycle ring (10回で卒業) ─────────────────────────────────────────
 function CycleRing({ done, total }: { done: number; total: number }) {
@@ -431,7 +411,6 @@ export type RepeatingSessionProps = {
   kindLabel: string;
   title: string;
   summary?: string | null;
-  importance: number;
   topicLabel?: string | null;
   topicIcon?: string | null;
   lines: string[];
@@ -458,7 +437,6 @@ export function RepeatingSession({
   kindLabel,
   title,
   summary,
-  importance,
   topicLabel,
   topicIcon,
   lines,
@@ -574,11 +552,8 @@ export function RepeatingSession({
       <div className="relative flex min-h-0 flex-1 flex-col">
         {/* Stage — vertically centered, compact */}
         <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-4">
-          {/* Pattern block — plain, no border. Stars sit above the title. */}
+          {/* Pattern block — plain, no border. */}
           <div className="max-w-[680px] text-center">
-            <div className="mb-2 flex justify-center">
-              <Stars value={importance} />
-            </div>
             <h1 className="text-[28px] font-bold leading-tight tracking-tight text-foreground">
               {title}
             </h1>

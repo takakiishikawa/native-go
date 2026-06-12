@@ -334,7 +334,6 @@ export default function GrammarRepeatingPage() {
         kindLabel="文法"
         title={current.name}
         summary={current.summary?.replace(/\\n/g, " ")}
-        importance={current.frequency}
         topicLabel={current.topic_label}
         topicIcon={current.topic_icon}
         lines={examples}

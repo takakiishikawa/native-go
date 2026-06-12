@@ -50,7 +50,6 @@ import type {
 } from "@/lib/types";
 import Link from "next/link";
 import {
-  Star,
   BookOpen,
   MessageSquare,
   Plus,
@@ -94,18 +93,6 @@ function StatusTag({ status }: { status: Lesson["status"] }) {
   return <Tag color={colorMap[status]}>{status}</Tag>;
 }
 
-function StarRating({ value }: { value: number }) {
-  return (
-    <span className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-3 w-3 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground"}`}
-        />
-      ))}
-    </span>
-  );
-}
 
 function GrammarPreview({ item }: { item: ExtractedGrammar }) {
   return (
@@ -117,7 +104,6 @@ function GrammarPreview({ item }: { item: ExtractedGrammar }) {
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">文法</Badge>
-            <StarRating value={item.frequency} />
           </div>
         </div>
         <CardDescription className="text-sm">{item.summary}</CardDescription>
@@ -149,7 +135,6 @@ function ExpressionPreview({ item }: { item: ExtractedExpression }) {
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">{item.category}</Badge>
-            <StarRating value={item.frequency} />
           </div>
         </div>
         <CardDescription className="text-sm">{item.meaning}</CardDescription>

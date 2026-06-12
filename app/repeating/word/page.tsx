@@ -321,7 +321,6 @@ export default function WordRepeatingPage() {
         kindLabel="単語"
         title={current.word}
         summary={current.meaning?.replace(/\\n/g, " ")}
-        importance={current.frequency}
         topicLabel={current.topic_label}
         topicIcon={current.topic_icon}
         lines={exampleLines}

@@ -328,7 +328,6 @@ export default function ExpressionRepeatingPage() {
         kindLabel="フレーズ"
         title={current.expression}
         summary={current.meaning?.replace(/\\n/g, " ")}
-        importance={current.frequency}
         topicLabel={current.topic_label}
         topicIcon={current.topic_icon}
         lines={lines}

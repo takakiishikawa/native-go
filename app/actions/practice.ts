@@ -423,7 +423,6 @@ export async function saveGrammar(
     examples: string[];
     pattern_quote?: string | null;
     usage_scene: string;
-    frequency: number;
     word_notes?: WordNote[] | null;
     category?: string | null;
     source_title?: string | null;
@@ -440,7 +439,6 @@ export async function saveGrammar(
     detail: g.detail ?? null,
     examples: g.examples.join("\n"),
     usage_scene: g.usage_scene,
-    frequency: g.frequency,
     play_count: 0,
     lesson_id: lessonId ?? null,
     language,
@@ -469,7 +467,6 @@ export async function saveExpressions(
     meaning: string;
     conversation: string[];
     usage_scene: string;
-    frequency: number;
     word_notes?: WordNote[] | null;
     nuance?: string | null;
     pattern_quote?: string | null;
@@ -487,7 +484,6 @@ export async function saveExpressions(
     meaning: e.meaning,
     conversation: e.conversation.join("\n"),
     usage_scene: e.usage_scene,
-    frequency: e.frequency,
     play_count: 0,
     lesson_id: lessonId ?? null,
     language,
@@ -512,7 +508,6 @@ export async function saveWords(
     meaning: string;
     example?: string | null;
     usage_scene?: string | null;
-    frequency: number;
     word_notes?: WordNote[] | null;
     source_title?: string | null;
     category?: string | null;
@@ -543,7 +538,6 @@ export async function saveWords(
     meaning: w.meaning,
     example: w.example ?? null,
     usage_scene: w.usage_scene ?? null,
-    frequency: w.frequency,
     play_count: 0,
     lesson_id: lessonId ?? null,
     language,
@@ -600,6 +594,17 @@ export async function setItemCategory(
   if (error) throw error;
   revalidatePath("/list");
   revalidatePath("/phrases");
+}
+
+// ── メモ（note）─ 理解のための自由メモ。ライブラリで入力/編集/削除 ──
+export async function setItemNote(kind: ItemKind, id: string, note: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from(ITEM_TABLE[kind])
+    .update({ note: note.trim() || null })
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/list");
 }
 
 // ── パターン箇所の AI 判定 ──────────────────────────────────────────────

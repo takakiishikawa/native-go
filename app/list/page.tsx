@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Button,
-  cn,
   DataTable,
   PageHeader,
   Badge,
@@ -18,9 +17,10 @@ import {
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Grammar, Expression, Word } from "@/lib/types";
 import { useCurrentLanguage } from "@/lib/language-context";
-import { Plus, Star, Trash2, Sparkles } from "lucide-react";
+import { Plus, Trash2, Sparkles } from "lucide-react";
 import { ViAddModal } from "@/components/vi-add-modal";
 import { SceneTag } from "@/components/scene-tag";
+import { NoteCell } from "@/components/note-cell";
 import {
   deleteGrammar,
   deleteExpression,
@@ -45,19 +45,6 @@ function useSceneSuggestions(items: { category: string | null }[]): string[] {
         ),
       ).sort((a, b) => a.localeCompare(b, "ja")),
     [items],
-  );
-}
-
-function StarRating({ value }: { value: number }) {
-  return (
-    <span className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={`h-3.5 w-3.5 ${i <= value ? "fill-[var(--color-warning)] text-[color:var(--color-warning)]" : "text-muted-foreground/30"}`}
-        />
-      ))}
-    </span>
   );
 }
 
@@ -172,6 +159,13 @@ function GrammarTab({
       ),
     [],
   );
+  const handleNoteChanged = useCallback(
+    (id: string, next: string | null) =>
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, note: next } : it)),
+      ),
+    [],
+  );
 
   const columns = useMemo(
     (): ColumnDef<GrammarWithLesson>[] => {
@@ -231,22 +225,31 @@ function GrammarTab({
         },
       );
       if (isVi) {
-        cols.push({
-          id: "source_title",
-          header: "ソース",
-          cell: ({ row }) => (
-            <span className="text-xs text-muted-foreground line-clamp-1 max-w-[160px] block">
-              {row.original.source_title ?? "—"}
-            </span>
-          ),
-        });
+        cols.push(
+          {
+            id: "source_title",
+            header: "ソース",
+            cell: ({ row }) => (
+              <span className="text-xs text-muted-foreground line-clamp-1 max-w-[160px] block">
+                {row.original.source_title ?? "—"}
+              </span>
+            ),
+          },
+          {
+            id: "note",
+            header: "メモ",
+            cell: ({ row }) => (
+              <NoteCell
+                kind="grammar"
+                id={row.original.id}
+                value={row.original.note}
+                onChanged={(next) => handleNoteChanged(row.original.id, next)}
+              />
+            ),
+          },
+        );
       }
       cols.push(
-        {
-          accessorKey: "frequency",
-          header: "頻度",
-          cell: ({ row }) => <StarRating value={row.original.frequency} />,
-        },
         {
           accessorKey: "play_count",
           header: "練習",
@@ -271,7 +274,7 @@ function GrammarTab({
       );
       return cols;
     },
-    [isVi, busyId, suggestions, handleSceneChanged],
+    [isVi, busyId, suggestions, handleSceneChanged, handleNoteChanged],
   );
 
   if (loading) {
@@ -350,6 +353,13 @@ function PhraseTab({
       ),
     [],
   );
+  const handleNoteChanged = useCallback(
+    (id: string, next: string | null) =>
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, note: next } : it)),
+      ),
+    [],
+  );
 
   const columns = useMemo(
     (): ColumnDef<ExpressionWithLesson>[] => {
@@ -409,22 +419,31 @@ function PhraseTab({
         },
       );
       if (isVi) {
-        cols.push({
-          id: "source_title",
-          header: "ソース",
-          cell: ({ row }) => (
-            <span className="text-xs text-muted-foreground line-clamp-1 max-w-[160px] block">
-              {row.original.source_title ?? "—"}
-            </span>
-          ),
-        });
+        cols.push(
+          {
+            id: "source_title",
+            header: "ソース",
+            cell: ({ row }) => (
+              <span className="text-xs text-muted-foreground line-clamp-1 max-w-[160px] block">
+                {row.original.source_title ?? "—"}
+              </span>
+            ),
+          },
+          {
+            id: "note",
+            header: "メモ",
+            cell: ({ row }) => (
+              <NoteCell
+                kind="expression"
+                id={row.original.id}
+                value={row.original.note}
+                onChanged={(next) => handleNoteChanged(row.original.id, next)}
+              />
+            ),
+          },
+        );
       }
       cols.push(
-        {
-          accessorKey: "frequency",
-          header: "頻度",
-          cell: ({ row }) => <StarRating value={row.original.frequency} />,
-        },
         {
           accessorKey: "play_count",
           header: "練習",
@@ -449,7 +468,7 @@ function PhraseTab({
       );
       return cols;
     },
-    [isVi, busyId, suggestions, handleSceneChanged],
+    [isVi, busyId, suggestions, handleSceneChanged, handleNoteChanged],
   );
 
   if (loading) {
@@ -529,6 +548,13 @@ function WordTab({
       ),
     [],
   );
+  const handleNoteChanged = useCallback(
+    (id: string, next: string | null) =>
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, note: next } : it)),
+      ),
+    [],
+  );
 
   const columns = useMemo(
     (): ColumnDef<Word>[] => [
@@ -582,9 +608,16 @@ function WordTab({
         ),
       },
       {
-        accessorKey: "frequency",
-        header: "頻度",
-        cell: ({ row }) => <StarRating value={row.original.frequency} />,
+        id: "note",
+        header: "メモ",
+        cell: ({ row }) => (
+          <NoteCell
+            kind="word"
+            id={row.original.id}
+            value={row.original.note}
+            onChanged={(next) => handleNoteChanged(row.original.id, next)}
+          />
+        ),
       },
       {
         accessorKey: "play_count",
@@ -608,7 +641,7 @@ function WordTab({
         ),
       },
     ],
-    [busyId, suggestions, handleSceneChanged],
+    [busyId, suggestions, handleSceneChanged, handleNoteChanged],
   );
 
   if (loading) {

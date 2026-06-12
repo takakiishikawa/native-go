@@ -27,7 +27,6 @@ export interface Grammar {
   detail: string | null;
   examples: string;
   usage_scene: string;
-  frequency: number;
   play_count: number;
   last_played_at: string | null;
   created_at: string;
@@ -35,6 +34,7 @@ export interface Grammar {
   language: Language;
   word_notes: WordNote[] | null;
   category: string | null;
+  note: string | null;
   source_title: string | null;
   topic_label: string | null;
   topic_icon: string | null;
@@ -49,7 +49,6 @@ export interface Expression {
   meaning: string;
   conversation: string;
   usage_scene: string;
-  frequency: number;
   play_count: number;
   last_played_at: string | null;
   created_at: string;
@@ -57,6 +56,7 @@ export interface Expression {
   language: Language;
   word_notes: WordNote[] | null;
   nuance: string | null;
+  note: string | null;
   source_title: string | null;
   topic_label: string | null;
   topic_icon: string | null;
@@ -70,12 +70,12 @@ export interface Word {
   example: string | null;
   usage_scene: string | null;
   word_notes: WordNote[] | null;
-  frequency: number;
   play_count: number;
   last_played_at: string | null;
   created_at: string;
   lesson_id: string | null;
   language: Language;
+  note: string | null;
   source_title: string | null;
   category: string | null;
   topic_label: string | null;
