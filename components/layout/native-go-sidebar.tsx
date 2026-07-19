@@ -20,34 +20,45 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@takaki/go-design-system";
-import { Settings, Sun, Moon, ExternalLink } from "lucide-react";
+import {
+  Settings,
+  Sun,
+  Moon,
+  ExternalLink,
+  Home,
+  Repeat,
+  Headphones,
+  PenLine,
+  BookOpen,
+  MessagesSquare,
+  BarChart3,
+  type LucideIcon,
+} from "lucide-react";
 import type { Language } from "@/lib/types";
 import { LanguageSwitch } from "./language-switch";
 import { FluentMark } from "@/components/brand/fluent-mark";
 
-type Shape = "square" | "circle";
-
 type NavItem = {
   href: string;
   label: string;
-  shape: Shape;
+  icon: LucideIcon;
   /** 表示対象の言語。未指定なら全言語で表示 */
   languages?: Language[];
 };
 
-/** プライマリナビ（常時表示）— アイコンは色付きドット（NativeGo Concepts.dc.html 準拠） */
+/** プライマリナビ（常時表示）— アイコンは NativeGo Concepts.dc.html の実アイコンに準拠 */
 const primaryNavItems: NavItem[] = [
-  { href: "/", label: "Dashboard", shape: "square" },
-  { href: "/repeating", label: "Repeating", shape: "circle" },
-  { href: "/shadowing", label: "Shadowing", shape: "square" },
-  { href: "/output", label: "Output", shape: "circle" },
-  { href: "/library", label: "Input", shape: "square", languages: ["en"] },
-  { href: "/phrases", label: "Phrases", shape: "circle", languages: ["vi"] },
-  { href: "/list", label: "Library", shape: "square", languages: ["vi"] },
+  { href: "/", label: "Dashboard", icon: Home },
+  { href: "/repeating", label: "Repeating", icon: Repeat },
+  { href: "/shadowing", label: "Shadowing", icon: Headphones },
+  { href: "/output", label: "Output", icon: PenLine },
+  { href: "/library", label: "Input", icon: BookOpen, languages: ["en"] },
+  { href: "/phrases", label: "Phrases", icon: MessagesSquare, languages: ["vi"] },
+  { href: "/list", label: "Library", icon: BookOpen, languages: ["vi"] },
 ];
 
 /** プロフィール行ホバーで出すポップオーバー内ナビ */
-const popoverNavItems: NavItem[] = [{ href: "/report", label: "Report", shape: "square" }];
+const popoverNavItems: NavItem[] = [{ href: "/report", label: "Report", icon: BarChart3 }];
 
 function isActive(href: string, pathname: string) {
   if (href === "/") return pathname === "/";
@@ -155,7 +166,7 @@ export function NativeGoSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
-              {visiblePrimary.map(({ href, label, shape }) => {
+              {visiblePrimary.map(({ href, label, icon: Icon }) => {
                 const active = isActive(href, pathname);
                 const shownLabel =
                   href === "/shadowing" && channelName
@@ -171,14 +182,9 @@ export function NativeGoSidebar({
                           : "text-muted-foreground hover:bg-[var(--color-surface-subtle)]"
                       }`}
                     >
-                      <span
-                        className="h-2 w-2 shrink-0"
-                        style={{
-                          borderRadius: shape === "circle" ? "50%" : 3,
-                          background: active
-                            ? "var(--color-primary)"
-                            : "var(--color-text-secondary)",
-                        }}
+                      <Icon
+                        className="h-[18px] w-[18px] shrink-0"
+                        style={{ color: active ? "var(--color-primary)" : "var(--color-text-secondary)" }}
                       />
                       {shownLabel}
                     </Link>
@@ -231,7 +237,7 @@ export function NativeGoSidebar({
           {visiblePopover.length > 0 && (
             <HoverCardContent side="top" align="start" className="w-48 p-1">
               <div className="flex flex-col gap-0.5">
-                {visiblePopover.map(({ href, label, shape }) => {
+                {visiblePopover.map(({ href, label, icon: Icon }) => {
                   const active =
                     (pathname === "/phrases" && href === "/phrases") ||
                     (pathname === "/report" && href === "/report");
@@ -245,14 +251,9 @@ export function NativeGoSidebar({
                           : "text-muted-foreground hover:bg-[var(--color-surface-subtle)]"
                       }`}
                     >
-                      <span
-                        className="h-2 w-2 shrink-0"
-                        style={{
-                          borderRadius: shape === "circle" ? "50%" : 3,
-                          background: active
-                            ? "var(--color-primary)"
-                            : "var(--color-text-secondary)",
-                        }}
+                      <Icon
+                        className="h-4 w-4 shrink-0"
+                        style={{ color: active ? "var(--color-primary)" : "var(--color-text-secondary)" }}
                       />
                       {label}
                     </Link>
