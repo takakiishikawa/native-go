@@ -120,6 +120,23 @@ export interface OutputTopic {
   updated_at: string;
 }
 
+export interface SongLine {
+  text: string;
+  translation: string;
+}
+
+export interface Song {
+  id: string;
+  user_id: string;
+  language: Language;
+  title: string;
+  artist: string;
+  youtube_video_id: string;
+  lines: SongLine[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface NativeCampLog {
   id: string;
   user_id: string;
