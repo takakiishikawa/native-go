@@ -308,7 +308,7 @@ export default function OutputPage() {
           />
         ) : (
           <div
-            className="flex h-full flex-col rounded-[20px] p-[26px_30px]"
+            className="flex h-full flex-col overflow-y-auto rounded-[20px] p-[26px_30px]"
             style={{
               background: "var(--color-surface)",
               border: "1px solid var(--color-border-default)",
@@ -358,7 +358,7 @@ export default function OutputPage() {
               value={response}
               onChange={(e) => setResponse(e.target.value)}
               placeholder="Write your response in your own words..."
-              className="min-h-0 w-full flex-1 resize-none text-[18px] leading-relaxed"
+              className="min-h-[200px] w-full flex-1 resize-y text-[18px] leading-relaxed"
               style={{ background: "var(--color-background)" }}
             />
             <div className="mt-3.5 flex shrink-0 items-center justify-between">
