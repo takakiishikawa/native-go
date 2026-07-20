@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Textarea, Button, toast } from "@takaki/go-design-system";
+import { Textarea, Button, Switch, toast } from "@takaki/go-design-system";
 import { Lock, Check, MessageSquarePlus, Sparkles } from "lucide-react";
 import { toggleRound, masterItem, setItemNote } from "@/app/actions/practice";
 import { useCurrentLanguage } from "@/lib/language-context";
@@ -18,10 +18,7 @@ type Row = {
   jp: string;
   note: string | null;
   rounds: [boolean, boolean, boolean];
-  playCount: number;
 };
-
-const GRID_COLS = "48px 1fr 120px";
 
 function useLibraryItems(kind: Kind, reloadKey: number) {
   const supabase = useMemo(() => createClient(), []);
@@ -51,7 +48,6 @@ function useLibraryItems(kind: Kind, reloadKey: number) {
           jp: (kind === "grammar" ? r.summary : r.meaning) ?? "",
           note: r.note ?? null,
           rounds: [!!r.round1_done, !!r.round2_done, !!r.round3_done],
-          playCount: r.play_count ?? 0,
         })),
       );
       setLoading(false);
@@ -137,7 +133,7 @@ function NoteRow({
 function InputTable({
   kind,
   round,
-  filterIncomplete,
+  showCompleted,
   items,
   setItems,
   loading,
@@ -145,7 +141,7 @@ function InputTable({
 }: {
   kind: Kind;
   round: Round;
-  filterIncomplete: boolean;
+  showCompleted: boolean;
   items: Row[];
   setItems: React.Dispatch<React.SetStateAction<Row[]>>;
   loading: boolean;
@@ -187,9 +183,9 @@ function InputTable({
     }
   }
 
-  const visible = filterIncomplete
-    ? items.filter((it) => !it.rounds[roundIdx])
-    : items;
+  const visible = showCompleted
+    ? items
+    : items.filter((it) => !it.rounds[roundIdx]);
 
   if (loading) {
     return (
@@ -205,12 +201,11 @@ function InputTable({
       style={{ border: "1px solid var(--color-border-default)", background: "var(--color-surface)" }}
     >
       <div
-        className="grid px-[18px] py-2.5 text-[11.5px] font-bold uppercase tracking-[0.04em] text-muted-foreground"
-        style={{ gridTemplateColumns: GRID_COLS, background: "var(--color-surface-subtle)" }}
+        className="flex items-center gap-4 px-[18px] py-2.5 text-[11.5px] font-bold uppercase tracking-[0.04em] text-muted-foreground"
+        style={{ background: "var(--color-surface-subtle)" }}
       >
-        <div>No.</div>
-        <div>{kind === "grammar" ? "Grammar point" : "Phrase"}</div>
-        <div>Practice</div>
+        <div className="w-[28px] shrink-0">No.</div>
+        <div className="flex-1">{kind === "grammar" ? "Grammar point" : "Phrase"}</div>
       </div>
       {visible.length === 0 ? (
         <div className="px-[18px] py-10 text-center text-sm text-muted-foreground">
@@ -221,37 +216,25 @@ function InputTable({
           const locked = roundIdx > 0 && !row.rounds.slice(0, roundIdx).every(Boolean);
           const checked = row.rounds[roundIdx];
           const canSkipAhead = !locked && !checked && round < 3;
-          const statusLabel =
-            row.playCount === 0 ? "New" : row.playCount >= 10 ? "Mastered" : "In progress";
-          const statusColor =
-            row.playCount === 0
-              ? "var(--color-text-secondary)"
-              : row.playCount >= 10
-                ? "var(--color-primary)"
-                : "var(--color-accent)";
+          const contentOpacity = locked ? 0.35 : checked ? 0.55 : 1;
           return (
             <div
               key={row.id}
-              className="group relative grid px-[18px] py-3.5 transition-colors"
+              className="relative flex items-start gap-4 px-[18px] py-3.5 transition-colors"
               onClick={() => !locked && handleToggleRound(row)}
               style={{
-                gridTemplateColumns: GRID_COLS,
                 borderTop: "1px solid var(--color-border-default)",
-                alignItems: "start",
+                borderLeft: `2px solid ${checked ? "var(--color-primary)" : "transparent"}`,
                 cursor: locked ? "default" : "pointer",
-                background: checked
-                  ? "color-mix(in oklch, var(--color-primary-soft) 40%, var(--color-surface))"
-                  : undefined,
-                boxShadow: checked ? "inset 3px 0 0 var(--color-primary)" : undefined,
               }}
             >
               <div
-                className="pt-0.5 text-[13px] text-foreground"
-                style={{ opacity: locked ? 0.35 : 1 }}
+                className="w-[28px] shrink-0 pt-0.5 text-[13px] text-foreground"
+                style={{ opacity: contentOpacity }}
               >
                 {row.no}
               </div>
-              <div style={{ opacity: locked ? 0.35 : 1 }}>
+              <div className="min-w-0 flex-1" style={{ opacity: contentOpacity }}>
                 <div className="flex items-start gap-2">
                   <div className="text-[14px] font-semibold text-foreground">
                     {row.title}
@@ -280,31 +263,24 @@ function InputTable({
                   />
                 )}
               </div>
-              <div
-                className="flex items-center justify-between gap-2 pt-0.5"
-                style={{ opacity: locked ? 0.35 : 1 }}
-              >
-                <span className="text-[12.5px] font-semibold" style={{ color: statusColor }}>
-                  {statusLabel}
-                </span>
-                {canSkipAhead && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMaster(row);
-                    }}
-                    title="Mark fully understood — skip remaining rounds"
-                    className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold opacity-0 transition-opacity group-hover:opacity-100"
-                    style={{
-                      color: "var(--color-accent)",
-                      background: "var(--color-accent-soft)",
-                    }}
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    Skip ahead
-                  </button>
-                )}
-              </div>
+
+              {canSkipAhead && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMaster(row);
+                  }}
+                  title="Mark fully understood — skip remaining rounds"
+                  className="flex shrink-0 items-center gap-1 self-center rounded-full px-2.5 py-1.5 text-[11px] font-semibold"
+                  style={{
+                    color: "var(--color-accent)",
+                    background: "var(--color-accent-soft)",
+                  }}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Skip
+                </button>
+              )}
 
               {locked && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -329,7 +305,7 @@ export default function LibraryInputPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Kind>("grammar");
   const [round, setRound] = useState<Round>(1);
-  const [filterIncomplete, setFilterIncomplete] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const { items, setItems, loading } = useLibraryItems(tab, reloadKey);
 
@@ -397,23 +373,16 @@ export default function LibraryInputPage() {
             </span>
           </button>
         ))}
-        <button
-          onClick={() => setFilterIncomplete((v) => !v)}
-          className="mb-2 ml-auto rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-colors"
-          style={{
-            border: `1px solid ${filterIncomplete ? "var(--color-primary)" : "var(--color-border-default)"}`,
-            background: filterIncomplete ? "var(--color-primary-soft)" : "var(--color-surface)",
-            color: filterIncomplete ? "var(--color-primary)" : "var(--color-text-secondary)",
-          }}
-        >
-          Show remaining only
-        </button>
+        <label className="mb-2 ml-auto flex shrink-0 items-center gap-2 text-[12.5px] font-semibold text-muted-foreground">
+          Show completed
+          <Switch checked={showCompleted} onCheckedChange={setShowCompleted} />
+        </label>
       </div>
 
       <InputTable
         kind={tab}
         round={round}
-        filterIncomplete={filterIncomplete}
+        showCompleted={showCompleted}
         items={items}
         setItems={setItems}
         loading={loading}
