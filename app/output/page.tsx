@@ -346,7 +346,7 @@ export default function OutputPage() {
               value={response}
               onChange={(e) => setResponse(e.target.value)}
               placeholder="Write your response in your own words..."
-              className="min-h-0 w-full flex-1 resize-none text-[15px] leading-relaxed"
+              className="min-h-0 w-full flex-1 resize-none text-[18px] leading-relaxed"
               style={{ background: "var(--color-background)" }}
             />
             <div className="mt-3.5 flex shrink-0 items-center justify-between">
