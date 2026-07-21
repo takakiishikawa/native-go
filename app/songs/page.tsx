@@ -19,7 +19,16 @@ import {
   SelectValue,
   toast,
 } from "@takaki/go-design-system";
-import { Plus, Music, Rewind, FastForward, Play, Pause } from "lucide-react";
+import {
+  Plus,
+  Music,
+  Rewind,
+  FastForward,
+  Play,
+  Pause,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import {
   listSongs,
   createSong,
@@ -247,39 +256,61 @@ export default function SongsPage() {
               ref={playerRef}
               videoId={active.youtube_video_id}
               onPlayingChange={setPlaying}
-              maxHeight="38vh"
             />
 
-            <div className="mt-3.5 flex items-center justify-center gap-3">
-              <button
-                onClick={() => playerRef.current?.seekBy(-10)}
-                className="flex h-9 w-9 items-center justify-center rounded-full"
-                style={{ border: "1px solid var(--color-border-default)", color: "var(--color-text-primary)" }}
-              >
-                <Rewind className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => (playing ? playerRef.current?.pause() : playerRef.current?.play())}
-                className="flex h-11 w-11 items-center justify-center rounded-full"
-                style={{ background: "var(--color-primary)", color: "var(--color-surface)" }}
-              >
-                {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </button>
-              <button
-                onClick={() => playerRef.current?.seekBy(10)}
-                className="flex h-9 w-9 items-center justify-center rounded-full"
-                style={{ border: "1px solid var(--color-border-default)", color: "var(--color-text-primary)" }}
-              >
-                <FastForward className="h-4 w-4" />
-              </button>
+            <div className="mt-3.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <span />
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => playerRef.current?.seekBy(-10)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full"
+                  style={{ border: "1px solid var(--color-border-default)", color: "var(--color-text-primary)" }}
+                >
+                  <Rewind className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => (playing ? playerRef.current?.pause() : playerRef.current?.play())}
+                  className="flex h-11 w-11 items-center justify-center rounded-full"
+                  style={{ background: "var(--color-primary)", color: "var(--color-surface)" }}
+                >
+                  {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                </button>
+                <button
+                  onClick={() => playerRef.current?.seekBy(10)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full"
+                  style={{ border: "1px solid var(--color-border-default)", color: "var(--color-text-primary)" }}
+                >
+                  <FastForward className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => setLineIndex((i) => Math.max(0, i - 1))}
+                  disabled={lineIndex === 0}
+                  title="Previous line"
+                  className="flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-30"
+                  style={{ border: "1px solid var(--color-border-default)", color: "var(--color-text-primary)" }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setLineIndex((i) => Math.min(lines.length - 1, i + 1))}
+                  disabled={lineIndex >= lines.length - 1}
+                  title="Next line"
+                  className="flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-30"
+                  style={{ border: "1px solid var(--color-border-default)", color: "var(--color-text-primary)" }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {currentLine && (
               <div
-                className="mt-[22px] flex flex-1 flex-col rounded-[16px] p-5"
+                className="mt-[18px] flex flex-1 flex-col rounded-[16px] p-5"
                 style={{ background: "var(--color-surface-subtle)" }}
               >
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-2 flex items-center justify-between">
                   <span className="text-[12px] font-semibold text-muted-foreground">
                     Line {lineIndex + 1} / {lines.length}
                   </span>
@@ -288,44 +319,29 @@ export default function SongsPage() {
                     <Switch checked={showHint} onCheckedChange={setShowHint} />
                   </label>
                 </div>
-                <p className="mb-2 text-[20px] font-bold leading-snug text-foreground">
-                  {currentLine.text}
-                </p>
-                {showHint && (
-                  <p className="mb-3 text-[12.5px] italic text-muted-foreground">
-                    {hintLoading
-                      ? "Translating…"
-                      : hint?.text === currentLine.text
-                        ? hint.translation
-                        : ""}
+                <div className="mb-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                  <p className="text-[20px] font-bold leading-snug text-foreground">
+                    {currentLine.text}
                   </p>
-                )}
+                  {showHint && (
+                    <p className="text-[13px] italic text-muted-foreground">
+                      {hintLoading
+                        ? "Translating…"
+                        : hint?.text === currentLine.text
+                          ? `— ${hint.translation}`
+                          : ""}
+                    </p>
+                  )}
+                </div>
                 <Textarea
                   value={currentLine.translation}
                   onChange={(e) => handleTranslationChange(e.target.value)}
                   onBlur={() => persistLines(lines)}
                   placeholder="このフレーズを日本語に訳してみましょう..."
                   rows={1}
-                  className="mb-4 resize-y text-[14px]"
+                  className="resize-y text-[14px]"
                   style={{ background: "var(--color-surface)" }}
                 />
-                <div className="mt-auto flex items-center justify-between gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={lineIndex === 0}
-                    onClick={() => setLineIndex((i) => Math.max(0, i - 1))}
-                  >
-                    ← Previous line
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={lineIndex >= lines.length - 1}
-                    onClick={() => setLineIndex((i) => Math.min(lines.length - 1, i + 1))}
-                  >
-                    Next line →
-                  </Button>
-                </div>
               </div>
             )}
           </div>
