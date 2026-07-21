@@ -95,6 +95,10 @@ async function fetchAllPlaylists(
 
     const res = await fetch(url.toString());
     const data = await res.json();
+    if (data.error) {
+      console.error("[youtube-import] playlists.list failed:", data.error);
+      break;
+    }
     for (const item of data.items ?? []) {
       playlists.push({
         id: item.id,
@@ -209,7 +213,7 @@ export async function importRyanChannel(
   // 再生リストを保存し、YouTube上のplaylistId → 行ID の対応を作る
   const playlistRowIdMap = new Map<string, string>();
   for (const p of playlists) {
-    const { data: upserted } = await supabase
+    const { data: upserted, error: upsertErr } = await supabase
       .from("youtube_playlists")
       .upsert(
         {
@@ -223,6 +227,10 @@ export async function importRyanChannel(
       )
       .select("id")
       .single();
+    if (upsertErr) {
+      console.error("[youtube-import] playlist upsert failed:", p.id, upsertErr);
+      continue;
+    }
     if (upserted) playlistRowIdMap.set(p.id, upserted.id);
   }
 
