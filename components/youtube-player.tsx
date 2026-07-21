@@ -112,7 +112,7 @@ export const YoutubePlayer = forwardRef<
 
   return (
     <div
-      className="mx-auto w-full max-w-[640px] overflow-hidden rounded-[20px]"
+      className="mx-auto w-full max-w-[760px] overflow-hidden rounded-[20px]"
       style={{ aspectRatio: "16/9", background: "#000" }}
     >
       <div ref={targetRef} className="h-full w-full" />

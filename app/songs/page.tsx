@@ -311,7 +311,7 @@ export default function SongsPage() {
 
             {currentLine && (
               <div
-                className="mt-[18px] flex flex-1 flex-col rounded-[16px] p-5"
+                className="mt-[18px] flex flex-col rounded-[16px] p-5"
                 style={{ background: "var(--color-surface-subtle)" }}
               >
                 <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
