@@ -61,8 +61,8 @@ export interface YoutubePlayerHandle {
 
 export const YoutubePlayer = forwardRef<
   YoutubePlayerHandle,
-  { videoId: string; onPlayingChange?: (playing: boolean) => void }
->(function YoutubePlayer({ videoId, onPlayingChange }, ref) {
+  { videoId: string; onPlayingChange?: (playing: boolean) => void; maxHeight?: string }
+>(function YoutubePlayer({ videoId, onPlayingChange, maxHeight }, ref) {
   const targetRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
 
@@ -113,7 +113,7 @@ export const YoutubePlayer = forwardRef<
   return (
     <div
       className="w-full overflow-hidden rounded-[20px]"
-      style={{ aspectRatio: "16/9", background: "#000" }}
+      style={{ aspectRatio: "16/9", maxHeight, background: "#000" }}
     >
       <div ref={targetRef} className="h-full w-full" />
     </div>

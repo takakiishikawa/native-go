@@ -225,7 +225,10 @@ export default function OutputPage() {
   }
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col">
+    <div
+      className="flex w-full min-h-0 flex-col"
+      style={{ height: "calc(100svh - 2rem)" }}
+    >
       <div
         className="mb-1.5 text-[12.5px] font-semibold uppercase tracking-[0.06em]"
         style={{ color: "var(--color-accent)" }}

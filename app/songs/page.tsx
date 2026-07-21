@@ -5,6 +5,7 @@ import {
   Button,
   Input,
   Textarea,
+  Switch,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -18,12 +19,11 @@ import {
   SelectValue,
   toast,
 } from "@takaki/go-design-system";
-import { Plus, Music, Rewind, FastForward, Play, Pause, Trash2 } from "lucide-react";
+import { Plus, Music, Rewind, FastForward, Play, Pause } from "lucide-react";
 import {
   listSongs,
   createSong,
   updateSongLines,
-  deleteSong,
   fetchYoutubeMeta,
 } from "@/app/actions/songs";
 import { extractYoutubeVideoId } from "@/lib/youtube";
@@ -89,6 +89,53 @@ export default function SongsPage() {
     );
   }
 
+  // Google翻訳による参考訳（ヒント）。自分で和訳するときの補助として表示するだけで、
+  // translation欄には自動で入れない
+  const [showHint, setShowHint] = useState(false);
+  const [hintLoading, setHintLoading] = useState(false);
+  const [hint, setHint] = useState<{ text: string; translation: string } | null>(null);
+  const hintCache = useRef(new Map<string, string>());
+
+  useEffect(() => {
+    if (!showHint || !currentLine) return;
+    const key = currentLine.text;
+    const cached = hintCache.current.get(key);
+    if (cached) {
+      setHint({ text: key, translation: cached });
+      return;
+    }
+    let cancelled = false;
+    setHintLoading(true);
+    fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texts: [key] }),
+    })
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d?.error || `翻訳API エラー (${r.status})`);
+        return d as { translations?: string[] };
+      })
+      .then((d) => {
+        if (cancelled) return;
+        const t = d.translations?.[0];
+        if (t) {
+          hintCache.current.set(key, t);
+          setHint({ text: key, translation: t });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Failed to fetch translation hint");
+      })
+      .finally(() => {
+        if (!cancelled) setHintLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showHint, currentLine?.text]);
+
   async function persistLines(next: SongLine[]) {
     if (!active) return;
     const { error } = await updateSongLines(active.id, next);
@@ -125,13 +172,6 @@ export default function SongsPage() {
     fetchedForVideoId.current = null;
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this song?")) return;
-    await deleteSong(id);
-    setSongs((prev) => prev.filter((s) => s.id !== id));
-    if (activeId === id) setActiveId(null);
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -141,7 +181,10 @@ export default function SongsPage() {
   }
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col">
+    <div
+      className="flex w-full min-h-0 flex-col"
+      style={{ height: "calc(100svh - 2rem)" }}
+    >
       <div
         className="mb-1.5 text-[12.5px] font-semibold uppercase tracking-[0.06em]"
         style={{ color: "var(--color-accent)" }}
@@ -195,28 +238,16 @@ export default function SongsPage() {
               border: "1px solid var(--color-border-default)",
             }}
           >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[18px] font-bold text-foreground">{active.title}</p>
-                <p className="text-[12.5px] text-muted-foreground">
-                  {active.artist || "Unknown artist"}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-destructive"
-                onClick={() => handleDelete(active.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+            <p className="mb-2 truncate text-[15px] font-bold text-foreground">
+              {active.title}
+            </p>
 
             <YoutubePlayer
               key={active.id}
               ref={playerRef}
               videoId={active.youtube_video_id}
               onPlayingChange={setPlaying}
+              maxHeight="38vh"
             />
 
             <div className="mt-3.5 flex items-center justify-center gap-3">
@@ -252,16 +283,29 @@ export default function SongsPage() {
                   <span className="text-[12px] font-semibold text-muted-foreground">
                     Line {lineIndex + 1} / {lines.length}
                   </span>
+                  <label className="flex items-center gap-1.5 text-[11.5px] font-semibold text-muted-foreground">
+                    Hint (JA)
+                    <Switch checked={showHint} onCheckedChange={setShowHint} />
+                  </label>
                 </div>
-                <p className="mb-4 text-[20px] font-bold leading-snug text-foreground">
+                <p className="mb-2 text-[20px] font-bold leading-snug text-foreground">
                   {currentLine.text}
                 </p>
+                {showHint && (
+                  <p className="mb-3 text-[12.5px] italic text-muted-foreground">
+                    {hintLoading
+                      ? "Translating…"
+                      : hint?.text === currentLine.text
+                        ? hint.translation
+                        : ""}
+                  </p>
+                )}
                 <Textarea
                   value={currentLine.translation}
                   onChange={(e) => handleTranslationChange(e.target.value)}
                   onBlur={() => persistLines(lines)}
                   placeholder="このフレーズを日本語に訳してみましょう..."
-                  rows={3}
+                  rows={1}
                   className="mb-4 resize-y text-[14px]"
                   style={{ background: "var(--color-surface)" }}
                 />
