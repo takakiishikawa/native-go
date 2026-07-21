@@ -18,7 +18,7 @@ export default async function ReportPage() {
       .order("practiced_at"),
     supabase
       .from("youtube_logs")
-      .select("completed_at, youtube_videos(duration)")
+      .select("completed_at, duration")
       .eq("language", language)
       .order("completed_at"),
     supabase
@@ -39,9 +39,7 @@ export default async function ReportPage() {
 
   const youtubeLogs = (youtubeLogsResult.data ?? []).map((l) => ({
     completed_at: l.completed_at,
-    youtube_videos:
-      (l.youtube_videos as unknown as { duration: string | null } | null) ??
-      null,
+    duration: l.duration as string | null,
   }));
 
   const efSetScores: EfSetScore[] = (efSetResult.data ?? []) as EfSetScore[];

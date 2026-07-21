@@ -27,7 +27,7 @@ type PracticeLog = {
 
 type YoutubeLog = {
   completed_at: string;
-  youtube_videos: { duration: string | null } | null;
+  duration: string | null;
 };
 
 function parseDurToMin(dur: string | null | undefined): number {
@@ -73,7 +73,7 @@ function buildMonthlyShadowing(youtubeLogs: YoutubeLog[]): ChartRow[] {
   const map = new Map<string, number>();
   for (const l of youtubeLogs) {
     const ym = l.completed_at.slice(0, 7);
-    map.set(ym, (map.get(ym) ?? 0) + parseDurToMin(l.youtube_videos?.duration));
+    map.set(ym, (map.get(ym) ?? 0) + parseDurToMin(l.duration));
   }
   return [...map.keys()]
     .sort()

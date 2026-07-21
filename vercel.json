@@ -6,5 +6,11 @@
       "main": true,
       "**": false
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/sync-ryan",
+      "schedule": "0 18 * * 0"
+    }
+  ]
 }

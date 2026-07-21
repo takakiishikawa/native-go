@@ -11,11 +11,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@takaki/go-design-system";
-import { Plus, ListVideo, ExternalLink, Check, Lock, Trash2 } from "lucide-react";
+import {
+  Plus,
+  ListVideo,
+  ExternalLink,
+  Check,
+  Lock,
+  Trash2,
+  RefreshCw,
+  Settings2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@takaki/go-design-system";
 import { useCurrentLanguage } from "@/lib/language-context";
-import type { YoutubeChannel, YoutubeVideo } from "@/lib/types";
+import type { YoutubeChannel, YoutubeVideo, YoutubePlaylist } from "@/lib/types";
 
 type VideoWithLap = YoutubeVideo & { lapCount: number };
 const ROUNDS = [1, 2, 3] as const;
@@ -36,6 +45,7 @@ export default function ShadowingPage() {
 
   const [channel, setChannel] = useState<YoutubeChannel | null>(null);
   const [videos, setVideos] = useState<VideoWithLap[]>([]);
+  const [playlists, setPlaylists] = useState<YoutubePlaylist[]>([]);
   const [round, setRound] = useState<Round>(1);
   const [loading, setLoading] = useState(true);
   const [showAddVideoModal, setShowAddVideoModal] = useState(false);
@@ -49,6 +59,14 @@ export default function ShadowingPage() {
   const [channelPlaylists, setChannelPlaylists] = useState<ChannelPlaylist[] | null>(null);
   const [loadingChannelPlaylists, setLoadingChannelPlaylists] = useState(false);
   const [importingPlaylistId, setImportingPlaylistId] = useState<string | null>(null);
+
+  // Ryan(EN)専用: 一括インポート + ライブラリ管理
+  const [importingRyan, setImportingRyan] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [setupUrl, setSetupUrl] = useState("");
+  const [setupError, setSetupError] = useState("");
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [deletingPlaylistId, setDeletingPlaylistId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -79,11 +97,12 @@ export default function ShadowingPage() {
 
     if (!fixed) {
       setVideos([]);
+      setPlaylists([]);
       setLoading(false);
       return;
     }
 
-    const [videosResult, logsResult] = await Promise.all([
+    const [videosResult, logsResult, playlistsResult] = await Promise.all([
       supabase
         .from("youtube_videos")
         .select("*")
@@ -93,7 +112,13 @@ export default function ShadowingPage() {
         .from("youtube_logs")
         .select("video_id")
         .eq("language", language),
+      supabase
+        .from("youtube_playlists")
+        .select("*")
+        .eq("channel_id", fixed.id)
+        .order("title"),
     ]);
+    setPlaylists(playlistsResult.data ?? []);
 
     const logs = logsResult.data ?? [];
     const lapCounts = new Map<string, number>();
@@ -121,10 +146,12 @@ export default function ShadowingPage() {
     if (!user) return;
 
     const nextLap = currentLap + 1;
+    const video = videos.find((v) => v.id === videoId);
 
     const { error } = await supabase.from("youtube_logs").insert({
       user_id: user.id,
       video_id: videoId,
+      duration: video?.duration ?? null,
       lap: nextLap,
       language,
     });
@@ -141,7 +168,8 @@ export default function ShadowingPage() {
   };
 
   const handleDeleteVideo = async (videoId: string): Promise<void> => {
-    await supabase.from("youtube_logs").delete().eq("video_id", videoId);
+    // youtube_logs は video_id が ON DELETE SET NULL なので、削除しても
+    // 完了記録(duration含む)自体は残り、レポート集計は壊れない
     const { error } = await supabase
       .from("youtube_videos")
       .delete()
@@ -154,6 +182,61 @@ export default function ShadowingPage() {
 
     toast.success("Video deleted");
     setVideos((prev) => prev.filter((v) => v.id !== videoId));
+  };
+
+  const handleDeletePlaylist = async (playlistId: string): Promise<void> => {
+    if (!confirm("Delete this playlist and its videos?")) return;
+    setDeletingPlaylistId(playlistId);
+    await supabase.from("youtube_videos").delete().eq("playlist_id", playlistId);
+    const { error } = await supabase
+      .from("youtube_playlists")
+      .delete()
+      .eq("id", playlistId);
+    setDeletingPlaylistId(null);
+
+    if (error) {
+      toast.error("Failed to delete playlist");
+      return;
+    }
+
+    toast.success("Playlist deleted");
+    setPlaylists((prev) => prev.filter((p) => p.id !== playlistId));
+    await loadData();
+  };
+
+  const handleImportRyan = async (bootstrapUrl?: string) => {
+    setImportingRyan(true);
+    setSetupError("");
+    try {
+      const res = await fetch("/api/youtube-import-ryan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language, channelUrl: bootstrapUrl }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (!channel && !bootstrapUrl) {
+          // 初回：チャンネルURLの入力を求める
+          setShowSetupModal(true);
+          return;
+        }
+        setSetupError(data.error ?? "Import failed");
+        toast.error(data.error ?? "Import failed");
+        return;
+      }
+
+      toast.success(
+        `Imported ${data.videoCount} video(s) across ${data.playlistCount} playlist(s)`,
+      );
+      setShowSetupModal(false);
+      setSetupUrl("");
+      await loadData();
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setImportingRyan(false);
+    }
   };
 
   const handleFetchVideo = async () => {
@@ -248,25 +331,49 @@ export default function ShadowingPage() {
           Shadowing
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            onClick={() => {
-              setShowAddPlaylistModal(true);
-              if (channelPlaylists === null) loadChannelPlaylists();
-            }}
-            size="sm"
-            variant="outline"
-          >
-            <ListVideo className="h-4 w-4 mr-1.5" />
-            Add playlist
-          </Button>
-          <Button
-            onClick={() => setShowAddVideoModal(true)}
-            size="sm"
-            variant="outline"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add video
-          </Button>
+          {language === "en" ? (
+            <>
+              <Button
+                onClick={() => setShowManageModal(true)}
+                size="sm"
+                variant="outline"
+              >
+                <Settings2 className="h-4 w-4 mr-1.5" />
+                Manage library
+              </Button>
+              <Button
+                onClick={() => handleImportRyan()}
+                disabled={importingRyan}
+                size="sm"
+                variant="outline"
+              >
+                <RefreshCw className={cn("h-4 w-4 mr-1.5", importingRyan && "animate-spin")} />
+                {importingRyan ? "Importing..." : "Import Ryan"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={() => {
+                  setShowAddPlaylistModal(true);
+                  if (channelPlaylists === null) loadChannelPlaylists();
+                }}
+                size="sm"
+                variant="outline"
+              >
+                <ListVideo className="h-4 w-4 mr-1.5" />
+                Add playlist
+              </Button>
+              <Button
+                onClick={() => setShowAddVideoModal(true)}
+                size="sm"
+                variant="outline"
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add video
+              </Button>
+            </>
+          )}
         </div>
       </div>
       <h1 className="mb-[22px] text-[30px] font-bold text-foreground">
@@ -279,7 +386,13 @@ export default function ShadowingPage() {
         <div className="text-center py-20 text-muted-foreground">
           <p className="font-medium">No videos yet</p>
           <p className="text-sm mt-1">
-            Add one with &quot;Add video&quot; or &quot;Add playlist&quot;
+            {language === "en" ? (
+              <>
+                Click &quot;Import Ryan&quot; to pull in all playlists and videos
+              </>
+            ) : (
+              <>Add one with &quot;Add video&quot; or &quot;Add playlist&quot;</>
+            )}
           </p>
         </div>
       ) : (
@@ -455,6 +568,152 @@ export default function ShadowingPage() {
                 {fetchingPlaylist ? "Fetching..." : "Add playlist"}
               </Button>
             </FormActions>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ryan 初回セットアップ: チャンネルURL入力（チャンネル行が無いときのみ） */}
+      <Dialog
+        open={showSetupModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowSetupModal(false);
+            setSetupUrl("");
+            setSetupError("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set up Ryan</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Ryan&apos;s YouTube channel URL</label>
+              <Input
+                value={setupUrl}
+                onChange={(e) => setSetupUrl(e.target.value)}
+                placeholder="https://www.youtube.com/@RyanChannelHandle"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleImportRyan(setupUrl.trim());
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Only needed once. After this, &quot;Import Ryan&quot; will re-sync
+                automatically using this channel.
+              </p>
+            </div>
+            {setupError && <p className="text-sm text-destructive">{setupError}</p>}
+            <FormActions>
+              <Button
+                onClick={() => handleImportRyan(setupUrl.trim())}
+                disabled={importingRyan || !setupUrl.trim()}
+              >
+                {importingRyan ? "Importing..." : "Import"}
+              </Button>
+            </FormActions>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ライブラリ管理: 再生リスト・未所属動画の一覧と削除 */}
+      <Dialog open={showManageModal} onOpenChange={setShowManageModal}>
+        <DialogContent className="max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Manage Ryan&apos;s library</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[70vh] space-y-5 overflow-y-auto">
+            <div>
+              <p className="mb-1.5 text-sm font-medium">
+                Playlists ({playlists.length})
+              </p>
+              {playlists.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No playlists imported yet</p>
+              ) : (
+                <div className="space-y-1">
+                  {playlists.map((p) => {
+                    const count = videos.filter((v) => v.playlist_id === p.id).length;
+                    return (
+                      <div
+                        key={p.id}
+                        className="flex items-center gap-3 rounded-[12px] px-3 py-2"
+                        style={{ border: "1px solid var(--color-border-default)" }}
+                      >
+                        {p.thumbnail_url ? (
+                          <img
+                            src={p.thumbnail_url}
+                            alt=""
+                            className="h-10 w-16 shrink-0 rounded object-cover"
+                          />
+                        ) : (
+                          <span className="h-10 w-16 shrink-0 rounded bg-muted" />
+                        )}
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                          {p.title}
+                        </span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {count} video{count === 1 ? "" : "s"}
+                        </span>
+                        <Button
+                          onClick={() => handleDeletePlaylist(p.id)}
+                          disabled={deletingPlaylistId === p.id}
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0 p-1 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-1.5 text-sm font-medium">
+                Not in a playlist (
+                {videos.filter((v) => !v.playlist_id).length})
+              </p>
+              {videos.filter((v) => !v.playlist_id).length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Every video belongs to a playlist
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  {videos
+                    .filter((v) => !v.playlist_id)
+                    .map((v) => (
+                      <div
+                        key={v.id}
+                        className="flex items-center gap-3 rounded-[12px] px-3 py-2"
+                        style={{ border: "1px solid var(--color-border-default)" }}
+                      >
+                        {v.thumbnail_url ? (
+                          <img
+                            src={v.thumbnail_url}
+                            alt=""
+                            className="h-10 w-16 shrink-0 rounded object-cover"
+                          />
+                        ) : (
+                          <span className="h-10 w-16 shrink-0 rounded bg-muted" />
+                        )}
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                          {v.title}
+                        </span>
+                        <Button
+                          onClick={() => handleDeleteVideo(v.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0 p-1 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

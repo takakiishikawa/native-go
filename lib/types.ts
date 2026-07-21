@@ -159,9 +159,20 @@ export interface YoutubeChannel {
   created_at: string;
 }
 
+export interface YoutubePlaylist {
+  id: string;
+  user_id: string;
+  channel_id: string;
+  youtube_playlist_id: string;
+  title: string;
+  thumbnail_url: string | null;
+  created_at: string;
+}
+
 export interface YoutubeVideo {
   id: string;
   channel_id: string;
+  playlist_id: string | null;
   title: string;
   video_url: string;
   duration: string | null;
@@ -173,7 +184,8 @@ export interface YoutubeVideo {
 export interface YoutubeLog {
   id: string;
   user_id: string;
-  video_id: string;
+  video_id: string | null;
+  duration: string | null;
   lap: number;
   completed_at: string;
 }
